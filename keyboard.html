@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SwifTyper Multifunction Keyboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="keyboard.css" />
+  </head>
+
+  <body>
+    <div class="main-container">
+      <header>
+        <div class="logo">Swif<span class="highlight">Typer</span></div>
+        <button id="theme-toggle" class="theme-btn">Switch Theme 🌗</button>
+      </header>
+
+      <!-- Controls Bar: Start / Stop / Reset - Session Type - Duration - Device Toggle -->
+      <div id="controls" class="controls">
+        <div class="controls-center">
+          <label for="session-type">Mode</label>
+          <select id="session-type">
+            <option value="timed">Timed</option>
+            <option value="words">Words</option>
+          </select>
+          <label for="session-duration">Duration (sec)</label>
+          <input
+            id="session-duration"
+            type="number"
+            min="10"
+            max="600"
+            value="60"
+          />
+          <!-- Level selector -->
+          <label for="level-selector">Level</label>
+          <select id="level-selector">
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="controls-right">
+          <label for="device-toggle">Device</label>
+          <select id="device-toggle">
+            <option value="auto">Auto</option>
+            <option value="windows">Windows</option>
+            <option value="mac">Mac</option>
+          </select>
+          <!-- Adaptive mode and heatmap toggles -->
+          <label for="adaptive-toggle">Adaptive</label>
+          <input type="checkbox" id="adaptive-toggle" />
+          <label for="heatmap-toggle">Heatmap</label>
+          <input type="checkbox" id="heatmap-toggle" />
+        </div>
+      </div>
+      <div class="controls-left">
+        <button id="start-btn" class="theme-btn">Start</button>
+        <button id="stop-btn" class="theme-btn" disabled>Stop</button>
+        <button id="reset-btn" class="theme-btn">Reset</button>
+        <button id="open-history" class="theme-btn">History</button>
+      </div>
+      <!-- Target text display and typing area -->
+      <div id="target-display" class="target-display" aria-live="polite"></div>
+      <!-- Session messages -->
+      <div
+        id="session-message"
+        class="session-message"
+        aria-live="polite"
+      ></div>
+      <div class="screen-container">
+        <textarea id="display-screen" placeholder="Start typing..."></textarea>
+      </div>
+
+      <!-- Live Stats Panel -->
+      <div id="stats-panel" class="stats-panel">
+        <div class="stat">
+          <strong>Timer:</strong> <span id="timer">00:00</span>
+        </div>
+        <div class="stat"><strong>WPM:</strong> <span id="wpm">0</span></div>
+        <div class="stat">
+          <strong>Accuracy:</strong> <span id="accuracy">0%</span>
+        </div>
+        <div class="stat">
+          <strong>Errors:</strong> <span id="errors">0</span>
+        </div>
+      </div>
+
+      <div class="keyboard" id="keyboard">
+        <div class="keyboard-row">
+          <div
+            class="key key-pinky action-key"
+            data-key="Backquote"
+            data-char="&#96;"
+          >
+            &#96;
+          </div>
+          <div class="key key-pinky" data-key="Digit1" data-char="1">1</div>
+          <div class="key key-ring" data-key="Digit2" data-char="2">2</div>
+          <div class="key key-middle" data-key="Digit3" data-char="3">3</div>
+          <div class="key key-index" data-key="Digit4" data-char="4">4</div>
+          <div class="key key-index" data-key="Digit5" data-char="5">5</div>
+          <div class="key key-index" data-key="Digit6" data-char="6">6</div>
+          <div class="key key-index" data-key="Digit7" data-char="7">7</div>
+          <div class="key key-middle" data-key="Digit8" data-char="8">8</div>
+          <div class="key key-ring" data-key="Digit9" data-char="9">9</div>
+          <div class="key key-pinky" data-key="Digit0" data-char="0">0</div>
+          <div class="key key-pinky" data-key="Minus" data-char="-">-</div>
+          <div class="key key-pinky" data-key="Equal" data-char="=">=</div>
+          <div class="key action-key key-xl" data-key="Backspace">⌫</div>
+        </div>
+
+        <div class="keyboard-row">
+          <div
+            class="key action-key key-wide"
+            data-key="Tab"
+            data-label-windows="Tab"
+            data-label-mac="Tab"
+          >
+            Tab
+          </div>
+          <div class="key key-pinky" data-key="KeyQ" data-char="q">Q</div>
+          <div class="key key-ring" data-key="KeyW" data-char="w">W</div>
+          <div class="key key-middle" data-key="KeyE" data-char="e">E</div>
+          <div class="key key-index" data-key="KeyR" data-char="r">R</div>
+          <div class="key key-index" data-key="KeyT" data-char="t">T</div>
+          <div class="key key-index" data-key="KeyY" data-char="y">Y</div>
+          <div class="key key-index" data-key="KeyU" data-char="u">U</div>
+          <div class="key key-middle" data-key="KeyI" data-char="i">I</div>
+          <div class="key key-ring" data-key="KeyO" data-char="o">O</div>
+          <div class="key key-pinky" data-key="KeyP" data-char="p">P</div>
+          <div class="key key-pinky" data-key="BracketLeft" data-char="[">
+            [
+          </div>
+          <div class="key key-pinky" data-key="BracketRight" data-char="]">
+            ]
+          </div>
+          <div class="key key-pinky" data-key="Backslash" data-char="&#92;">
+            &#92;
+          </div>
+        </div>
+
+        <div class="keyboard-row">
+          <div class="key action-key key-xl" id="caps-lock" data-key="CapsLock">
+            Caps
+          </div>
+          <div class="key key-pinky" data-key="KeyA" data-char="a">A</div>
+          <div class="key key-ring" data-key="KeyS" data-char="s">S</div>
+          <div class="key key-middle" data-key="KeyD" data-char="d">D</div>
+          <div class="key key-index" data-key="KeyF" data-char="f">F</div>
+          <div class="key key-index" data-key="KeyG" data-char="g">G</div>
+          <div class="key key-index" data-key="KeyH" data-char="h">H</div>
+          <div class="key key-index" data-key="KeyJ" data-char="j">J</div>
+          <div class="key key-middle" data-key="KeyK" data-char="k">K</div>
+          <div class="key key-ring" data-key="KeyL" data-char="l">L</div>
+          <div class="key key-pinky" data-key="Semicolon" data-char=";">;</div>
+          <div class="key key-pinky" data-key="Quote" data-char="'">'</div>
+          <div
+            class="key action-key key-xl"
+            data-key="Enter"
+            data-label-windows="Enter"
+            data-label-mac="Enter"
+          >
+            Enter
+          </div>
+        </div>
+
+        <div class="keyboard-row">
+          <div
+            class="key action-key key-xl"
+            data-key="ShiftLeft"
+            data-label-windows="Shift"
+            data-label-mac="Shift"
+          >
+            Shift
+          </div>
+          <div class="key key-pinky" data-key="KeyZ" data-char="z">Z</div>
+          <div class="key key-ring" data-key="KeyX" data-char="x">X</div>
+          <div class="key key-middle" data-key="KeyC" data-char="c">C</div>
+          <div class="key key-index" data-key="KeyV" data-char="v">V</div>
+          <div class="key key-index" data-key="KeyB" data-char="b">B</div>
+          <div class="key key-index" data-key="KeyN" data-char="n">N</div>
+          <div class="key key-index" data-key="KeyM" data-char="m">M</div>
+          <div class="key key-middle" data-key="Comma" data-char=",">,</div>
+          <div class="key key-ring" data-key="Period" data-char=".">.</div>
+          <div class="key key-pinky" data-key="Slash" data-char="/">/</div>
+          <div
+            class="key action-key key-xl"
+            data-key="ShiftRight"
+            data-label-windows="Shift"
+            data-label-mac="Shift"
+          >
+            Shift
+          </div>
+        </div>
+
+        <div class="keyboard-row keyboard-row--space">
+          <div
+            class="key action-key"
+            data-key="ControlLeft"
+            data-label-windows="Ctrl"
+            data-label-mac="Control"
+          >
+            Ctrl
+          </div>
+          <div
+            class="key action-key"
+            data-key="MetaLeft"
+            data-label-windows="Win"
+            data-label-mac="⌘"
+          >
+            Win
+          </div>
+          <div
+            class="key action-key"
+            data-key="AltLeft"
+            data-label-windows="Alt"
+            data-label-mac="Option"
+          >
+            Alt
+          </div>
+          <div class="key key-thumb space-key" data-key="Space" data-char=" ">
+            Space
+          </div>
+          <div
+            class="key action-key"
+            data-key="AltRight"
+            data-label-windows="Alt"
+            data-label-mac="Option"
+          >
+            Alt
+          </div>
+          <div
+            class="key action-key"
+            data-key="MetaRight"
+            data-label-windows="Win"
+            data-label-mac="⌘"
+          >
+            Win
+          </div>
+          <div
+            class="key action-key"
+            data-key="ControlRight"
+            data-label-windows="Ctrl"
+            data-label-mac="Control"
+          >
+            Ctrl
+          </div>
+        </div>
+      </div>
+      <!-- History Overlay -->
+      <div id="history-overlay" class="history-overlay hidden"></div>
+      <!-- History Panel -->
+      <div id="history-panel" class="history-panel hidden">
+        <div class="history-header">
+          <h3>Past Sessions</h3>
+          <div>
+            <button id="export-history">Export</button>
+            <input type="file" id="import-history" accept="application/json" />
+            <button id="clear-history">Clear</button>
+            <button id="close-history">Close</button>
+          </div>
+        </div>
+        <div class="history-content">
+          <div id="history-summary" class="history-summary">
+            <div>
+              <strong>Avg WPM:</strong> <span id="summary-avgWpm">0</span>
+            </div>
+            <div>
+              <strong>Best WPM:</strong> <span id="summary-bestWpm">0</span>
+            </div>
+            <div>
+              <strong>Avg Acc:</strong> <span id="summary-avgAcc">0%</span>
+            </div>
+          </div>
+          <canvas id="history-chart" width="600" height="200"></canvas>
+          <ul id="history-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="keyboard.js"></script>
+  </body>
+</html>

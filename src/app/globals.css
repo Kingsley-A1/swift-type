@@ -1,0 +1,85 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+@layer base {
+  :root {
+    --brand-orange: #ff6b35;
+    --deep-obsidian: #1a1a2e;
+    --elegant-white: #fafbfc;
+    --text-muted: #64748b;
+    --key-bg: #ffffff;
+    --key-text: #1a1a1a;
+    --screen-bg: #f0f2f5;
+    --container-bg: rgba(255, 255, 255, 0.88);
+    --container-border: rgba(0, 0, 0, 0.07);
+  }
+
+  .dark {
+    --brand-orange: #ff6b35;
+    --deep-obsidian: #e2e8f0;
+    --elegant-white: #fafbfc;
+    --text-muted: #6b7280;
+    --key-bg: #2a2a2a;
+    --key-text: #e5e7eb;
+    --screen-bg: #111318;
+    --container-bg: rgba(20, 22, 28, 0.92);
+    --container-border: rgba(255, 255, 255, 0.07);
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    @apply antialiased transition-colors duration-200;
+    background-color: var(--screen-bg);
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .dark body {
+    background-color: var(--screen-bg);
+  }
+}
+
+@layer utilities {
+  /* Main app glass container */
+  .glass-panel {
+    background: var(--container-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--container-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Control row unified card */
+  .control-card {
+    background: var(--container-bg);
+    border: 1px solid var(--container-border);
+    border-radius: 10px;
+  }
+
+  /* Typing text area */
+  .typing-panel {
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: 12px;
+  }
+
+  .dark .typing-panel {
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 116, 139, 0.25);
+    border-radius: 10px;
+  }
+}
