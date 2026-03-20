@@ -1,20 +1,26 @@
-import { Moon, Sun, History, BookOpen } from "lucide-react";
+import { Moon, Sun, History, BookOpen, Sparkles, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useSession, signOut } from "next-auth/react";
 import { HistoryPanel } from "./HistoryPanel";
+import { AuthModal } from "./AuthModal";
 import { useState, useEffect } from "react";
 
 interface HeaderProps {
   onGuideOpen: () => void;
+  onSwiftAIOpen?: () => void;
 }
 
-export function Header({ onGuideOpen }: HeaderProps) {
+export function Header({ onGuideOpen, onSwiftAIOpen }: HeaderProps) {
   const { theme, setTheme } = useTheme();
+  const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   const isDark = theme === "dark";
+  const isAuthed = status === "authenticated";
 
   return (
     <>
@@ -29,7 +35,11 @@ export function Header({ onGuideOpen }: HeaderProps) {
             }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z" fill="white" strokeLinejoin="round" />
+              <path
+                d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"
+                fill="white"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
           <span className="text-[17px] font-black text-gray-900 dark:text-white tracking-tight">
@@ -39,7 +49,32 @@ export function Header({ onGuideOpen }: HeaderProps) {
 
         {/* Right actions */}
         <div className="flex items-center gap-1.5">
-          {/* Getting Started — primary CTA */}
+          {/* Ask Swift — AI Chat */}
+          <button
+            onClick={() => {
+              if (isAuthed && onSwiftAIOpen) {
+                onSwiftAIOpen();
+              } else if (!isAuthed) {
+                setIsAuthOpen(true);
+              }
+            }}
+            className={
+              isAuthed
+                ? "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                : "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold border border-gray-200 dark:border-white/8 text-gray-400 dark:text-gray-500 transition-all hover:border-gray-300 dark:hover:border-white/15"
+            }
+            style={
+              isAuthed
+                ? { background: "linear-gradient(135deg, #7c3aed, #6366f1)" }
+                : undefined
+            }
+            title={isAuthed ? "Chat with Swift AI" : "Sign in to use Swift AI"}
+          >
+            <Sparkles size={13} />
+            Ask Swift
+          </button>
+
+          {/* Getting Started */}
           <button
             onClick={onGuideOpen}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold text-white transition-all hover:opacity-90 active:scale-95"
@@ -69,6 +104,39 @@ export function Header({ onGuideOpen }: HeaderProps) {
               {isDark ? "Light" : "Dark"}
             </button>
           )}
+
+          {/* Auth: Sign In or User Avatar */}
+          {mounted &&
+            (isAuthed ? (
+              <div className="flex items-center gap-1.5">
+                {session?.user?.image ? (
+                  <img
+                    src={session.user.image}
+                    alt={session.user.name || "User"}
+                    className="w-7 h-7 rounded-full border border-gray-200 dark:border-white/10"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-brand-orange/20 flex items-center justify-center text-[11px] font-bold text-brand-orange">
+                    {(session?.user?.name || "U")[0].toUpperCase()}
+                  </div>
+                )}
+                <button
+                  onClick={() => signOut()}
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-white/8 text-[11px] font-semibold text-gray-500 dark:text-gray-400 hover:text-red-500 hover:border-red-500/30 transition-all"
+                  title="Sign out"
+                >
+                  <LogOut size={11} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-orange/30 text-[12px] font-semibold text-brand-orange hover:bg-brand-orange/10 transition-all"
+              >
+                Sign In
+              </button>
+            ))}
         </div>
       </header>
 
@@ -76,6 +144,8 @@ export function Header({ onGuideOpen }: HeaderProps) {
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
       />
+
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </>
   );
 }

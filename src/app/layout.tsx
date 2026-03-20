@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { SessionProvider } from "next-auth/react";
 import { SplashScreen } from "@/components/SplashScreen";
 import "./globals.css";
 
@@ -105,7 +106,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          <SplashScreen>{children}</SplashScreen>
+          <SessionProvider>
+            <SplashScreen>{children}</SplashScreen>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>
