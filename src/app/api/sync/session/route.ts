@@ -3,6 +3,10 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import {
+  getActiveGoals,
+  updateGoalProgressFromSession,
+} from "@/lib/goalService";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -19,7 +23,13 @@ export async function POST(req: Request) {
     .where(eq(sessions.id, data.id))
     .limit(1);
   if (existing.length > 0) {
-    return NextResponse.json({ ok: true, skipped: true });
+    const goalSnapshot = await getActiveGoals(session.user.id);
+    return NextResponse.json({
+      ok: true,
+      skipped: true,
+      goalSnapshot,
+      rewardEvents: [],
+    });
   }
 
   await db.insert(sessions).values({
@@ -34,5 +44,16 @@ export async function POST(req: Request) {
     historyData: data.historyData,
   });
 
-  return NextResponse.json({ ok: true });
+  const result = await updateGoalProgressFromSession(session.user.id, {
+    date: Number(new Date(data.date).getTime()),
+    wpm: Number(data.wpm),
+    accuracy: Number(data.accuracy),
+    duration: Number(data.duration),
+  });
+
+  return NextResponse.json({
+    ok: true,
+    goalSnapshot: result.snapshot,
+    rewardEvents: result.rewardEvents,
+  });
 }
