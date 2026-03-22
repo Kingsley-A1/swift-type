@@ -115,9 +115,10 @@ export function PrivacyPolicy({ isOpen, onClose }: PrivacyPolicyProps) {
                   the service. Here is exactly what we collect and why:
                 </PolicyP>
                 <PolicyBullet>
-                  <strong>Account identity</strong> — Your name, email address,
-                  and profile image from your OAuth provider (Google or GitHub).
-                  Used to create and identify your account.
+                  <strong>Account identity</strong> — Your name and email
+                  address. If you sign in with GitHub, a profile image from
+                  GitHub may also be collected. Used to create and identify
+                  your account.
                 </PolicyBullet>
                 <PolicyBullet>
                   <strong>Typing session data</strong> — WPM, accuracy,
@@ -184,9 +185,11 @@ export function PrivacyPolicy({ isOpen, onClose }: PrivacyPolicyProps) {
                   signed and expire after 30 days.
                 </PolicyBullet>
                 <PolicyBullet>
-                  <strong>OAuth security</strong> — We never see or store your
-                  Google or GitHub password. We receive only an access token and
-                  basic profile info that you authorize.
+                  <strong>Password security</strong> — If you sign in with
+                  email and password, your password is stored only as a bcrypt
+                  hash — plain-text passwords are never stored or transmitted.
+                  If you sign in with GitHub, we receive only an OAuth access
+                  token and basic profile info.
                 </PolicyBullet>
               </PolicySection>
 
@@ -195,13 +198,13 @@ export function PrivacyPolicy({ isOpen, onClose }: PrivacyPolicyProps) {
                   Swift Type uses the following third-party services to operate:
                 </PolicyP>
                 <PolicyBullet>
-                  <strong>Google OAuth &amp; Gemini AI</strong> — Identity
-                  verification and AI coaching. Subject to Google&apos;s Privacy
-                  Policy.
+                  <strong>Google Gemini AI</strong> — AI coaching responses.
+                  Subject to Google&apos;s Gemini API Data Usage Policies.
+                  (Google sign-in is coming soon.)
                 </PolicyBullet>
                 <PolicyBullet>
-                  <strong>GitHub OAuth</strong> — Identity verification. Subject
-                  to GitHub&apos;s Privacy Policy.
+                  <strong>GitHub OAuth</strong> — Identity verification for
+                  GitHub sign-in. Subject to GitHub&apos;s Privacy Policy.
                 </PolicyBullet>
                 <PolicyBullet>
                   <strong>Neon</strong> — PostgreSQL hosting. EU/US data

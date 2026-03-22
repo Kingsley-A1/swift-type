@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { withUsersPasswordColumn } from "@/lib/ensureUsersPasswordColumn";
 
 export async function POST(req: Request) {
   try {
@@ -16,11 +17,9 @@ export async function POST(req: Request) {
     }
 
     // 1. Check if user already exists
-    const [existingUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+    const [existingUser] = await withUsersPasswordColumn(() =>
+      db.select().from(users).where(eq(users.email, email)).limit(1)
+    );
 
     if (existingUser) {
       // 2. If user exists without a password, they used OAuth

@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/db";
 import { accounts, users, verificationTokens } from "@/db/schema";
+import { withUsersPasswordColumn } from "@/lib/ensureUsersPasswordColumn";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -31,11 +32,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, credentials.email as string))
-          .limit(1);
+        const [user] = await withUsersPasswordColumn(() =>
+          db
+            .select()
+            .from(users)
+            .where(eq(users.email, credentials.email as string))
+            .limit(1)
+        );
 
         if (!user || !user.password) return null; // Fallback to OAuth if password missing
 

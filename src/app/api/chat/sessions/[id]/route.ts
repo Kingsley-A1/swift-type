@@ -23,10 +23,7 @@ export async function GET(
     getChatMessages(userId, id),
     withChatFeedbackColumn(() =>
       db.query.chatSessions.findFirst({
-        where: and(
-          eq(chatSessions.id, id),
-          eq(chatSessions.userId, userId),
-        ),
+        where: and(eq(chatSessions.id, id), eq(chatSessions.userId, userId)),
         columns: {
           feedback: true,
         },
