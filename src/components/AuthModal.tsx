@@ -74,14 +74,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             className="fixed inset-0 z-61 flex items-center justify-center p-4"
           >
             <div
-              className="relative w-full max-w-md overflow-hidden rounded-[30px]"
+              className="relative w-full max-w-[400px] overflow-hidden rounded-[24px]"
               style={{
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,249,252,0.92))",
-                border: "1px solid rgba(255,255,255,0.65)",
+                background: "rgba(255,255,255,0.98)",
+                border: "1px solid rgba(0,0,0,0.05)",
                 backdropFilter: "blur(32px) saturate(180%)",
                 boxShadow:
-                  "0 40px 100px rgba(15, 23, 42, 0.24), 0 8px 24px rgba(15, 23, 42, 0.12)",
+                  "0 24px 80px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06)",
               }}
             >
               <div
@@ -93,44 +92,32 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               />
               <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/80" />
 
-              <div className="relative p-7 sm:p-8">
+              <div className="relative p-6 sm:p-8">
                 {/* Close */}
                 <button
                   onClick={onClose}
-                  className="absolute right-5 top-5 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/5 bg-white/70 text-gray-400 transition-colors hover:text-gray-700 hover:bg-white"
+                  className="absolute right-4 top-4 inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:text-gray-700 hover:bg-gray-100"
                 >
-                  <X size={15} />
+                  <X size={16} strokeWidth={2.5} />
                 </button>
 
                 {/* Header */}
-                <div className="mb-8 flex items-start gap-4">
-                  <div
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl overflow-hidden"
-                    style={{
-                      boxShadow: "0 10px 30px rgba(255,107,53,0.28)",
-                    }}
-                  >
-                    <Image src="/logo-192.png" alt="SwiftType" width={48} height={48} />
+                <div className="mb-6 flex flex-col items-center justify-center text-center">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
+                    <Image src="/logo-192.png" alt="SwiftType" width={56} height={56} />
                   </div>
-                  <div>
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-400">
-                      Swift Type Account
-                    </p>
-                    <h2 className="text-[28px] font-semibold leading-[1.05] text-gray-900">
-                      Continue to Swift
-                      <span className="text-brand-orange">Type</span>
-                    </h2>
-                    <p className="mt-2 max-w-xs text-[13px] leading-6 text-gray-500">
-                      Sync your progress, unlock Swift AI coaching, and keep
-                      every session backed up across devices.
-                    </p>
-                  </div>
+                  <h2 className="text-[22px] font-bold tracking-tight text-gray-900">
+                    {mode === "signin" ? "Welcome back" : "Create your account"}
+                  </h2>
+                  <p className="mt-1.5 text-[13px] text-gray-500">
+                    Sync your progress and unlock Swift AI.
+                  </p>
                 </div>
 
                 {/* Native Email & Password Form */}
-                <form onSubmit={handleSubmit} className="mb-6 space-y-3 relative z-10">
+                <form onSubmit={handleSubmit} className="mb-5 space-y-3 relative z-10">
                   {error && (
-                    <div className="rounded-xl border border-red-500/20 bg-red-50/50 p-3 text-[13px] font-medium text-red-600">
+                    <div className="rounded-lg border border-red-500/20 bg-red-50/80 p-2.5 text-center text-[13px] font-medium text-red-600">
                       {error}
                     </div>
                   )}
@@ -140,7 +127,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Email address"
-                      className="w-full rounded-2xl border border-gray-200 bg-white/60 px-4 py-3.5 text-[14px] text-gray-900 placeholder:text-gray-400 focus:border-brand-orange/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-orange/5 transition-all"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[14px] text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-brand-orange focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/20 transition-all"
                       required
                     />
                   </div>
@@ -150,45 +137,43 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Password"
-                      className="w-full rounded-2xl border border-gray-200 bg-white/60 px-4 py-3.5 text-[14px] text-gray-900 placeholder:text-gray-400 focus:border-brand-orange/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-orange/5 transition-all"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[14px] text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-brand-orange focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/20 transition-all"
                       required
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[14px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
-                    style={{ background: "linear-gradient(135deg, #ff6b35, #ff8c5a)", boxShadow: "0 8px 20px rgba(255,107,53,0.25)" }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-semibold text-white transition-all hover:bg-brand-orange/90 active:scale-[0.98] disabled:opacity-70 shadow-sm bg-brand-orange"
                   >
-                    {isLoading ? <Loader2 size={18} className="animate-spin opacity-70" /> : mode === "signin" ? "Sign In" : "Create Account"}
+                    {isLoading ? <Loader2 size={16} className="animate-spin opacity-70" /> : mode === "signin" ? "Sign In" : "Continue"}
                   </button>
-                  <p className="text-center text-[12px] font-medium text-gray-500 mt-3 flex items-center justify-center gap-1.5 pt-1">
-                    {mode === "signin" ? "Don't have an account?" : "Already properly registered?"}
-                    <button type="button" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }} className="font-bold text-brand-orange hover:underline focus:outline-none">
+                  <div className="text-center text-[12px] font-medium text-gray-500 mt-3 flex items-center justify-center gap-1.5 pt-1">
+                    {mode === "signin" ? "Don't have an account?" : "Already registered?"}
+                    <button type="button" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }} className="font-semibold text-gray-900 hover:text-brand-orange transition-colors focus:outline-none">
                       {mode === "signin" ? "Sign up" : "Sign in"}
                     </button>
-                  </p>
+                  </div>
                 </form>
 
-                <div className="relative my-6 z-0">
-                  <div className="absolute inset-0 flex items-center opacity-70"><div className="w-full border-t border-gray-200" /></div>
-                  <div className="relative flex justify-center text-[11px] uppercase tracking-widest text-gray-400 font-bold bg-white/70 backdrop-blur-md px-3 w-max mx-auto rounded-full">
+                <div className="relative my-5 z-0 flex items-center justify-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                  <div className="absolute bg-white px-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
                     OR
                   </div>
                 </div>
 
                 {/* OAuth Buttons */}
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <button
-                    onClick={() => signIn("google", { callbackUrl: "/" })}
-                    className="group flex w-full items-center gap-3 rounded-2xl border border-white/80 bg-white/85 px-4 py-4 text-left text-sm font-semibold text-gray-800 transition-all hover:-translate-y-0.5 hover:border-gray-200 hover:bg-white"
-                    style={{ boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)" }}
+                    disabled
+                    type="button"
+                    className="relative flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-[14px] font-semibold text-gray-400 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all"
                   >
                     <svg
-                      width="17"
-                      height="17"
+                      width="16"
+                      height="16"
                       viewBox="0 0 24 24"
-                      className="shrink-0"
                     >
                       <path
                         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -207,46 +192,30 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         fill="#EA4335"
                       />
                     </svg>
-                    <div className="flex-1">
-                      <div>Continue with Google</div>
-                      <div className="mt-0.5 text-[12px] font-medium text-gray-400">
-                        Fast sign-in with your Google account
-                      </div>
-                    </div>
-                    <span className="text-gray-300 transition-transform group-hover:translate-x-0.5">
-                      →
+                    Continue with Google
+                    <span className="absolute right-3 rounded-md bg-gray-200 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
+                      Soon
                     </span>
                   </button>
 
                   <button
                     onClick={() => signIn("github", { callbackUrl: "/" })}
-                    className="group flex w-full items-center gap-3 rounded-2xl border border-white/80 bg-white/85 px-4 py-4 text-left text-sm font-semibold text-gray-800 transition-all hover:-translate-y-0.5 hover:border-gray-200 hover:bg-white"
-                    style={{ boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)" }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-[14px] font-semibold text-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all hover:bg-gray-50 active:scale-[0.98]"
                   >
                     <svg
-                      width="17"
-                      height="17"
+                      width="16"
+                      height="16"
                       viewBox="0 0 24 24"
                       fill="currentColor"
-                      className="shrink-0 text-gray-800 dark:text-white"
                     >
                       <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                     </svg>
-                    <div className="flex-1">
-                      <div>Continue with GitHub</div>
-                      <div className="mt-0.5 text-[12px] font-medium text-gray-400">
-                        Ideal if your workflow already lives in GitHub
-                      </div>
-                    </div>
-                    <span className="text-gray-300 transition-transform group-hover:translate-x-0.5">
-                      →
-                    </span>
+                    Continue with GitHub
                   </button>
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-black/5 bg-black/[0.02] px-4 py-3 text-[12px] leading-5 text-gray-500 text-center">
-                  By continuing, you agree to our zero-friction terms. Swift
-                  Type safely handles all data securely.
+                <div className="mt-5 text-[11px] leading-relaxed text-gray-400 text-center px-4">
+                  By tracking progress, you agree to our strictly zero-friction Terms of Service and data policy.
                 </div>
               </div>
             </div>
