@@ -642,7 +642,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         type: "warning",
-        text: "Swift AI requires an account. Sign in with Google or GitHub to unlock full AI coaching. Your chat conversations are private and never shared publicly.",
+        text: "Swift AI requires an account. Sign in with email and password or continue with GitHub to unlock full AI coaching. Google sign-in is being prepared for a later rollout. Your chat conversations are private and never shared publicly.",
       },
       {
         type: "stats",
@@ -683,7 +683,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     content: [
       {
         type: "paragraph",
-        text: "Creating a free Swift Type account unlocks cloud session sync, full history tracking, Swift AI coaching, and a persistent profile that follows you across devices. All stored securely — no passwords, no hassle.",
+        text: "Creating a free Swift Type account unlocks cloud session sync, full history tracking, Swift AI coaching, and a persistent profile that follows you across devices. You can create an account with email and password or sign in with GitHub.",
       },
       {
         type: "heading",
@@ -718,8 +718,9 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         type: "steps",
         items: [
           "Click 'Sign In' in the top-right header.",
-          "Choose Google or GitHub — no passwords required.",
-          "You are redirected back to Swift Type, now fully signed in.",
+          "Choose email and password for the simple native sign-in flow, or continue with GitHub.",
+          "If you are new, switch to 'Create Account' and complete email plus password in the same modal.",
+          "After sign-in, Swift Type restores your account features immediately.",
           "Your previous guest sessions are automatically promoted to your account.",
         ],
       },
@@ -767,7 +768,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         type: "steps",
         items: [
           "Typing session data: WPM, accuracy, keystroke timing, and character error maps.",
-          "Account info from OAuth (name, email, avatar) — provided by Google or GitHub.",
+          "Account information such as email address and profile details from the sign-in method you use, including GitHub when selected.",
           "Chat messages sent to Swift AI (processed by Google Gemini, not stored permanently).",
           "Browser theme preference (stored locally, never sent to the server).",
         ],
@@ -780,7 +781,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         type: "steps",
         items: [
           "The actual text you type during practice sessions.",
-          "Passwords — we use OAuth only, no password storage.",
+          "Plain-text passwords — passwords from the native sign-in flow should be stored only as secure hashes.",
           "Third-party tracking cookies or ad network identifiers.",
           "Any data from users who are not signed in.",
         ],
