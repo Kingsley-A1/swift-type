@@ -37,9 +37,17 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         type: "stats",
         items: [
           { label: "Average beginner WPM", value: "20–35", desc: "Keys only" },
-          { label: "Average professional WPM", value: "65–80", desc: "Touch typing" },
+          {
+            label: "Average professional WPM",
+            value: "65–80",
+            desc: "Touch typing",
+          },
           { label: "Elite typists", value: "100+", desc: "With 98%+ accuracy" },
-          { label: "Time to touch type", value: "3–6 weeks", desc: "Daily 15 min practice" },
+          {
+            label: "Time to touch type",
+            value: "3–6 weeks",
+            desc: "Daily 15 min practice",
+          },
         ],
       },
     ],
@@ -50,7 +58,14 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     title: "Your First Typing Session",
     emoji: "🚀",
     level: "beginner",
-    tags: ["start", "first time", "beginner", "how to", "session", "getting started"],
+    tags: [
+      "start",
+      "first time",
+      "beginner",
+      "how to",
+      "session",
+      "getting started",
+    ],
     content: [
       {
         type: "heading",
@@ -94,10 +109,19 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       {
         type: "keys",
         items: [
-          { key: "Enter", desc: "Start a new typing session from the idle state" },
+          {
+            key: "Enter",
+            desc: "Start a new typing session from the idle state",
+          },
           { key: "Tab", desc: "Instantly reset and get a fresh set of words" },
-          { key: "Esc", desc: "Stop the current session early and see results" },
-          { key: "Backspace", desc: "Delete the last character you typed (during session)" },
+          {
+            key: "Esc",
+            desc: "Stop the current session early and see results",
+          },
+          {
+            key: "Backspace",
+            desc: "Delete the last character you typed (during session)",
+          },
         ],
       },
       {
@@ -152,7 +176,14 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     title: "Difficulty Levels",
     emoji: "📊",
     level: "all",
-    tags: ["level", "difficulty", "beginner", "intermediate", "advanced", "word list"],
+    tags: [
+      "level",
+      "difficulty",
+      "beginner",
+      "intermediate",
+      "advanced",
+      "word list",
+    ],
     content: [
       {
         type: "paragraph",
@@ -179,7 +210,15 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     title: "The AI Adaptive Engine",
     emoji: "🧠",
     level: "intermediate",
-    tags: ["adaptive", "AI", "bigram", "weak keys", "n-gram", "learning", "smart"],
+    tags: [
+      "adaptive",
+      "AI",
+      "bigram",
+      "weak keys",
+      "n-gram",
+      "learning",
+      "smart",
+    ],
     content: [
       {
         type: "paragraph",
@@ -236,10 +275,26 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       {
         type: "stats",
         items: [
-          { label: "95–100%", value: "Excellent", desc: "Slow down only if WPM < target" },
-          { label: "90–94%", value: "Good", desc: "Acceptable for learning phase" },
-          { label: "80–89%", value: "Fair", desc: "Prioritize accuracy over speed" },
-          { label: "< 80%", value: "Needs work", desc: "Significantly slow down" },
+          {
+            label: "95–100%",
+            value: "Excellent",
+            desc: "Slow down only if WPM < target",
+          },
+          {
+            label: "90–94%",
+            value: "Good",
+            desc: "Acceptable for learning phase",
+          },
+          {
+            label: "80–89%",
+            value: "Fair",
+            desc: "Prioritize accuracy over speed",
+          },
+          {
+            label: "< 80%",
+            value: "Needs work",
+            desc: "Significantly slow down",
+          },
         ],
       },
       {
@@ -259,7 +314,14 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     title: "Performance History & Stats Panel",
     emoji: "🗂️",
     level: "all",
-    tags: ["history", "stats panel", "sessions", "progress", "track", "average"],
+    tags: [
+      "history",
+      "stats panel",
+      "sessions",
+      "progress",
+      "track",
+      "average",
+    ],
     content: [
       {
         type: "paragraph",
@@ -287,7 +349,14 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     title: "Proper Finger Placement",
     emoji: "🖐️",
     level: "beginner",
-    tags: ["fingers", "hand position", "posture", "home row", "technique", "placement"],
+    tags: [
+      "fingers",
+      "hand position",
+      "posture",
+      "home row",
+      "technique",
+      "placement",
+    ],
     content: [
       {
         type: "paragraph",
@@ -296,11 +365,26 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       {
         type: "keys",
         items: [
-          { key: "🟢 Green (Pinky)", desc: "A, Q, Z, Tab, Caps, Shift (left) and P, ;, /, ', Enter, Backspace (right)" },
-          { key: "🟡 Yellow (Ring)", desc: "S, W, X (left) and O, L, . (right)" },
-          { key: "🟠 Orange (Middle)", desc: "D, E, C (left) and I, K, , (right)" },
-          { key: "🔴 Red (Index)", desc: "F, G, R, T, V, B (left) and J, H, U, Y, M, N (right)" },
-          { key: "🟣 Purple (Thumbs)", desc: "Spacebar — both thumbs, whichever is natural" },
+          {
+            key: "🟢 Green (Pinky)",
+            desc: "A, Q, Z, Tab, Caps, Shift (left) and P, ;, /, ', Enter, Backspace (right)",
+          },
+          {
+            key: "🟡 Yellow (Ring)",
+            desc: "S, W, X (left) and O, L, . (right)",
+          },
+          {
+            key: "🟠 Orange (Middle)",
+            desc: "D, E, C (left) and I, K, , (right)",
+          },
+          {
+            key: "🔴 Red (Index)",
+            desc: "F, G, R, T, V, B (left) and J, H, U, Y, M, N (right)",
+          },
+          {
+            key: "🟣 Purple (Thumbs)",
+            desc: "Spacebar — both thumbs, whichever is natural",
+          },
         ],
       },
       {
@@ -324,7 +408,14 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     title: "Breaking Through Speed Plateaus",
     emoji: "🏎️",
     level: "intermediate",
-    tags: ["speed", "WPM", "plateau", "faster typing", "improve", "intermediate"],
+    tags: [
+      "speed",
+      "WPM",
+      "plateau",
+      "faster typing",
+      "improve",
+      "intermediate",
+    ],
     content: [
       {
         type: "paragraph",
@@ -388,10 +479,18 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       {
         type: "stats",
         items: [
-          { label: "60–80 WPM", value: "Proficient", desc: "Standard professional level" },
+          {
+            label: "60–80 WPM",
+            value: "Proficient",
+            desc: "Standard professional level",
+          },
           { label: "80–100 WPM", value: "Fast", desc: "Top 10% of typists" },
           { label: "100–120 WPM", value: "Elite", desc: "Top 1%" },
-          { label: "120+ WPM", value: "Exceptional", desc: "Competitive typist territory" },
+          {
+            label: "120+ WPM",
+            value: "Exceptional",
+            desc: "Competitive typist territory",
+          },
         ],
       },
       {
@@ -487,6 +586,322 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       },
     ],
   },
+
+  // ─── SWIFT AI COACH ────────────────────────────────────────────────────────
+  {
+    id: "swift-ai",
+    title: "Swift AI Coach",
+    emoji: "🤖",
+    level: "all",
+    tags: [
+      "ai",
+      "coach",
+      "swift ai",
+      "chat",
+      "artificial intelligence",
+      "help",
+      "advice",
+    ],
+    content: [
+      {
+        type: "paragraph",
+        text: "Swift AI is your personal typing coach — powered by Gemini 2.5 Flash. It understands your session history, current skill level, and weak spots, then gives you personalised advice, drills, and answers in real time. Think of it as a world-class typing instructor who is always available and never judges your WPM.",
+      },
+      {
+        type: "heading",
+        text: "What Swift AI can do",
+      },
+      {
+        type: "steps",
+        items: [
+          "Analyse your recent WPM and accuracy trends and explain what is holding you back.",
+          "Suggest targeted finger drills for your slowest keys and most error-prone bigrams.",
+          "Explain proper hand posture, finger placement, and ergonomic setup.",
+          "Answer any question about the app, settings, or typing technique in plain language.",
+          "Generate custom word lists or practice sentences for specific problem keys.",
+          "Motivate and pace you through a training plan suited to your improvement goals.",
+        ],
+      },
+      {
+        type: "tip",
+        text: "Click the 'Ask Swift' button in the header (or the Docs panel) to open the Swift AI chat. Sign-in is required — your session data is used to personalise responses.",
+      },
+      {
+        type: "heading",
+        text: "How to get the most out of Swift AI",
+      },
+      {
+        type: "steps",
+        items: [
+          "Complete at least 3–5 sessions so Swift AI has enough data to make meaningful observations.",
+          "Be specific: instead of 'help me type faster', try 'my accuracy drops on the right hand — why?'",
+          "Ask for drills: 'Give me a 30-second drill focusing on P, semicolon, and apostrophe.'",
+          "Ask for explanations: 'What is a bigram and why does it matter?'",
+          "Use the conversation history — Swift AI remembers your previous messages in the session.",
+        ],
+      },
+      {
+        type: "warning",
+        text: "Swift AI requires an account. Sign in with Google or GitHub to unlock full AI coaching. Your chat conversations are private and never shared publicly.",
+      },
+      {
+        type: "stats",
+        items: [
+          {
+            label: "AI model",
+            value: "Gemini 2.5",
+            desc: "Flash — fast & accurate",
+          },
+          { label: "Response time", value: "<2s", desc: "Real-time streaming" },
+          {
+            label: "Context window",
+            value: "Session + history",
+            desc: "Personalised advice",
+          },
+          { label: "Privacy", value: "GDPR ready", desc: "No data sold" },
+        ],
+      },
+    ],
+  },
+
+  // ─── ACCOUNT & CLOUD SYNC ──────────────────────────────────────────────────
+  {
+    id: "account",
+    title: "Account & Cloud Sync",
+    emoji: "☁️",
+    level: "beginner",
+    tags: [
+      "account",
+      "cloud",
+      "sync",
+      "save",
+      "history",
+      "data",
+      "profile",
+      "sign in",
+    ],
+    content: [
+      {
+        type: "paragraph",
+        text: "Creating a free Swift Type account unlocks cloud session sync, full history tracking, Swift AI coaching, and a persistent profile that follows you across devices. All stored securely — no passwords, no hassle.",
+      },
+      {
+        type: "heading",
+        text: "Account benefits at a glance",
+      },
+      {
+        type: "stats",
+        items: [
+          {
+            label: "Session history",
+            value: "All sessions",
+            desc: "Stored in the cloud",
+          },
+          {
+            label: "Swift AI",
+            value: "Full access",
+            desc: "AI coaching included",
+          },
+          {
+            label: "Cross-device",
+            value: "Any browser",
+            desc: "Your data follows you",
+          },
+          { label: "Cost", value: "Free", desc: "Always" },
+        ],
+      },
+      {
+        type: "heading",
+        text: "Signing in",
+      },
+      {
+        type: "steps",
+        items: [
+          "Click 'Sign In' in the top-right header.",
+          "Choose Google or GitHub — no passwords required.",
+          "You are redirected back to Swift Type, now fully signed in.",
+          "Your previous guest sessions are automatically promoted to your account.",
+        ],
+      },
+      {
+        type: "tip",
+        text: "You can practice without an account — sessions are stored locally in your browser. Sign in any time and your local history is automatically synced to the cloud.",
+      },
+      {
+        type: "heading",
+        text: "Your profile",
+      },
+      {
+        type: "paragraph",
+        text: "Click your avatar in the top-right corner to open your profile panel. It shows your best WPM, average WPM, and accuracy across all sessions — and lets you jump straight to Swift AI coaching or your full stats history.",
+      },
+    ],
+  },
+
+  // ─── PRIVACY & DATA ────────────────────────────────────────────────────────
+  {
+    id: "privacy",
+    title: "Privacy & Data",
+    emoji: "🔒",
+    level: "all",
+    tags: [
+      "privacy",
+      "data",
+      "security",
+      "gdpr",
+      "ccpa",
+      "policy",
+      "storage",
+      "delete",
+    ],
+    content: [
+      {
+        type: "paragraph",
+        text: "Swift Type is built with privacy-first principles. Your data is used only to improve your typing experience — it is never sold, rented, or shared with advertisers.",
+      },
+      {
+        type: "heading",
+        text: "What we collect",
+      },
+      {
+        type: "steps",
+        items: [
+          "Typing session data: WPM, accuracy, keystroke timing, and character error maps.",
+          "Account info from OAuth (name, email, avatar) — provided by Google or GitHub.",
+          "Chat messages sent to Swift AI (processed by Google Gemini, not stored permanently).",
+          "Browser theme preference (stored locally, never sent to the server).",
+        ],
+      },
+      {
+        type: "heading",
+        text: "What we do NOT collect",
+      },
+      {
+        type: "steps",
+        items: [
+          "The actual text you type during practice sessions.",
+          "Passwords — we use OAuth only, no password storage.",
+          "Third-party tracking cookies or ad network identifiers.",
+          "Any data from users who are not signed in.",
+        ],
+      },
+      {
+        type: "tip",
+        text: "View the full Privacy Policy anytime — click the shield icon (🛡) in the header, or ask Swift AI: 'What is your privacy policy?'",
+      },
+      {
+        type: "heading",
+        text: "Your rights",
+      },
+      {
+        type: "paragraph",
+        text: "You may request a copy of all data we hold, request deletion of your account and all associated data, or opt out of AI-enhanced processing at any time. Send requests to privacy@swifttype.app.",
+      },
+    ],
+  },
+
+  // ─── GOALS & STREAKS ───────────────────────────────────────────────────────
+  {
+    id: "goals-and-streaks",
+    title: "Goals & Streaks",
+    emoji: "🎯",
+    level: "all",
+    tags: [
+      "goals",
+      "streaks",
+      "rewards",
+      "target",
+      "progress",
+      "daily",
+      "weekly",
+      "habit",
+    ],
+    content: [
+      {
+        type: "paragraph",
+        text: "Goals give your practice a clear direction. Swift Type lets you set daily and weekly targets, tracks every session automatically, and shows exactly how close you are to hitting them.",
+      },
+      {
+        type: "heading",
+        text: "Creating a Goal",
+      },
+      {
+        type: "steps",
+        items: [
+          "Click the Target icon (🎯) in the left sidebar to open the Goals panel.",
+          "Choose Daily or Weekly using the toggle at the top of the Create Goal section.",
+          "Click a template that matches your focus — speed, accuracy, consistency, or time.",
+          "Customise the goal name, target value, and required sessions in the inline form.",
+          "Click Create Goal. Your progress starts tracking immediately.",
+        ],
+      },
+      {
+        type: "heading",
+        text: "Goal Types",
+      },
+      {
+        type: "keys",
+        items: [
+          {
+            key: "Sessions",
+            desc: "Complete a fixed number of typing sessions. Best for building a daily habit.",
+          },
+          {
+            key: "Accuracy",
+            desc: "Maintain a target accuracy percentage across a set number of sessions (e.g. 95% over 3 runs).",
+          },
+          {
+            key: "Time",
+            desc: "Accumulate a total amount of practice time during the period (e.g. 15 minutes this week).",
+          },
+          {
+            key: "Speed",
+            desc: "Hit or exceed a specific WPM target (e.g. 45 WPM) in at least one qualifying session.",
+          },
+        ],
+      },
+      {
+        type: "tip",
+        text: "Required Sessions sets the minimum number of sessions that must run before the goal can be counted as complete. Raising it ensures the result is consistent, not a one-off fluke.",
+      },
+      {
+        type: "heading",
+        text: "Tracking Progress",
+      },
+      {
+        type: "paragraph",
+        text: "Each time you finish a session, Swift Type checks all active goals and updates them automatically. The Goals panel shows a live progress bar, how far you've come, and when the goal window closes.",
+      },
+      {
+        type: "paragraph",
+        text: "A compact progress indicator is also visible in the sidebar next to the Goals icon. On mobile, the GoalProgressChip beneath the controls shows the same at a glance.",
+      },
+      {
+        type: "heading",
+        text: "Streaks",
+      },
+      {
+        type: "paragraph",
+        text: "Every time you complete a goal, your streak grows by one. If a day ends without a completed daily goal, the streak resets. Your best-ever streak is always preserved as a personal record.",
+      },
+      {
+        type: "tip",
+        text: "Your active streak count is shown in the top header as a flame pill so it stays visible during every session. You can view current and best streak in the Goals panel.",
+      },
+      {
+        type: "heading",
+        text: "Rewards",
+      },
+      {
+        type: "paragraph",
+        text: "Completing goals and reaching milestones unlocks reward badges. Streak milestones, WPM records, and consistency goals each award different badges. Open the Rewards panel from the sidebar to browse your full collection.",
+      },
+      {
+        type: "tip",
+        text: "Swift AI has full visibility into your active goals. Ask it things like 'Am I on track for my weekly goal?' or 'What should I practise to hit 60 WPM this week?' for personalised recommendations.",
+      },
+    ],
+  },
 ];
 
 // Flat searchable index for the search feature
@@ -498,8 +913,10 @@ export const SEARCH_INDEX = GUIDE_SECTIONS.flatMap((section) => {
       if (block.type === "warning") return block.text;
       if (block.type === "heading") return block.text;
       if (block.type === "steps") return block.items.join(" ");
-      if (block.type === "keys") return block.items.map((k) => k.desc).join(" ");
-      if (block.type === "stats") return block.items.map((s) => s.label + " " + s.desc).join(" ");
+      if (block.type === "keys")
+        return block.items.map((k) => k.desc).join(" ");
+      if (block.type === "stats")
+        return block.items.map((s) => s.label + " " + s.desc).join(" ");
       return "";
     })
     .join(" ");
@@ -512,7 +929,8 @@ export const SEARCH_INDEX = GUIDE_SECTIONS.flatMap((section) => {
       level: section.level,
       body: textBlocks,
       tags: section.tags.join(" "),
-      searchText: `${section.title} ${section.tags.join(" ")} ${textBlocks}`.toLowerCase(),
+      searchText:
+        `${section.title} ${section.tags.join(" ")} ${textBlocks}`.toLowerCase(),
     },
   ];
 });

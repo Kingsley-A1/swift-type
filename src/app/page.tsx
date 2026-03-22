@@ -8,6 +8,13 @@ import { Keyboard } from "@/components/Keyboard";
 import { PostSessionStats } from "@/components/PostSessionStats";
 import { UserGuide } from "@/components/UserGuide";
 import { SwiftAI } from "@/components/SwiftAI";
+import { PrivacyPolicy } from "@/components/PrivacyPolicy";
+import { GoalPanel } from "@/components/GoalPanel";
+import { GoalCompleteModal } from "@/components/GoalCompleteModal";
+import { AppSidebar } from "@/components/AppSidebar";
+import { RewardsPanel } from "@/components/RewardsPanel";
+import { HistoryPanel } from "@/components/HistoryPanel";
+import { ProfilePanel } from "@/components/ProfilePanel";
 import { useTypingStore } from "@/store/useTypingStore";
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -20,6 +27,8 @@ import {
   syncSessionToServer,
   syncStatsToServer,
   mergeLocalDataToServer,
+  mergeLocalGoalsToServer,
+  fetchRewardsFromServer,
 } from "@/lib/syncService";
 
 export default function Home() {
@@ -34,20 +43,62 @@ export default function Home() {
     startSession,
     resetSession,
     endSession,
+    refreshGoalStatuses,
+    rewardQueue,
+    goalStreak,
+    clearRewardQueue,
   } = useTypingStore();
 
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isSwiftAIOpen, setIsSwiftAIOpen] = useState(false);
-  const hasMerged = useRef(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [isGoalOpen, setIsGoalOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isRewardsOpen, setIsRewardsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const bootstrappedUserId = useRef<string | null>(null);
 
-  // One-time merge: push localStorage data to DB on first authenticated load
+  // Keep guest goals fresh and hide finished windows after they expire.
   useEffect(() => {
-    if (status === "authenticated" && !hasMerged.current) {
-      hasMerged.current = true;
-      mergeLocalDataToServer();
+    refreshGoalStatuses();
+    const intervalId = window.setInterval(refreshGoalStatuses, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [refreshGoalStatuses]);
+
+  // One-time bootstrapping per authenticated user: merge local sessions, then merge local goals.
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.id) {
+      return;
     }
-  }, [status]);
+
+    if (bootstrappedUserId.current === session.user.id) {
+      return;
+    }
+
+    bootstrappedUserId.current = session.user.id;
+
+    void (async () => {
+      await mergeLocalDataToServer();
+      await mergeLocalGoalsToServer();
+      await fetchRewardsFromServer();
+    })();
+  }, [session?.user?.id, status]);
+
+  const primaryReward =
+    rewardQueue.find((reward) => reward.rewardType === "goal_completion") ??
+    rewardQueue[0] ??
+    null;
+  const companionReward =
+    rewardQueue.find((reward) => reward.rewardType === "rank") ??
+    rewardQueue.find((reward) => reward.rewardType === "streak") ??
+    rewardQueue.find((reward) => reward.rewardType === "milestone") ??
+    null;
+
+  const completedGoalTitle =
+    typeof primaryReward?.metadata?.goalTitle === "string"
+      ? primaryReward.metadata.goalTitle
+      : primaryReward?.description;
 
   const prevSessionCount = useRef(
     useTypingStore.getState().savedSessions.length,
@@ -113,6 +164,15 @@ export default function Home() {
         e.preventDefault();
         endSession();
       }
+      // Ctrl/Cmd + Shift + S — toggle Swift AI panel
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "s"
+      ) {
+        e.preventDefault();
+        setIsSwiftAIOpen((prev) => !prev);
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -130,55 +190,112 @@ export default function Home() {
 
   return (
     <>
-      <UserGuide isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
-      <SwiftAI isOpen={isSwiftAIOpen} onClose={() => setIsSwiftAIOpen(false)} />
+      <UserGuide
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        onAskSwift={() => setIsSwiftAIOpen(true)}
+        isSwiftAIOpen={isSwiftAIOpen}
+      />
+      <SwiftAI
+        isOpen={isSwiftAIOpen}
+        onClose={() => setIsSwiftAIOpen(false)}
+        onDocsOpen={() => setIsGuideOpen(true)}
+        isDocsOpen={isGuideOpen}
+      />
+      <HistoryPanel
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+      />
+      <GoalPanel isOpen={isGoalOpen} onClose={() => setIsGoalOpen(false)} />
+      <PrivacyPolicy
+        isOpen={isPrivacyOpen}
+        onClose={() => setIsPrivacyOpen(false)}
+      />
+      <RewardsPanel
+        isOpen={isRewardsOpen}
+        onClose={() => setIsRewardsOpen(false)}
+        onOpenGoals={() => setIsGoalOpen(true)}
+      />
+      <GoalCompleteModal
+        isOpen={rewardQueue.length > 0}
+        onClose={clearRewardQueue}
+        primaryReward={primaryReward}
+        companionReward={companionReward}
+        streakCount={goalStreak.currentStreak}
+        completedGoalTitle={completedGoalTitle}
+        userName={session?.user?.name}
+      />
+
+      <AppSidebar
+        isGoalsOpen={isGoalOpen}
+        isHistoryOpen={isHistoryOpen}
+        isDocsOpen={isGuideOpen}
+        isPrivacyOpen={isPrivacyOpen}
+        isRewardsOpen={isRewardsOpen}
+        onOpenGoals={() => setIsGoalOpen(true)}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        onOpenDocs={() => setIsGuideOpen(true)}
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
+        onOpenRewards={() => setIsRewardsOpen(true)}
+        onOpenProfile={() => setIsProfileOpen(true)}
+      />
+
+      <ProfilePanel
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        onAskGenius={() => setIsSwiftAIOpen(true)}
+        onViewStats={() => setIsHistoryOpen(true)}
+        onPractice={() => setIsProfileOpen(false)}
+      />
 
       {/* Full-viewport container — no scroll */}
-      <main
-        className="w-full max-w-5xl mx-auto flex flex-col"
-        style={{
-          height: "100dvh",
-          padding: "16px 24px",
-          borderLeft: "1px solid rgba(255,107,53,0.09)",
-          borderRight: "1px solid rgba(255,107,53,0.09)",
-        }}
-      >
-        {/* Header */}
-        <Header
-          onGuideOpen={() => setIsGuideOpen(true)}
-          onSwiftAIOpen={() => setIsSwiftAIOpen(true)}
-        />
+      <div className="h-dvh pl-[72px]">
+        <main
+          className="w-full max-w-5xl mx-auto flex flex-col"
+          style={{
+            height: "100dvh",
+            padding: "16px 24px",
+            borderLeft: "1px solid rgba(255,107,53,0.09)",
+            borderRight: "1px solid rgba(255,107,53,0.09)",
+          }}
+        >
+          {/* Header */}
+          <Header
+            onHistoryOpen={() => setIsHistoryOpen(true)}
+            onSwiftAIOpen={() => setIsSwiftAIOpen(true)}
+          />
 
-        {/* Controls */}
-        <Controls />
+          {/* Controls */}
+          <Controls />
 
-        {/* Typing area + Stats OR Post-session */}
-        {!isFinished ? (
-          <>
-            <TypingDisplay />
-            <LiveStats />
-          </>
-        ) : (
-          <PostSessionStats />
-        )}
+          {/* Typing area + Stats OR Post-session */}
+          {!isFinished ? (
+            <>
+              <TypingDisplay />
+              <LiveStats />
+            </>
+          ) : (
+            <PostSessionStats />
+          )}
 
-        {/* Keyboard — takes remaining space */}
-        {!isFinished && (
-          <div className="flex-1 min-h-0 flex flex-col justify-end">
-            <Keyboard />
+          {/* Keyboard — takes remaining space */}
+          {!isFinished && (
+            <div className="flex-1 min-h-0 flex flex-col justify-end">
+              <Keyboard />
+            </div>
+          )}
+
+          {/* Credit */}
+          <div className="shrink-0 flex justify-center pt-1 pb-0.5">
+            <span
+              className="text-[11px] font-medium tracking-wide"
+              style={{ color: "rgba(253, 175, 8, 0.96)" }}
+            >
+              Engineered by Kingsley Maduabuchi
+            </span>
           </div>
-        )}
-
-        {/* Credit */}
-        <div className="flex-shrink-0 flex justify-center pt-1 pb-0.5">
-          <span
-            className="text-[11px] font-medium tracking-wide"
-            style={{ color: "rgba(253, 175, 8, 0.96)" }}
-          >
-            Engineered by Kingsley Maduabuchi
-          </span>
-        </div>
-      </main>
+        </main>
+      </div>
     </>
   );
 }

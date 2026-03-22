@@ -1,7 +1,9 @@
 import { useTypingStore, SessionHistory } from "@/store/useTypingStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, LineChart, Target, Zap, Clock } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
+import { fetchRewardsFromServer } from "@/lib/syncService";
 
 interface HistoryPanelProps {
   isOpen: boolean;
@@ -9,8 +11,33 @@ interface HistoryPanelProps {
 }
 
 export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
-  const { savedSessions, clearHistory } = useTypingStore();
-  const [selectedSession, setSelectedSession] = useState<SessionHistory | null>(null);
+  const { savedSessions, clearHistory, rewards, goalStreak } = useTypingStore();
+  const { status } = useSession();
+  const [selectedSession, setSelectedSession] = useState<SessionHistory | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!isOpen || status !== "authenticated") {
+      return;
+    }
+
+    void fetchRewardsFromServer();
+  }, [isOpen, status]);
+
+  const recentGoalCompletions = useMemo(
+    () =>
+      rewards
+        .filter((reward) => reward.rewardType === "goal_completion")
+        .slice(0, 4),
+    [rewards],
+  );
+
+  const streakMilestones = useMemo(
+    () =>
+      rewards.filter((reward) => reward.rewardType === "streak").slice(0, 4),
+    [rewards],
+  );
 
   const handlePanelClose = () => {
     setSelectedSession(null);
@@ -77,7 +104,7 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
                   Lifetime Averages
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col p-4 rounded-xl bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 border border-brand-orange/20 shadow-sm">
+                  <div className="flex flex-col p-4 rounded-xl bg-linear-to-br from-brand-orange/10 to-brand-orange/5 border border-brand-orange/20 shadow-sm">
                     <span className="flex items-center gap-2 text-xs font-semibold text-brand-orange mb-1">
                       <Zap size={14} /> WPM
                     </span>
@@ -85,7 +112,7 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
                       {averageWpm}
                     </span>
                   </div>
-                  <div className="flex flex-col p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 shadow-sm">
+                  <div className="flex flex-col p-4 rounded-xl bg-linear-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 shadow-sm">
                     <span className="flex items-center gap-2 text-xs font-semibold text-blue-500 mb-1">
                       <Target size={14} /> Accuracy
                     </span>
@@ -93,6 +120,69 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
                       {averageAcc}%
                     </span>
                   </div>
+                </div>
+              </div>
+
+              <div className="px-6 pt-2">
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">
+                  Goal Momentum
+                </h3>
+
+                <div className="rounded-xl border border-gray-100 dark:border-white/8 bg-white dark:bg-white/2 p-4">
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                    Streak summary:{" "}
+                    <span className="text-brand-orange font-bold">
+                      {goalStreak.currentStreak}
+                    </span>{" "}
+                    current ·{" "}
+                    <span className="font-bold">{goalStreak.bestStreak}</span>{" "}
+                    best
+                  </p>
+
+                  <div className="mt-3 space-y-2">
+                    {recentGoalCompletions.length === 0 ? (
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                        Goal completions will appear here once you close your
+                        first target.
+                      </p>
+                    ) : (
+                      recentGoalCompletions.map((reward) => (
+                        <div
+                          key={reward.id}
+                          className="text-xs text-gray-600 dark:text-gray-300 flex items-center justify-between gap-3"
+                        >
+                          <span className="truncate">{reward.description}</span>
+                          <span className="text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                            {new Date(reward.earnedAt).toLocaleDateString(
+                              undefined,
+                              {
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {streakMilestones.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10">
+                      <p className="text-[11px] uppercase tracking-widest text-gray-400 dark:text-gray-500 font-bold mb-2">
+                        Streak History
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {streakMilestones.map((reward) => (
+                          <span
+                            key={reward.id}
+                            className="text-[11px] rounded-full px-2.5 py-1 border border-brand-orange/20 bg-brand-orange/5 text-brand-orange font-semibold"
+                          >
+                            {reward.title}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -181,66 +271,101 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
               </div>
             )}
             {/* Detailed Session Sliding View */}
-          <AnimatePresence>
-            {selectedSession && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.15 }}
-                className="absolute inset-0 z-[60] flex flex-col bg-white dark:bg-brand-dark"
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-black/20">
-                  <h2 className="text-lg font-bold flex items-center gap-2 mt-1">
-                    <Clock size={18} className="text-brand-orange" />
-                    Session Details
-                  </h2>
-                  <button onClick={() => setSelectedSession(null)} className="rounded-full p-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 focus:outline-none transition-colors">
-                    <X size={18} />
-                  </button>
-                </div>
-                
-                {/* Details Container */}
-                <div className="flex-1 overflow-y-auto w-full relative custom-scrollbar p-6">
-                   <div className="grid grid-cols-2 gap-4 mb-6">
-                     <div className="bg-white dark:bg-brand-dark border border-brand-orange/20 shadow-sm rounded-2xl p-6 text-center">
-                        <span className="text-4xl font-extrabold text-brand-orange block mb-1">{selectedSession.wpm}</span>
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Net Speed</span>
-                     </div>
-                     <div className="bg-white dark:bg-brand-dark border border-blue-500/20 shadow-sm rounded-2xl p-6 text-center">
-                        <span className="text-4xl font-extrabold text-blue-500 block mb-1">{selectedSession.accuracy}%</span>
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Accuracy</span>
-                     </div>
-                   </div>
+            <AnimatePresence>
+              {selectedSession && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute inset-0 z-60 flex flex-col bg-white dark:bg-brand-dark"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-black/20">
+                    <h2 className="text-lg font-bold flex items-center gap-2 mt-1">
+                      <Clock size={18} className="text-brand-orange" />
+                      Session Details
+                    </h2>
+                    <button
+                      onClick={() => setSelectedSession(null)}
+                      className="rounded-full p-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 focus:outline-none transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
 
-                   <div className="bg-white dark:bg-transparent border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden p-6 custom-glass">
-                    <h3 className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-4">Diagnostics Insight</h3>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-white/10">
-                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">Mode Active</span>
-                        <span className="text-sm font-bold capitalize text-gray-900 dark:text-gray-100">{selectedSession.mode}</span>
+                  {/* Details Container */}
+                  <div className="flex-1 overflow-y-auto w-full relative custom-scrollbar p-6">
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="bg-white dark:bg-brand-dark border border-brand-orange/20 shadow-sm rounded-2xl p-6 text-center">
+                        <span className="text-4xl font-extrabold text-brand-orange block mb-1">
+                          {selectedSession.wpm}
+                        </span>
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">
+                          Net Speed
+                        </span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-white/10">
-                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">Total Duration</span>
-                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{selectedSession.duration}s</span>
-                      </div>
-                      <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-white/10">
-                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">Total Keystrokes</span>
-                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{selectedSession.keystrokes || 0}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-3">
-                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">Error Count</span>
-                        <span className="text-sm font-extrabold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-md">
-                          {Math.max(0, Math.round((selectedSession.keystrokes || 0) - (selectedSession.accuracy * (selectedSession.keystrokes || 0) / 100)))}
+                      <div className="bg-white dark:bg-brand-dark border border-blue-500/20 shadow-sm rounded-2xl p-6 text-center">
+                        <span className="text-4xl font-extrabold text-blue-500 block mb-1">
+                          {selectedSession.accuracy}%
+                        </span>
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">
+                          Accuracy
                         </span>
                       </div>
                     </div>
-                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+                    <div className="bg-white dark:bg-transparent border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden p-6 custom-glass">
+                      <h3 className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-4">
+                        Diagnostics Insight
+                      </h3>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-white/10">
+                          <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                            Mode Active
+                          </span>
+                          <span className="text-sm font-bold capitalize text-gray-900 dark:text-gray-100">
+                            {selectedSession.mode}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-white/10">
+                          <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                            Total Duration
+                          </span>
+                          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                            {selectedSession.duration}s
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-white/10">
+                          <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                            Total Keystrokes
+                          </span>
+                          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                            {selectedSession.keystrokes || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-3">
+                          <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                            Error Count
+                          </span>
+                          <span className="text-sm font-extrabold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-md">
+                            {Math.max(
+                              0,
+                              Math.round(
+                                (selectedSession.keystrokes || 0) -
+                                  (selectedSession.accuracy *
+                                    (selectedSession.keystrokes || 0)) /
+                                    100,
+                              ),
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </>
       )}

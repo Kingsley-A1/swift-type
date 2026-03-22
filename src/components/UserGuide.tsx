@@ -2,14 +2,29 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, BookOpen, ChevronRight, Zap, ArrowLeft } from "lucide-react";
-import { GUIDE_SECTIONS, SEARCH_INDEX, GuideSection, GuideBlock } from "@/data/userGuide";
+import {
+  Search,
+  X,
+  BookOpen,
+  ChevronRight,
+  Zap,
+  ArrowLeft,
+  Sparkles,
+} from "lucide-react";
+import {
+  GUIDE_SECTIONS,
+  SEARCH_INDEX,
+  GuideSection,
+  GuideBlock,
+} from "@/data/userGuide";
 import clsx from "clsx";
 
 // ─── LEVEL BADGE ─────────────────────────────────────────────────────────────
 const LEVEL_STYLES = {
-  beginner: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-  intermediate: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20",
+  beginner:
+    "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  intermediate:
+    "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20",
   advanced: "bg-purple-500/15 text-purple-500 border-purple-500/20",
   all: "bg-brand-orange/10 text-brand-orange border-brand-orange/20",
 };
@@ -53,21 +68,28 @@ function BlockRenderer({ block }: { block: GuideBlock }) {
       return (
         <div className="flex gap-3 p-3 rounded-xl bg-brand-orange/8 border border-brand-orange/20">
           <span className="text-brand-orange flex-shrink-0 mt-0.5">💡</span>
-          <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">{block.text}</p>
+          <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
+            {block.text}
+          </p>
         </div>
       );
     case "warning":
       return (
         <div className="flex gap-3 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20">
           <span className="flex-shrink-0 mt-0.5">⚠️</span>
-          <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">{block.text}</p>
+          <p className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed">
+            {block.text}
+          </p>
         </div>
       );
     case "steps":
       return (
         <ol className="space-y-2 mt-1">
           {block.items.map((item, i) => (
-            <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-300">
+            <li
+              key={i}
+              className="flex gap-3 text-sm text-gray-600 dark:text-gray-300"
+            >
               <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand-orange text-white text-[10px] font-bold flex items-center justify-center mt-0.5">
                 {i + 1}
               </span>
@@ -267,7 +289,8 @@ function SearchResults({
       ) : (
         <>
           <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-1 pb-1">
-            {results.length} result{results.length !== 1 ? "s" : ""} for "{query}"
+            {results.length} result{results.length !== 1 ? "s" : ""} for "
+            {query}"
           </p>
           {results.map((section) => (
             <SectionCard
@@ -287,6 +310,8 @@ function SearchResults({
 interface UserGuideProps {
   isOpen: boolean;
   onClose: () => void;
+  onAskSwift?: () => void;
+  isSwiftAIOpen?: boolean;
 }
 
 const LEVEL_FILTERS = [
@@ -296,7 +321,12 @@ const LEVEL_FILTERS = [
   { value: "advanced", label: "Advanced" },
 ] as const;
 
-export function UserGuide({ isOpen, onClose }: UserGuideProps) {
+export function UserGuide({
+  isOpen,
+  onClose,
+  onAskSwift,
+  isSwiftAIOpen,
+}: UserGuideProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [levelFilter, setLevelFilter] = useState<string>("all");
@@ -331,7 +361,8 @@ export function UserGuide({ isOpen, onClose }: UserGuideProps) {
 
   const filteredSections = useMemo(() => {
     return GUIDE_SECTIONS.filter(
-      (s) => levelFilter === "all" || s.level === levelFilter || s.level === "all",
+      (s) =>
+        levelFilter === "all" || s.level === levelFilter || s.level === "all",
     );
   }, [levelFilter]);
 
@@ -345,29 +376,35 @@ export function UserGuide({ isOpen, onClose }: UserGuideProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop — translucent so app stays visible behind */}
-          <motion.div
-            key="guide-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            onClick={handleClose}
-            className="fixed inset-0 z-40 bg-black/20 dark:bg-black/40 backdrop-blur-[2px]"
-          />
+          {/* Backdrop — only when Swift AI is NOT also open */}
+          {!isSwiftAIOpen && (
+            <motion.div
+              key="guide-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={handleClose}
+              className="fixed inset-0 z-40 bg-black/20 dark:bg-black/40 backdrop-blur-[2px]"
+            />
+          )}
 
-          {/* Panel — 70% width, slides from RIGHT */}
+          {/* Panel — sits beside SwiftAI when it's open, otherwise at right-0 */}
           <motion.div
             key="guide-panel"
             initial={{ x: "100%", opacity: 0.6 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0.6 }}
             transition={{ type: "spring", damping: 28, stiffness: 220 }}
-            className="fixed inset-y-0 right-0 z-50 w-[70%] max-w-3xl flex flex-col"
+            className="fixed inset-y-0 z-50 flex flex-col"
             style={{
-              background: "rgba(255,255,255,0.92)",
+              right: isSwiftAIOpen ? "50%" : "0",
+              width: isSwiftAIOpen ? "45%" : "50%",
+              transition:
+                "right 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1)",
+              background: "var(--container-bg)",
               backdropFilter: "blur(24px) saturate(180%)",
-              borderLeft: "1px solid rgba(0,0,0,0.06)",
+              borderLeft: "1px solid var(--container-border)",
               boxShadow: "-20px 0 60px rgba(0,0,0,0.12)",
             }}
           >
@@ -375,8 +412,8 @@ export function UserGuide({ isOpen, onClose }: UserGuideProps) {
             <div
               className="flex-shrink-0 dark:bg-transparent"
               style={{
-                background: "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 100%)",
-                borderBottom: "1px solid rgba(0,0,0,0.06)",
+                background: "var(--container-bg)",
+                borderBottom: "1px solid var(--container-border)",
               }}
             >
               {/* Top bar */}
@@ -384,26 +421,45 @@ export function UserGuide({ isOpen, onClose }: UserGuideProps) {
                 <div className="flex items-center gap-3">
                   <div
                     className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg, #ff6b35, #ff8c5a)" }}
+                    style={{
+                      background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                    }}
                   >
                     <BookOpen size={14} className="text-white" />
                   </div>
                   <div>
-                    <h1 className="text-base font-black text-gray-900 leading-none">
-                      Swift<span style={{ color: "#ff6b35" }}>Type</span> Guide
+                    <h1 className="text-base font-black text-gray-900 dark:text-white leading-none">
+                      Swift<span style={{ color: "#ff6b35" }}>Type</span>{" "}
+                      <span className="text-gray-600">Docs</span>
                     </h1>
                     <p className="text-[10px] text-gray-400 mt-0.5">
                       Everything you need to type faster
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={handleClose}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  aria-label="Close guide"
-                >
-                  <X size={16} className="text-gray-500" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {/* Ask Swift button */}
+                  {onAskSwift && (
+                    <button
+                      onClick={onAskSwift}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                      style={{
+                        background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                      }}
+                      title="Ask Swift AI"
+                    >
+                      <Sparkles size={11} />
+                      Ask Swift
+                    </button>
+                  )}
+                  <button
+                    onClick={handleClose}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    aria-label="Close docs"
+                  >
+                    <X size={16} className="text-gray-500" />
+                  </button>
+                </div>
               </div>
 
               {/* Apple-style Search Bar */}
@@ -460,7 +516,8 @@ export function UserGuide({ isOpen, onClose }: UserGuideProps) {
               <AnimatePresence mode="wait">
                 {selectedSection ? (
                   /* Detail View */
-                  <div className="h-full overflow-y-auto custom-scrollbar"
+                  <div
+                    className="h-full overflow-y-auto custom-scrollbar"
                     style={{ background: "transparent" }}
                   >
                     <SectionDetail
@@ -493,7 +550,8 @@ export function UserGuide({ isOpen, onClose }: UserGuideProps) {
                           <div
                             className="flex items-center gap-4 p-4 rounded-2xl mb-5"
                             style={{
-                              background: "linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%)",
+                              background:
+                                "linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%)",
                               boxShadow: "0 4px 20px rgba(255,107,53,0.25)",
                             }}
                           >
@@ -501,9 +559,12 @@ export function UserGuide({ isOpen, onClose }: UserGuideProps) {
                               ⚡
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-sm font-bold text-white">New here?</h3>
+                              <h3 className="text-sm font-bold text-white">
+                                New here?
+                              </h3>
                               <p className="text-xs text-white/75 mt-0.5">
-                                Start with "Your First Typing Session" — it takes 2 minutes to read.
+                                Start with "Your First Typing Session" — it
+                                takes 2 minutes to read.
                               </p>
                             </div>
                             <button

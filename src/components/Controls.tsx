@@ -1,7 +1,19 @@
 import { useTypingStore } from "@/store/useTypingStore";
-import { Play, Square, RotateCcw, BrainCircuit, Volume2, VolumeX, HelpCircle } from "lucide-react";
+import {
+  Play,
+  Square,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  HelpCircle,
+} from "lucide-react";
+import Image from "next/image";
 import { getRandomWords } from "@/data/dictionary";
-import { generateAdaptiveText, generateCurriculumText, CURRICULUM_STAGES } from "@/lib/adaptiveEngine";
+import {
+  generateAdaptiveText,
+  generateCurriculumText,
+  CURRICULUM_STAGES,
+} from "@/lib/adaptiveEngine";
 import { useState, useRef } from "react";
 import { HintModal } from "./HintModal";
 import clsx from "clsx";
@@ -22,7 +34,9 @@ function PillGroup<T extends string>({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">{label}</span>
+      <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
+        {label}
+      </span>
       <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-white/8 bg-gray-100 dark:bg-white/5">
         {options.map((opt) => (
           <button
@@ -124,7 +138,13 @@ export function Controls() {
 
   const handleStart = () => {
     const state = useTypingStore.getState();
-    if (!state.hasPlayedIntro && !state.isActive && !state.isFinished && state.targetText === "swift type teaches you touch typing happy learning click enter to start") {
+    if (
+      !state.hasPlayedIntro &&
+      !state.isActive &&
+      !state.isFinished &&
+      state.targetText ===
+        "swift type teaches you touch typing happy learning click enter to start"
+    ) {
       state.setConfig({ mode: "timed", duration: 60, hasPlayedIntro: true });
       startSession(state.targetText);
       return;
@@ -132,7 +152,8 @@ export function Controls() {
 
     let count = 30;
     if (mode === "timed") {
-      const baseWpm = level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
+      const baseWpm =
+        level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
       count = Math.ceil((baseWpm * duration) / 60);
     } else {
       count = wordCount;
@@ -166,7 +187,6 @@ export function Controls() {
 
   return (
     <div className="control-card flex items-stretch mb-3 divide-x divide-gray-200 dark:divide-white/8">
-
       {/* ── Card 1 (2): Action Buttons ─────────────────────────────────── */}
       <div className="flex items-center gap-1.5 px-3 py-2 shrink-0">
         <button
@@ -224,7 +244,7 @@ export function Controls() {
             disabled={isActive}
           />
         )}
-        
+
         {mode === "timed" && (
           <PillGroup
             label="Duration"
@@ -259,7 +279,7 @@ export function Controls() {
           title="Adaptive AI — drills your weak keys"
           activeClass="bg-brand-orange/10 text-brand-orange border-brand-orange/25"
         >
-          <BrainCircuit size={13} />
+          <Image src="/swift-ai-icon.png" alt="Swift AI" width={13} height={13} className="rounded-sm" />
         </IconBtn>
 
         <IconBtn

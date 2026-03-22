@@ -4,8 +4,18 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 export function LiveStats() {
-  const { isActive, isFinished, timeLeft, tick, keystrokes, mistakes, startTime, duration, mode, savedSessions } =
-    useTypingStore();
+  const {
+    isActive,
+    isFinished,
+    timeLeft,
+    tick,
+    keystrokes,
+    mistakes,
+    startTime,
+    duration,
+    mode,
+    savedSessions,
+  } = useTypingStore();
 
   const prevSession = savedSessions[0];
   const prevAccuracy = prevSession?.accuracy || 0;
@@ -20,17 +30,26 @@ export function LiveStats() {
 
   const timeElapsedMin = startTime ? (Date.now() - startTime) / 1000 / 60 : 0;
   const rawWPM = timeElapsedMin > 0 ? keystrokes / 5 / timeElapsedMin : 0;
-  const netWPM = timeElapsedMin > 0 ? Math.max(0, Math.round(((keystrokes - mistakes) / 5) / timeElapsedMin)) : 0;
-  const accuracy = keystrokes > 0 ? Math.round(((keystrokes - mistakes) / keystrokes) * 100) : 0;
+  const netWPM =
+    timeElapsedMin > 0
+      ? Math.max(0, Math.round((keystrokes - mistakes) / 5 / timeElapsedMin))
+      : 0;
+  const accuracy =
+    keystrokes > 0
+      ? Math.round(((keystrokes - mistakes) / keystrokes) * 100)
+      : 0;
 
   const formatTime = (s: number) =>
-    `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
+    `${Math.floor(s / 60)
+      .toString()
+      .padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
-  const progress = mode === "timed" ? ((duration - timeLeft) / duration) * 100 : 0;
+  const progress =
+    mode === "timed" ? ((duration - timeLeft) / duration) * 100 : 0;
   const isLastTen = mode === "timed" && timeLeft <= 10 && isActive;
 
   return (
-    <div className="mb-2">
+    <div className="mb-4 mt-2 shrink-0">
       {/* Timed progress bar */}
       {mode === "timed" && (
         <div className="w-full h-[2px] bg-gray-100 dark:bg-white/8 rounded-full overflow-hidden mb-2">
@@ -59,7 +78,7 @@ export function LiveStats() {
           },
           {
             label: "WPM",
-            value: (isActive || isFinished) ? String(netWPM) : "—",
+            value: isActive || isFinished ? String(netWPM) : "—",
             highlight: false,
             orange: true,
             mono: true,
@@ -69,10 +88,21 @@ export function LiveStats() {
             label: "ACCURACY",
             value: (
               <span className="flex items-center justify-center gap-1">
-                {(isActive || isFinished) ? `${accuracy}%` : "—"}
+                {isActive || isFinished ? `${accuracy}%` : "—"}
                 {(isActive || isFinished) && prevSession && (
-                  <span className={accuracy >= prevAccuracy ? "text-green-500" : "text-red-500"} title={`Previous: ${prevAccuracy}%`}>
-                    {accuracy >= prevAccuracy ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                  <span
+                    className={
+                      accuracy >= prevAccuracy
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }
+                    title={`Previous: ${prevAccuracy}%`}
+                  >
+                    {accuracy >= prevAccuracy ? (
+                      <ArrowUpRight size={14} />
+                    ) : (
+                      <ArrowDownRight size={14} />
+                    )}
                   </span>
                 )}
               </span>
@@ -83,7 +113,7 @@ export function LiveStats() {
           },
           {
             label: "ERRORS",
-            value: (isActive || isFinished) ? String(mistakes) : "—",
+            value: isActive || isFinished ? String(mistakes) : "—",
             highlight: false,
             red: true,
             mono: true,
@@ -102,7 +132,9 @@ export function LiveStats() {
                 orange ? "text-brand-orange" : "",
                 red ? "text-red-500" : "",
                 highlight && !orange && !red ? "text-red-500" : "",
-                !orange && !red && !highlight ? "text-gray-800 dark:text-gray-100" : "",
+                !orange && !red && !highlight
+                  ? "text-gray-800 dark:text-gray-100"
+                  : "",
               ]
                 .filter(Boolean)
                 .join(" ")}

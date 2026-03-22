@@ -1,9 +1,44 @@
 "use client";
 
 import { useTypingStore } from "@/store/useTypingStore";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef, memo, forwardRef } from "react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
+
+const CharSpan = memo(
+  forwardRef<
+    HTMLSpanElement,
+    { char: string; typed: string | undefined; isCaret: boolean }
+  >(({ char, typed, isCaret }, ref) => {
+    let colorClass = "text-gray-600 dark:text-gray-400"; // untyped
+    let bgClass = "";
+
+    if (typed != null) {
+      if (typed === char) {
+        colorClass = "text-brand-orange";
+      } else {
+        colorClass = "text-red-600 dark:text-red-500 underline decoration-red-600 dark:decoration-red-500 underline-offset-4";
+        if (char === " ") {
+          bgClass = "bg-red-500/20 rounded-[2px]";
+        }
+      }
+    }
+
+    return (
+      <span ref={ref} className={clsx("relative inline-block", colorClass, bgClass)}>
+        {isCaret && (
+          <motion.span
+            className="absolute left-[-1px] top-[10%] h-[82%] w-[2px] bg-brand-orange rounded-full block"
+            animate={{ opacity: [1, 0, 1] }}
+            transition={{ repeat: Infinity, duration: 0.85 }}
+          />
+        )}
+        {char === " " ? "\u00A0" : char}
+      </span>
+    );
+  })
+);
+CharSpan.displayName = "CharSpan";
 
 export function TypingDisplay() {
   const {
@@ -77,32 +112,16 @@ export function TypingDisplay() {
       >
         {chars.map((char, i) => {
           const typed = typedText[i];
-          let colorClass = "text-gray-600 dark:text-gray-400"; // untyped — strong obsidian
-
-          if (typed != null) {
-            colorClass =
-              typed === char
-                ? "text-brand-orange"
-                : "text-red-600 dark:text-red-500 underline decoration-red-600 dark:decoration-red-500 underline-offset-4";
-          }
-
           const isCaret = i === typedText.length && isActive;
 
           return (
-            <span
+            <CharSpan
               key={i}
               ref={isCaret ? activeCharRef : null}
-              className={clsx("relative inline-block", colorClass)}
-            >
-              {isCaret && (
-                <motion.span
-                  className="absolute left-[-1px] top-[10%] h-[82%] w-[2px] bg-brand-orange rounded-full block"
-                  animate={{ opacity: [1, 0, 1] }}
-                  transition={{ repeat: Infinity, duration: 0.85 }}
-                />
-              )}
-              {char === " " ? "\u00A0" : char}
-            </span>
+              char={char}
+              typed={typed}
+              isCaret={isCaret}
+            />
           );
         })}
 
@@ -115,12 +134,6 @@ export function TypingDisplay() {
           />
         )}
       </div>
-
-      {/* Idle state — minimal, no overlays */}
-      {!isActive && !isFinished && typedText.length === 0 && targetText.length > 0 && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        </div>
-      )}
     </div>
   );
 }

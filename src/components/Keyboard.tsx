@@ -8,21 +8,21 @@ import clsx from "clsx";
 
 // ─── FINGER COLORS (keybr.com palette — lighter pastels) ─────────────────────
 const FINGER_COLOR: Record<string, { bg: string; shadow: string }> = {
-  pinky:  { bg: "#c8e6c9", shadow: "#9eca9f" },  // green
-  ring:   { bg: "#fff9c4", shadow: "#d4c97c" },  // yellow
-  middle: { bg: "#ffe0b2", shadow: "#d4a265" },  // orange-peach
-  index:  { bg: "#ffcdd2", shadow: "#d49499" },  // red-pink
-  thumb:  { bg: "#f3e5f5", shadow: "#c8a7d0" },  // lavender
-  action: { bg: "#e8e4de", shadow: "#b5b0a8" },  // warm grey
+  pinky: { bg: "#c8e6c9", shadow: "#9eca9f" }, // green
+  ring: { bg: "#fff9c4", shadow: "#d4c97c" }, // yellow
+  middle: { bg: "#ffe0b2", shadow: "#d4a265" }, // orange-peach
+  index: { bg: "#ffcdd2", shadow: "#d49499" }, // red-pink
+  thumb: { bg: "#f3e5f5", shadow: "#c8a7d0" }, // lavender
+  action: { bg: "#e8e4de", shadow: "#b5b0a8" }, // warm grey
 };
 
 // Dark mode equivalents
 const FINGER_COLOR_DARK: Record<string, { bg: string; shadow: string }> = {
-  pinky:  { bg: "#1e3a20", shadow: "#0d1f0f" },
-  ring:   { bg: "#2e2a00", shadow: "#1a1700" },
+  pinky: { bg: "#1e3a20", shadow: "#0d1f0f" },
+  ring: { bg: "#2e2a00", shadow: "#1a1700" },
   middle: { bg: "#2e1a00", shadow: "#1a0f00" },
-  index:  { bg: "#2e1012", shadow: "#1a0608" },
-  thumb:  { bg: "#1e0f2a", shadow: "#0d060f" },
+  index: { bg: "#2e1012", shadow: "#1a0608" },
+  thumb: { bg: "#1e0f2a", shadow: "#0d060f" },
   action: { bg: "#2a2825", shadow: "#151412" },
 };
 
@@ -60,10 +60,14 @@ export function Keyboard() {
 
   // Detect dark mode
   useEffect(() => {
-    const check = () => setIsDark(document.documentElement.classList.contains("dark"));
+    const check = () =>
+      setIsDark(document.documentElement.classList.contains("dark"));
     check();
     const obs = new MutationObserver(check);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
     return () => obs.disconnect();
   }, []);
 
@@ -73,11 +77,18 @@ export function Keyboard() {
       if (e.code === "CapsLock") setCapsLock(e.getModifierState("CapsLock"));
     };
     const up = (e: KeyboardEvent) => {
-      setActiveKeys((p) => { const n = new Set(p); n.delete(e.code); return n; });
+      setActiveKeys((p) => {
+        const n = new Set(p);
+        n.delete(e.code);
+        return n;
+      });
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
   }, []);
 
   const colors = isDark ? FINGER_COLOR_DARK : FINGER_COLOR;
@@ -86,7 +97,9 @@ export function Keyboard() {
     <div className="w-full">
       {/* Mode Switcher */}
       <div className="flex items-center justify-between mb-2 px-0.5">
-        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Keyboard Layout</span>
+        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+          Keyboard Layout
+        </span>
         <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-white/8 bg-gray-100 dark:bg-white/5">
           {(["windows", "mac"] as const).map((m) => (
             <button
@@ -104,8 +117,6 @@ export function Keyboard() {
           ))}
         </div>
       </div>
-
-      {/* Finger position guide removed for now per user request */}
 
       {/* Keyboard body */}
       <div
@@ -145,7 +156,9 @@ export function Keyboard() {
                       backgroundColor: isPressed
                         ? "#ff6b35"
                         : isNextKey
-                          ? isDark ? "rgba(255,107,53,0.25)" : "rgba(255,107,53,0.15)"
+                          ? isDark
+                            ? "rgba(255,107,53,0.25)"
+                            : "rgba(255,107,53,0.15)"
                           : bg,
                       // 3D shadow — bottom edge only, like physical keycap
                       boxShadow: isPressed
@@ -154,9 +167,17 @@ export function Keyboard() {
                           ? `0 2px 0 rgba(255,107,53,0.5), 0 0 0 1.5px rgba(255,107,53,0.6)`
                           : `0 2px 0 ${shadow}`,
                       // Pressed = translate down
-                      transform: isPressed ? "translateY(2px)" : "translateY(0)",
+                      transform: isPressed
+                        ? "translateY(2px)"
+                        : "translateY(0)",
                       // Color on pressed / next
-                      color: isPressed ? "#fff" : isNextKey ? "#ff6b35" : isDark ? "#d1d5db" : "#374151",
+                      color: isPressed
+                        ? "#fff"
+                        : isNextKey
+                          ? "#ff6b35"
+                          : isDark
+                            ? "#d1d5db"
+                            : "#374151",
                     }}
                     className="flex flex-col items-center justify-center min-h-[46px] rounded-[7px] text-[11px] font-semibold transition-all duration-[60ms] select-none cursor-default overflow-hidden"
                   >
@@ -165,7 +186,12 @@ export function Keyboard() {
                       <div className="flex flex-col items-center w-full px-1">
                         <span
                           className="self-start text-[8px] leading-none opacity-50 font-medium"
-                          style={{ color: isNextKey && key.shiftChar === nextChar ? "#ff6b35" : undefined }}
+                          style={{
+                            color:
+                              isNextKey && key.shiftChar === nextChar
+                                ? "#ff6b35"
+                                : undefined,
+                          }}
                         >
                           {key.shiftChar}
                         </span>
@@ -174,7 +200,14 @@ export function Keyboard() {
                         </span>
                       </div>
                     ) : (
-                      <span className={clsx("leading-none", key.finger === "action" ? "text-[10px]" : "text-[12px] font-bold")}>
+                      <span
+                        className={clsx(
+                          "leading-none",
+                          key.finger === "action"
+                            ? "text-[10px]"
+                            : "text-[12px] font-bold",
+                        )}
+                      >
                         {mainLabel === " " ? "" : mainLabel}
                       </span>
                     )}

@@ -1,5 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  GoalPeriodType,
+  GoalRecord,
+  GoalSnapshot,
+  GoalStreak,
+  applySessionToGoalSnapshot,
+  createEmptyGoalSnapshot,
+} from "@/lib/goals";
+import {
+  RewardRecord,
+  createRewardRecord,
+  evaluateRewardUnlocks,
+} from "@/lib/rewards";
 
 export interface WpmDataPoint {
   second: number;
@@ -31,6 +44,83 @@ export interface NGramStats {
   totalTimeMs: number;
 }
 
+function getUpdatedGoalState(
+  state: Pick<TypeState, "dailyGoal" | "weeklyGoal" | "goalStreak">,
+  session: SessionHistory,
+) {
+  const snapshot = applySessionToGoalSnapshot(
+    {
+      dailyGoal: state.dailyGoal,
+      weeklyGoal: state.weeklyGoal,
+      streak: state.goalStreak,
+    },
+    session,
+  );
+
+  return {
+    dailyGoal: snapshot.dailyGoal,
+    weeklyGoal: snapshot.weeklyGoal,
+    goalStreak: snapshot.streak,
+  };
+}
+
+function getVisibleGoal(goal: GoalRecord | null, now = Date.now()) {
+  if (!goal) {
+    return null;
+  }
+
+  if (now > goal.endsAt) {
+    return null;
+  }
+
+  return goal;
+}
+
+function getNewlyCompletedGoals(
+  previousState: Pick<TypeState, "dailyGoal" | "weeklyGoal">,
+  nextState: Pick<TypeState, "dailyGoal" | "weeklyGoal">,
+): GoalRecord[] {
+  const completedGoals: GoalRecord[] = [];
+
+  const evaluateTransition = (
+    previousGoal: GoalRecord | null,
+    nextGoal: GoalRecord | null,
+  ) => {
+    if (!previousGoal || !nextGoal) {
+      return;
+    }
+
+    if (
+      previousGoal.id === nextGoal.id &&
+      previousGoal.status !== "completed" &&
+      nextGoal.status === "completed"
+    ) {
+      completedGoals.push(nextGoal);
+    }
+  };
+
+  evaluateTransition(previousState.dailyGoal, nextState.dailyGoal);
+  evaluateTransition(previousState.weeklyGoal, nextState.weeklyGoal);
+
+  return completedGoals;
+}
+
+function getLocalRewardEvents(
+  state: Pick<TypeState, "dailyGoal" | "weeklyGoal" | "goalStreak" | "rewards">,
+  session: SessionHistory,
+  nextGoalState: Pick<TypeState, "dailyGoal" | "weeklyGoal" | "goalStreak">,
+): RewardRecord[] {
+  const completedGoals = getNewlyCompletedGoals(state, nextGoalState);
+  const existingKeys = new Set(state.rewards.map((reward) => reward.rewardKey));
+  const unlocks = evaluateRewardUnlocks(existingKeys, {
+    completedGoals,
+    streak: nextGoalState.goalStreak,
+    session,
+  });
+
+  return unlocks.map((unlock) => createRewardRecord(unlock, session.date));
+}
+
 interface TypeState {
   // Config
   level: string;
@@ -60,10 +150,25 @@ interface TypeState {
 
   // Global History (Persisted)
   savedSessions: SessionHistory[];
+  dailyGoal: GoalRecord | null;
+  weeklyGoal: GoalRecord | null;
+  goalStreak: GoalStreak;
+  rewards: RewardRecord[];
+  rewardQueue: RewardRecord[];
 
   // Actions
   setConfig: (
-    config: Partial<Pick<TypeState, "level" | "duration" | "wordCount" | "curriculumStage" | "mode" | "hasPlayedIntro">>,
+    config: Partial<
+      Pick<
+        TypeState,
+        | "level"
+        | "duration"
+        | "wordCount"
+        | "curriculumStage"
+        | "mode"
+        | "hasPlayedIntro"
+      >
+    >,
   ) => void;
   startSession: (text: string) => void;
   resetSession: () => void;
@@ -72,6 +177,13 @@ interface TypeState {
   tick: () => void;
   endSession: () => void;
   clearHistory: () => void;
+  setGoalSnapshot: (snapshot: GoalSnapshot) => void;
+  setLocalGoal: (goal: GoalRecord) => void;
+  cancelLocalGoal: (periodType: GoalPeriodType) => void;
+  refreshGoalStatuses: () => void;
+  addRewardEvents: (rewards: RewardRecord[]) => void;
+  clearRewardQueue: () => void;
+  hydrateRewardHistory: (rewards: RewardRecord[]) => void;
 }
 
 export const useTypingStore = create<TypeState>()(
@@ -87,7 +199,8 @@ export const useTypingStore = create<TypeState>()(
       isActive: false,
       isFinished: false,
       timeLeft: 60,
-      targetText: "swift type teaches you touch typing happy learning click enter to start",
+      targetText:
+        "swift type teaches you touch typing happy learning click enter to start",
       typedText: "",
       wordIndex: 0,
       charIndex: 0,
@@ -101,9 +214,24 @@ export const useTypingStore = create<TypeState>()(
       nGramStats: {},
 
       savedSessions: [],
+      dailyGoal: null,
+      weeklyGoal: null,
+      goalStreak: createEmptyGoalSnapshot().streak,
+      rewards: [],
+      rewardQueue: [],
 
       setConfig: (
-        config: Partial<Pick<TypeState, "level" | "duration" | "wordCount" | "curriculumStage" | "mode" | "hasPlayedIntro">>,
+        config: Partial<
+          Pick<
+            TypeState,
+            | "level"
+            | "duration"
+            | "wordCount"
+            | "curriculumStage"
+            | "mode"
+            | "hasPlayedIntro"
+          >
+        >,
       ) => set((state: TypeState) => ({ ...state, ...config })),
 
       startSession: (text: string) =>
@@ -204,7 +332,14 @@ export const useTypingStore = create<TypeState>()(
                 : 0;
             const netWPM =
               timeElapsedStr > 0
-                ? Math.max(0, Math.round(((updateObj.keystrokes - updateObj.mistakes) / 5) / timeElapsedStr))
+                ? Math.max(
+                    0,
+                    Math.round(
+                      (updateObj.keystrokes - updateObj.mistakes) /
+                        5 /
+                        timeElapsedStr,
+                    ),
+                  )
                 : 0;
             const accuracy =
               updateObj.keystrokes > 0
@@ -226,10 +361,20 @@ export const useTypingStore = create<TypeState>()(
               historyData: state.wpmHistory,
             };
 
+            const nextGoalState = getUpdatedGoalState(state, newSession);
+            const localRewardEvents = getLocalRewardEvents(
+              state,
+              newSession,
+              nextGoalState,
+            );
+
             Object.assign(updateObj, {
               isActive: false,
               isFinished: true,
               savedSessions: [newSession, ...state.savedSessions].slice(0, 200),
+              rewards: [...localRewardEvents, ...state.rewards].slice(0, 120),
+              rewardQueue: [...state.rewardQueue, ...localRewardEvents],
+              ...nextGoalState,
             });
           }
 
@@ -253,7 +398,14 @@ export const useTypingStore = create<TypeState>()(
           const rawWPM =
             timeElapsedStr > 0 ? state.keystrokes / 5 / timeElapsedStr : 0;
           const netWPM =
-            timeElapsedStr > 0 ? Math.max(0, Math.round(((state.keystrokes - state.mistakes) / 5) / timeElapsedStr)) : 0;
+            timeElapsedStr > 0
+              ? Math.max(
+                  0,
+                  Math.round(
+                    (state.keystrokes - state.mistakes) / 5 / timeElapsedStr,
+                  ),
+                )
+              : 0;
 
           const currentElapsedSeconds = Math.floor(
             (now - (state.startTime || now)) / 1000,
@@ -292,12 +444,22 @@ export const useTypingStore = create<TypeState>()(
               historyData: newWpmHistory,
             };
 
+            const nextGoalState = getUpdatedGoalState(state, newSession);
+            const localRewardEvents = getLocalRewardEvents(
+              state,
+              newSession,
+              nextGoalState,
+            );
+
             return {
               timeLeft: 0,
               isActive: false,
               isFinished: true,
               wpmHistory: newWpmHistory,
               savedSessions: [newSession, ...state.savedSessions].slice(0, 200), // Keep last 200
+              rewards: [...localRewardEvents, ...state.rewards].slice(0, 120),
+              rewardQueue: [...state.rewardQueue, ...localRewardEvents],
+              ...nextGoalState,
             };
           }
 
@@ -314,7 +476,14 @@ export const useTypingStore = create<TypeState>()(
           const rawWPM =
             timeElapsedStr > 0 ? state.keystrokes / 5 / timeElapsedStr : 0;
           const netWPM =
-            timeElapsedStr > 0 ? Math.max(0, Math.round(((state.keystrokes - state.mistakes) / 5) / timeElapsedStr)) : 0;
+            timeElapsedStr > 0
+              ? Math.max(
+                  0,
+                  Math.round(
+                    (state.keystrokes - state.mistakes) / 5 / timeElapsedStr,
+                  ),
+                )
+              : 0;
           const accuracy =
             state.keystrokes > 0
               ? Math.round(
@@ -334,14 +503,88 @@ export const useTypingStore = create<TypeState>()(
             historyData: state.wpmHistory,
           };
 
+          const nextGoalState = getUpdatedGoalState(state, newSession);
+          const localRewardEvents = getLocalRewardEvents(
+            state,
+            newSession,
+            nextGoalState,
+          );
+
           return {
             isActive: false,
             isFinished: true,
             savedSessions: [newSession, ...state.savedSessions].slice(0, 200),
+            rewards: [...localRewardEvents, ...state.rewards].slice(0, 120),
+            rewardQueue: [...state.rewardQueue, ...localRewardEvents],
+            ...nextGoalState,
           };
         }),
 
       clearHistory: () => set({ savedSessions: [] }),
+
+      setGoalSnapshot: (snapshot: GoalSnapshot) =>
+        set({
+          dailyGoal: snapshot.dailyGoal,
+          weeklyGoal: snapshot.weeklyGoal,
+          goalStreak: snapshot.streak,
+        }),
+
+      setLocalGoal: (goal: GoalRecord) =>
+        set((state: TypeState) => ({
+          dailyGoal: goal.periodType === "daily" ? goal : state.dailyGoal,
+          weeklyGoal: goal.periodType === "weekly" ? goal : state.weeklyGoal,
+        })),
+
+      cancelLocalGoal: (periodType: GoalPeriodType) =>
+        set((state: TypeState) => ({
+          dailyGoal: periodType === "daily" ? null : state.dailyGoal,
+          weeklyGoal: periodType === "weekly" ? null : state.weeklyGoal,
+        })),
+
+      refreshGoalStatuses: () =>
+        set((state: TypeState) => ({
+          dailyGoal: getVisibleGoal(state.dailyGoal),
+          weeklyGoal: getVisibleGoal(state.weeklyGoal),
+        })),
+
+      addRewardEvents: (events: RewardRecord[]) =>
+        set((state: TypeState) => {
+          if (events.length === 0) {
+            return state;
+          }
+
+          const rewardMap = new Map(
+            state.rewards.map((reward) => [reward.rewardKey, reward]),
+          );
+          const queueKeys = new Set(
+            state.rewardQueue.map((reward) => reward.rewardKey),
+          );
+          const nextQueue = [...state.rewardQueue];
+          for (const event of events) {
+            rewardMap.set(event.rewardKey, event);
+            if (!queueKeys.has(event.rewardKey)) {
+              nextQueue.push(event);
+              queueKeys.add(event.rewardKey);
+            }
+          }
+
+          const mergedRewards = Array.from(rewardMap.values())
+            .sort((left, right) => right.earnedAt - left.earnedAt)
+            .slice(0, 120);
+
+          return {
+            rewards: mergedRewards,
+            rewardQueue: nextQueue,
+          };
+        }),
+
+      clearRewardQueue: () => set({ rewardQueue: [] }),
+
+      hydrateRewardHistory: (rewards: RewardRecord[]) =>
+        set((state: TypeState) => ({
+          rewards,
+          rewardQueue: state.rewardQueue,
+        })),
     }),
     {
       name: "swiftyper-storage",
@@ -351,6 +594,10 @@ export const useTypingStore = create<TypeState>()(
           perKeyStats: state.perKeyStats,
           nGramStats: state.nGramStats || {},
           hasPlayedIntro: state.hasPlayedIntro,
+          dailyGoal: state.dailyGoal,
+          weeklyGoal: state.weeklyGoal,
+          goalStreak: state.goalStreak,
+          rewards: state.rewards,
         }) as unknown as TypeState,
     },
   ),
