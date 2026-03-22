@@ -20,13 +20,53 @@ function chatKey(userId: string, chatId: string) {
   return `chats/${userId}/${chatId}.json`;
 }
 
+function normalizeChatMessages(payload: unknown) {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  return payload.map((message, index) => {
+    if (!message || typeof message !== "object") {
+      return {
+        id: `legacy-${index}`,
+        role: "assistant",
+        parts: [{ type: "text", text: String(message ?? "") }],
+      };
+    }
+
+    const candidate = message as {
+      id?: string;
+      role?: string;
+      parts?: unknown;
+      content?: unknown;
+    };
+
+    if (Array.isArray(candidate.parts)) {
+      return {
+        ...candidate,
+        id: candidate.id ?? `legacy-${index}`,
+        role: candidate.role === "user" ? "user" : "assistant",
+      };
+    }
+
+    const text = typeof candidate.content === "string" ? candidate.content : "";
+
+    return {
+      ...candidate,
+      id: candidate.id ?? `legacy-${index}`,
+      role: candidate.role === "user" ? "user" : "assistant",
+      parts: [{ type: "text", text }],
+    };
+  });
+}
+
 export async function getChatMessages(userId: string, chatId: string) {
   try {
     const res = await r2.send(
       new GetObjectCommand({ Bucket: BUCKET, Key: chatKey(userId, chatId) }),
     );
     const body = await res.Body?.transformToString();
-    return body ? JSON.parse(body) : [];
+    return body ? normalizeChatMessages(JSON.parse(body)) : [];
   } catch (err: unknown) {
     if (err instanceof Error && err.name === "NoSuchKey") return [];
     throw err;

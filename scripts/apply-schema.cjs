@@ -1,8 +1,8 @@
-const { readFileSync } = require('fs');
-const { Client } = require('pg');
+const { readFileSync } = require("fs");
+const { Client } = require("pg");
 
 function loadEnv(filePath) {
-  const lines = readFileSync(filePath, 'utf8').split(/\r?\n/);
+  const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
   for (const line of lines) {
     const match = line.match(/^\s*([^#=]+?)\s*=\s*(.*)\s*$/);
     if (!match) continue;
@@ -18,7 +18,7 @@ function loadEnv(filePath) {
   }
 }
 
-loadEnv('.env.local');
+loadEnv(".env.local");
 
 const statements = [
   `
@@ -101,7 +101,7 @@ const statements = [
 async function main() {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL.includes('sslmode=')
+    ssl: process.env.DATABASE_URL.includes("sslmode=")
       ? { rejectUnauthorized: false }
       : undefined,
   });
@@ -111,14 +111,14 @@ async function main() {
     for (const statement of statements) {
       await client.query(statement);
     }
-    console.log('SCHEMA_APPLY_OK');
+    console.log("SCHEMA_APPLY_OK");
   } finally {
     await client.end();
   }
 }
 
 main().catch((error) => {
-  console.error('SCHEMA_APPLY_FAILED');
+  console.error("SCHEMA_APPLY_FAILED");
   console.error(error.stack || error.message || String(error));
   process.exit(1);
 });

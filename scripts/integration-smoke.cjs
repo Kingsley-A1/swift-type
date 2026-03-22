@@ -1,17 +1,17 @@
-const { readFileSync } = require('fs');
-const { generateText } = require('ai');
-const { google } = require('@ai-sdk/google');
-const { Client } = require('pg');
+const { readFileSync } = require("fs");
+const { generateText } = require("ai");
+const { google } = require("@ai-sdk/google");
+const { Client } = require("pg");
 const {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
-} = require('@aws-sdk/client-s3');
-const { appendFileSync, writeFileSync } = require('fs');
+} = require("@aws-sdk/client-s3");
+const { appendFileSync, writeFileSync } = require("fs");
 
 function loadEnv(filePath) {
-  const lines = readFileSync(filePath, 'utf8').split(/\r?\n/);
+  const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
   for (const line of lines) {
     const match = line.match(/^\s*([^#=]+?)\s*=\s*(.*)\s*$/);
     if (!match) continue;
@@ -30,27 +30,27 @@ function loadEnv(filePath) {
 function assertEnv(keys) {
   const missing = keys.filter((key) => !process.env[key]);
   if (missing.length > 0) {
-    throw new Error(`Missing required env vars: ${missing.join(', ')}`);
+    throw new Error(`Missing required env vars: ${missing.join(", ")}`);
   }
 }
 
 function logLine(message) {
-  appendFileSync('scripts/integration-smoke.status.log', `${message}\n`);
+  appendFileSync("scripts/integration-smoke.status.log", `${message}\n`);
 }
 async function checkDatabase() {
   const expectedTables = [
-    'accounts',
-    'chat_sessions',
-    'typing_sessions',
-    'user_preferences',
-    'user_stats',
-    'users',
-    'verification_tokens',
+    "accounts",
+    "chat_sessions",
+    "typing_sessions",
+    "user_preferences",
+    "user_stats",
+    "users",
+    "verification_tokens",
   ];
 
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL.includes('sslmode=')
+    ssl: process.env.DATABASE_URL.includes("sslmode=")
       ? { rejectUnauthorized: false }
       : undefined,
   });
@@ -76,12 +76,12 @@ async function checkDatabase() {
 
     if (missingTables.length > 0) {
       throw new Error(
-        `Database missing expected tables: ${missingTables.join(', ')}`,
+        `Database missing expected tables: ${missingTables.join(", ")}`,
       );
     }
 
-    console.log('DB OK:', foundTables.join(', '));
-    logLine(`DB OK: ${foundTables.join(', ')}`);
+    console.log("DB OK:", foundTables.join(", "));
+    logLine(`DB OK: ${foundTables.join(", ")}`);
   } finally {
     await client.end();
   }
@@ -89,8 +89,8 @@ async function checkDatabase() {
 
 async function checkGemini() {
   const result = await generateText({
-    model: google('gemini-2.5-flash'),
-    prompt: 'Reply with exactly: SWIFT_AI_OK',
+    model: google("gemini-2.5-flash"),
+    prompt: "Reply with exactly: SWIFT_AI_OK",
     maxOutputTokens: 10,
     providerOptions: {
       google: {
@@ -99,17 +99,19 @@ async function checkGemini() {
     },
   });
 
-  if (!result.text.trim().includes('SWIFT_AI_OK')) {
-    throw new Error(`Unexpected Gemini response: ${JSON.stringify(result.text)}`);
+  if (!result.text.trim().includes("SWIFT_AI_OK")) {
+    throw new Error(
+      `Unexpected Gemini response: ${JSON.stringify(result.text)}`,
+    );
   }
 
-  console.log('AI OK:', result.text.trim());
+  console.log("AI OK:", result.text.trim());
   logLine(`AI OK: ${result.text.trim()}`);
 }
 
 async function checkR2() {
   const client = new S3Client({
-    region: 'auto',
+    region: "auto",
     endpoint: process.env.R2_ENDPOINT,
     credentials: {
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
@@ -119,14 +121,17 @@ async function checkR2() {
 
   const bucket = process.env.R2_BUCKET_NAME;
   const key = `smoke-tests/${Date.now()}.json`;
-  const payload = JSON.stringify({ ok: true, createdAt: new Date().toISOString() });
+  const payload = JSON.stringify({
+    ok: true,
+    createdAt: new Date().toISOString(),
+  });
 
   await client.send(
     new PutObjectCommand({
       Bucket: bucket,
       Key: key,
       Body: payload,
-      ContentType: 'application/json',
+      ContentType: "application/json",
     }),
   );
 
@@ -139,7 +144,7 @@ async function checkR2() {
 
   const body = await object.Body.transformToString();
   if (body !== payload) {
-    throw new Error('R2 round-trip payload mismatch');
+    throw new Error("R2 round-trip payload mismatch");
   }
 
   await client.send(
@@ -149,33 +154,39 @@ async function checkR2() {
     }),
   );
 
-  console.log('R2 OK:', key);
+  console.log("R2 OK:", key);
   logLine(`R2 OK: ${key}`);
 }
 
 async function main() {
-  writeFileSync('scripts/integration-smoke.status.log', 'STARTED\n');
-  loadEnv('.env.local');
+  writeFileSync("scripts/integration-smoke.status.log", "STARTED\n");
+  loadEnv(".env.local");
   assertEnv([
-    'DATABASE_URL',
-    'GOOGLE_GENERATIVE_AI_API_KEY',
-    'R2_ENDPOINT',
-    'R2_ACCESS_KEY_ID',
-    'R2_SECRET_ACCESS_KEY',
-    'R2_BUCKET_NAME',
+    "DATABASE_URL",
+    "GOOGLE_GENERATIVE_AI_API_KEY",
+    "R2_ENDPOINT",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_BUCKET_NAME",
   ]);
 
   await checkDatabase();
   await checkGemini();
   await checkR2();
 
-  console.log('SMOKE TESTS PASSED');
-  logLine('SMOKE TESTS PASSED');
+  console.log("SMOKE TESTS PASSED");
+  logLine("SMOKE TESTS PASSED");
 }
 
 main().catch((error) => {
-  writeFileSync('scripts/integration-smoke.status.log', `FAILED\n${error instanceof Error ? error.stack || error.message : String(error)}\n`, { flag: 'a' });
-  console.error('SMOKE TESTS FAILED');
-  console.error(error instanceof Error ? error.stack || error.message : String(error));
+  writeFileSync(
+    "scripts/integration-smoke.status.log",
+    `FAILED\n${error instanceof Error ? error.stack || error.message : String(error)}\n`,
+    { flag: "a" },
+  );
+  console.error("SMOKE TESTS FAILED");
+  console.error(
+    error instanceof Error ? error.stack || error.message : String(error),
+  );
   process.exit(1);
 });

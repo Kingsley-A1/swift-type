@@ -1,10 +1,10 @@
-const { readFileSync, writeFileSync } = require('fs');
-const { spawnSync } = require('child_process');
-const { join } = require('path');
-const { Client } = require('pg');
+const { readFileSync, writeFileSync } = require("fs");
+const { spawnSync } = require("child_process");
+const { join } = require("path");
+const { Client } = require("pg");
 
 function loadEnv(filePath) {
-  const lines = readFileSync(filePath, 'utf8').split(/\r?\n/);
+  const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
   for (const line of lines) {
     const match = line.match(/^\s*([^#=]+?)\s*=\s*(.*)\s*$/);
     if (!match) continue;
@@ -20,13 +20,13 @@ function loadEnv(filePath) {
   }
 }
 
-loadEnv('.env.local');
-process.env.NODE_PATH = join(process.cwd(), 'node_modules');
+loadEnv(".env.local");
+process.env.NODE_PATH = join(process.cwd(), "node_modules");
 
 async function applySchemaFallback() {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL.includes('sslmode=')
+    ssl: process.env.DATABASE_URL.includes("sslmode=")
       ? { rejectUnauthorized: false }
       : undefined,
   });
@@ -109,9 +109,19 @@ async function applySchemaFallback() {
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         title TEXT NOT NULL DEFAULT 'New Chat',
         is_pinned BOOLEAN DEFAULT false,
+        feedback JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMP DEFAULT now(),
         updated_at TIMESTAMP DEFAULT now()
       )
+    `,
+    `
+      ALTER TABLE chat_sessions
+      ADD COLUMN IF NOT EXISTS feedback JSONB DEFAULT '{}'::jsonb
+    `,
+    `
+      UPDATE chat_sessions
+      SET feedback = '{}'::jsonb
+      WHERE feedback IS NULL
     `,
   ];
 
@@ -125,25 +135,26 @@ async function applySchemaFallback() {
   }
 }
 
-const drizzleBinary = process.platform === 'win32'
-  ? join('node_modules', '.bin', 'drizzle-kit.cmd')
-  : join('node_modules', '.bin', 'drizzle-kit');
+const drizzleBinary =
+  process.platform === "win32"
+    ? join("node_modules", ".bin", "drizzle-kit.cmd")
+    : join("node_modules", ".bin", "drizzle-kit");
 
-const result = spawnSync(drizzleBinary, ['push'], {
-  encoding: 'utf8',
+const result = spawnSync(drizzleBinary, ["push"], {
+  encoding: "utf8",
   shell: true,
   env: process.env,
 });
 
 const log = [
-  `exitCode=${result.status ?? 'null'}`,
-  'stdout:',
-  result.stdout || '',
-  'stderr:',
-  result.stderr || '',
-].join('\n');
+  `exitCode=${result.status ?? "null"}`,
+  "stdout:",
+  result.stdout || "",
+  "stderr:",
+  result.stderr || "",
+].join("\n");
 
-writeFileSync('scripts/drizzle-push.log', log);
+writeFileSync("scripts/drizzle-push.log", log);
 
 if (result.stdout) {
   process.stdout.write(result.stdout);
@@ -160,13 +171,13 @@ if (result.stderr) {
   ) {
     try {
       await applySchemaFallback();
-      const fallbackMessage = '\nFallback schema apply succeeded.\n';
-      writeFileSync('scripts/drizzle-push.log', log + fallbackMessage);
+      const fallbackMessage = "\nFallback schema apply succeeded.\n";
+      writeFileSync("scripts/drizzle-push.log", log + fallbackMessage);
       process.stdout.write(fallbackMessage);
       process.exit(0);
     } catch (error) {
       const fallbackMessage = `\nFallback schema apply failed.\n${error.stack || error.message || String(error)}\n`;
-      writeFileSync('scripts/drizzle-push.log', log + fallbackMessage);
+      writeFileSync("scripts/drizzle-push.log", log + fallbackMessage);
       process.stderr.write(fallbackMessage);
       process.exit(1);
     }

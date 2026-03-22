@@ -1,7 +1,7 @@
-const { readFileSync, writeFileSync } = require('fs');
+const { readFileSync, writeFileSync } = require("fs");
 
 function loadEnv(filePath) {
-  const lines = readFileSync(filePath, 'utf8').split(/\r?\n/);
+  const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
   for (const line of lines) {
     const match = line.match(/^\s*([^#=]+?)\s*=\s*(.*)\s*$/);
     if (!match) continue;
@@ -18,25 +18,27 @@ function loadEnv(filePath) {
 }
 
 async function main() {
-  loadEnv('.env.local');
+  loadEnv(".env.local");
 
   const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!key) {
-    throw new Error('Missing GOOGLE_GENERATIVE_AI_API_KEY');
+    throw new Error("Missing GOOGLE_GENERATIVE_AI_API_KEY");
   }
 
-  const modelsResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+  const modelsResponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`,
+  );
   const modelsJson = await modelsResponse.json();
 
   const generateResponse = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,
     {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [
           {
-            parts: [{ text: 'Reply with exactly: SWIFT_AI_OK' }],
+            parts: [{ text: "Reply with exactly: SWIFT_AI_OK" }],
           },
         ],
       }),
@@ -45,7 +47,7 @@ async function main() {
   const generateJson = await generateResponse.json();
 
   writeFileSync(
-    'scripts/google-probe.log',
+    "scripts/google-probe.log",
     JSON.stringify(
       {
         modelsStatus: modelsResponse.status,
@@ -58,11 +60,14 @@ async function main() {
     ),
   );
 
-  console.log('GOOGLE_PROBE_DONE');
+  console.log("GOOGLE_PROBE_DONE");
 }
 
 main().catch((error) => {
-  writeFileSync('scripts/google-probe.log', String(error.stack || error.message || error));
+  writeFileSync(
+    "scripts/google-probe.log",
+    String(error.stack || error.message || error),
+  );
   console.error(error.stack || error.message || String(error));
   process.exit(1);
 });
