@@ -10,6 +10,9 @@ import {
   Pencil,
   Check,
   X,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -25,26 +28,31 @@ interface SwiftAISidebarProps {
   sessions: ChatSession[];
   activeChatId: string | null;
   isLoading: boolean;
+  loadError: string | null;
   onSelect: (id: string) => void;
   onNewChat: () => void;
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onPin: (id: string, isPinned: boolean) => void;
+  onRetry: () => void;
 }
 
 export function SwiftAISidebar({
   sessions,
   activeChatId,
   isLoading,
+  loadError,
   onSelect,
   onNewChat,
   onDelete,
   onRename,
   onPin,
+  onRetry,
 }: SwiftAISidebarProps) {
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
 
   const pinned = sessions.filter((s) => s.isPinned);
   const recent = sessions.filter((s) => !s.isPinned);
@@ -62,40 +70,56 @@ export function SwiftAISidebar({
     setRenamingId(null);
   };
 
-  return (
-    <div className="w-56 flex-shrink-0 border-r border-gray-100 dark:border-white/6 flex flex-col bg-gray-50/50 dark:bg-white/[0.02]">
-      {/* New chat button */}
-      <div className="p-3">
+  // ─── Collapsed rail (mobile-friendly narrow strip) ───────────────────────
+  if (collapsed) {
+    return (
+      <div className="shrink-0 w-10 border-r border-gray-100 dark:border-white/6 flex flex-col items-center py-3 gap-3 bg-gray-50/50 dark:bg-white/2">
+        <button
+          onClick={() => setCollapsed(false)}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+          title="Expand sidebar"
+        >
+          <ChevronRight size={14} />
+        </button>
         <button
           onClick={onNewChat}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-semibold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/8 hover:border-purple-400/40 hover:text-purple-600 dark:hover:text-purple-400 transition-all"
+          className="p-1.5 rounded-lg text-gray-400 hover:text-brand-orange hover:bg-brand-orange/8 dark:hover:bg-brand-orange/10 transition-colors"
+          title="New chat"
+        >
+          <Plus size={14} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-56 shrink-0 border-r border-gray-100 dark:border-white/6 flex flex-col bg-gray-50/50 dark:bg-white/2">
+      {/* Header row: New chat + Collapse toggle */}
+      <div className="p-3 flex items-center gap-2">
+        <button
+          onClick={onNewChat}
+          className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-semibold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/8 hover:border-brand-orange/40 hover:text-brand-orange dark:hover:text-brand-orange transition-all"
         >
           <Plus size={14} />
           New chat
+        </button>
+        <button
+          onClick={() => setCollapsed(true)}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors shrink-0"
+          title="Collapse sidebar"
+        >
+          <ChevronLeft size={14} />
         </button>
       </div>
 
       {/* Session list */}
       <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-3">
         {isLoading ? (
-          <div className="space-y-2 px-1 pt-1">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-8 rounded-lg bg-gray-100 dark:bg-white/5 animate-pulse"
-              />
-            ))}
-          </div>
+          <SidebarSkeleton />
+        ) : loadError ? (
+          <SidebarError message={loadError} onRetry={onRetry} />
         ) : sessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center pt-12 text-center px-4">
-            <MessageSquare
-              size={20}
-              className="text-gray-300 dark:text-gray-600 mb-2"
-            />
-            <p className="text-[11px] text-gray-400 dark:text-gray-500">
-              No conversations yet
-            </p>
-          </div>
+          <SidebarEmpty onNewChat={onNewChat} />
         ) : (
           <>
             {pinned.length > 0 && (
@@ -160,6 +184,70 @@ export function SwiftAISidebar({
   );
 }
 
+// ─── SIDEBAR SKELETON ────────────────────────────────────────────────────────
+
+function SidebarSkeleton() {
+  return (
+    <div className="space-y-1.5 px-1 pt-1">
+      {[80, 64, 72, 56, 68].map((w, i) => (
+        <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+          <div
+            className="h-3 rounded bg-gray-200 dark:bg-white/8 animate-pulse"
+            style={{ width: `${w}%` }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── SIDEBAR EMPTY ───────────────────────────────────────────────────────────
+
+function SidebarEmpty({ onNewChat }: { onNewChat: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center pt-10 pb-4 text-center px-4">
+      <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-3">
+        <MessageSquare size={16} className="text-gray-300 dark:text-gray-600" />
+      </div>
+      <p className="text-[12px] font-semibold text-gray-500 dark:text-gray-400">
+        No conversations yet
+      </p>
+      <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+        Ask Swift anything about your typing
+      </p>
+      <button
+        onClick={onNewChat}
+        className="mt-3 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-brand-orange border border-brand-orange/20 dark:border-brand-orange/20 hover:bg-brand-orange/5 dark:hover:bg-brand-orange/10 transition-colors"
+      >
+        Start a conversation
+      </button>
+    </div>
+  );
+}
+
+// ─── SIDEBAR ERROR ───────────────────────────────────────────────────────────
+
+function SidebarError({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center pt-10 pb-4 text-center px-4">
+      <AlertCircle size={18} className="text-red-400 dark:text-red-500 mb-2" />
+      <p className="text-[11px] text-gray-500 dark:text-gray-400">{message}</p>
+      <button
+        onClick={onRetry}
+        className="mt-2 px-3 py-1 rounded-lg text-[11px] font-semibold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/8 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
 // ─── SECTION LABEL ───────────────────────────────────────────────────────────
 
 function SectionLabel({
@@ -219,7 +307,7 @@ function ChatItem({
         className={clsx(
           "w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] transition-all",
           isActive
-            ? "bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-semibold"
+            ? "bg-orange-50 dark:bg-brand-orange/10 text-brand-orange font-semibold"
             : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5",
         )}
       >
@@ -236,7 +324,7 @@ function ChatItem({
                 if (e.key === "Enter") onRenameCommit();
                 if (e.key === "Escape") onRenameCancel();
               }}
-              className="flex-1 min-w-0 bg-white dark:bg-white/10 border border-purple-300 dark:border-purple-500/30 rounded px-1.5 py-0.5 text-[12px] outline-none focus:ring-1 focus:ring-purple-400"
+              className="flex-1 min-w-0 bg-white dark:bg-white/10 border border-brand-orange/30 dark:border-brand-orange/20 rounded px-1.5 py-0.5 text-[12px] outline-none focus:ring-1 focus:ring-brand-orange/50"
             />
             <button
               onClick={onRenameCommit}

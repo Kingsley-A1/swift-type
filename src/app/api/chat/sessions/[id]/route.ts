@@ -1,8 +1,13 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { chatSessions } from "@/db/schema";
+import { withChatFeedbackColumn } from "@/lib/ensureChatFeedbackColumn";
 import { eq, and } from "drizzle-orm";
-import { getChatMessages, deleteChatMessages } from "@/lib/r2";
+import {
+  getChatMessages,
+  deleteChatMessages,
+  saveChatMessages,
+} from "@/lib/r2";
 
 export async function GET(
   _req: Request,
@@ -10,10 +15,29 @@ export async function GET(
 ) {
   const session = await auth();
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
+  const userId = session.user.id;
 
   const { id } = await params;
-  const messages = await getChatMessages(session.user.id, id);
-  return Response.json(messages);
+
+  const [messages, dbSession] = await Promise.all([
+    getChatMessages(userId, id),
+    withChatFeedbackColumn(() =>
+      db.query.chatSessions.findFirst({
+        where: and(
+          eq(chatSessions.id, id),
+          eq(chatSessions.userId, userId),
+        ),
+        columns: {
+          feedback: true,
+        },
+      }),
+    ),
+  ]);
+
+  return Response.json({
+    messages: messages || [],
+    feedback: dbSession?.feedback || {},
+  });
 }
 
 export async function PATCH(
@@ -22,19 +46,28 @@ export async function PATCH(
 ) {
   const session = await auth();
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
+  const userId = session.user.id;
 
   const { id } = await params;
   const body = await req.json();
   const updates: Record<string, unknown> = {};
   if (body.title !== undefined) updates.title = body.title;
   if (body.isPinned !== undefined) updates.isPinned = body.isPinned;
+  if (body.feedback !== undefined) updates.feedback = body.feedback;
 
-  await db
-    .update(chatSessions)
-    .set(updates)
-    .where(
-      and(eq(chatSessions.id, id), eq(chatSessions.userId, session.user.id)),
+  if (body.messages !== undefined) {
+    await saveChatMessages(userId, id, body.messages);
+    updates.updatedAt = new Date();
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await withChatFeedbackColumn(() =>
+      db
+        .update(chatSessions)
+        .set(updates)
+        .where(and(eq(chatSessions.id, id), eq(chatSessions.userId, userId))),
     );
+  }
 
   return Response.json({ ok: true });
 }
@@ -45,15 +78,14 @@ export async function DELETE(
 ) {
   const session = await auth();
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
+  const userId = session.user.id;
 
   const { id } = await params;
   await Promise.all([
     db
       .delete(chatSessions)
-      .where(
-        and(eq(chatSessions.id, id), eq(chatSessions.userId, session.user.id)),
-      ),
-    deleteChatMessages(session.user.id, id),
+      .where(and(eq(chatSessions.id, id), eq(chatSessions.userId, userId))),
+    deleteChatMessages(userId, id),
   ]);
 
   return Response.json({ ok: true });
