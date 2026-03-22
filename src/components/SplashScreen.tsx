@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 export function SplashScreen({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,16 +39,12 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="relative"
               >
-                <div className="w-24 h-24 rounded-[28px] flex items-center justify-center shadow-2xl"
+                <div className="w-24 h-24 rounded-[28px] flex items-center justify-center shadow-2xl overflow-hidden"
                   style={{
-                    background: "linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%)",
                     boxShadow: "0 0 60px rgba(255,107,53,0.4), 0 20px 40px rgba(0,0,0,0.5)"
                   }}
                 >
-                  {/* Lightning bolt SVG */}
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M30 4L8 30H24L22 48L44 22H28L30 4Z" fill="white" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-                  </svg>
+                  <Image src="/logo-192.png" alt="SwiftType" width={96} height={96} priority />
                 </div>
               </motion.div>
 
