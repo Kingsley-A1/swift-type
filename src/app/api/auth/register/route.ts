@@ -5,9 +5,28 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { withUsersPasswordColumn } from "@/lib/ensureUsersPasswordColumn";
 
+function deriveNameFromEmail(email: string) {
+  const localPart = email.split("@")[0] ?? "";
+  const normalized = localPart.replace(/[._-]+/g, " ").trim();
+
+  if (!normalized) {
+    return "Swift Type User";
+  }
+
+  return normalized
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const payload = await req.json();
+    const email = String(payload.email ?? "").trim().toLowerCase();
+    const password = String(payload.password ?? "");
+    const providedName = String(payload.name ?? "").trim();
+    const name = providedName || deriveNameFromEmail(email);
 
     if (!email || !password) {
       return NextResponse.json(
@@ -41,6 +60,7 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     await db.insert(users).values({
+      name,
       email,
       password: hashedPassword,
     });

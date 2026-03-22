@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, LogIn } from "lucide-react";
+import { X, Loader2, LogIn, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 interface AuthModalProps {
@@ -12,14 +12,16 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password || (mode === "signup" && !name.trim())) return;
 
     setIsLoading(true);
     setError(null);
@@ -29,7 +31,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         const response = await fetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ name, email, password }),
         });
 
         const data = await response.json();
@@ -59,6 +61,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const switchMode = (next: "signin" | "signup") => {
     setMode(next);
     setError(null);
+    setShowPassword(false);
   };
 
   return (
@@ -137,6 +140,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   </div>
                 )}
 
+                {mode === "signup" && (
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3.5 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15"
+                    required={mode === "signup"}
+                  />
+                )}
+
                 <input
                   type="email"
                   value={email}
@@ -145,14 +159,24 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3.5 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15"
                   required
                 />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === "signin" ? "Password" : "Create password"}
-                  className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3.5 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={mode === "signin" ? "Password" : "Create password"}
+                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3.5 py-3 pr-11 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
 
                 <button
                   type="submit"
