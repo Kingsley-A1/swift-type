@@ -16,6 +16,7 @@ export const users = pgTable("users", {
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name"),
   email: text("email").unique().notNull(),
+  password: text("password"),
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
@@ -108,7 +109,66 @@ export const userPreferences = pgTable("user_preferences", {
   preferredLevel: text("preferred_level").default("beginner"),
   preferredMode: text("preferred_mode").default("timed"),
   preferredDuration: integer("preferred_duration").default(60),
+  goalReminderEnabled: boolean("goal_reminder_enabled").default(true),
+  preferredGoalPeriod: text("preferred_goal_period").default("daily"),
+  preferredGoalTemplate: text("preferred_goal_template"),
+  sidebarDismissedAt: timestamp("sidebar_dismissed_at", { mode: "date" }),
 });
+
+export const userGoals = pgTable("user_goals", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  periodType: text("period_type").notNull(),
+  goalType: text("goal_type").notNull(),
+  targetValue: integer("target_value").notNull(),
+  currentValue: integer("current_value").notNull().default(0),
+  requiredSessions: integer("required_sessions").notNull().default(1),
+  currentSessions: integer("current_sessions").notNull().default(0),
+  status: text("status").notNull().default("active"),
+  timezone: text("timezone").notNull().default("UTC"),
+  startedAt: timestamp("started_at", { mode: "date" }).notNull(),
+  endsAt: timestamp("ends_at", { mode: "date" }).notNull(),
+  completedAt: timestamp("completed_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
+});
+
+export const userStreaks = pgTable("user_streaks", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  currentStreak: integer("current_streak").notNull().default(0),
+  bestStreak: integer("best_streak").notNull().default(0),
+  lastQualifiedAt: timestamp("last_qualified_at", { mode: "date" }),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
+});
+
+export const userRewards = pgTable(
+  "user_rewards",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    rewardType: text("reward_type").notNull(),
+    rewardKey: text("reward_key").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+    earnedAt: timestamp("earned_at", { mode: "date" }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("user_reward_key_idx").on(table.userId, table.rewardKey),
+  ],
+);
 
 export const chatSessions = pgTable("chat_sessions", {
   id: text("id")
@@ -119,6 +179,9 @@ export const chatSessions = pgTable("chat_sessions", {
     .references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull().default("New Chat"),
   isPinned: boolean("is_pinned").default(false),
+  feedback: jsonb("feedback")
+    .$type<Record<string, "up" | "down" | null>>()
+    .default({}),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
 });
