@@ -117,8 +117,8 @@ export function PrivacyPolicy({ isOpen, onClose }: PrivacyPolicyProps) {
                 <PolicyBullet>
                   <strong>Account identity</strong> — Your name and email
                   address. If you sign in with GitHub, a profile image from
-                  GitHub may also be collected. Used to create and identify
-                  your account.
+                  GitHub may also be collected. Used to create and identify your
+                  account.
                 </PolicyBullet>
                 <PolicyBullet>
                   <strong>Typing session data</strong> — WPM, accuracy,
@@ -185,11 +185,11 @@ export function PrivacyPolicy({ isOpen, onClose }: PrivacyPolicyProps) {
                   signed and expire after 30 days.
                 </PolicyBullet>
                 <PolicyBullet>
-                  <strong>Password security</strong> — If you sign in with
-                  email and password, your password is stored only as a bcrypt
-                  hash — plain-text passwords are never stored or transmitted.
-                  If you sign in with GitHub, we receive only an OAuth access
-                  token and basic profile info.
+                  <strong>Password security</strong> — If you sign in with email
+                  and password, your password is stored only as a bcrypt hash —
+                  plain-text passwords are never stored or transmitted. If you
+                  sign in with GitHub, we receive only an OAuth access token and
+                  basic profile info.
                 </PolicyBullet>
               </PolicySection>
 

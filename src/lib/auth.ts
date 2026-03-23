@@ -37,14 +37,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             .select()
             .from(users)
             .where(eq(users.email, credentials.email as string))
-            .limit(1)
+            .limit(1),
         );
 
         if (!user || !user.password) return null; // Fallback to OAuth if password missing
 
         const passwordsMatch = await bcrypt.compare(
           credentials.password as string,
-          user.password
+          user.password,
         );
 
         if (passwordsMatch) return user;

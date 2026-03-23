@@ -14,7 +14,7 @@ import {
   generateCurriculumText,
   CURRICULUM_STAGES,
 } from "@/lib/adaptiveEngine";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { HintModal } from "./HintModal";
 import clsx from "clsx";
 
@@ -135,6 +135,29 @@ export function Controls() {
   if (typeof window !== "undefined") {
     (window as any).__swiftTypePlaySound = playSound;
   }
+
+  // Regenerate preview text when config changes (and no session is running)
+  useEffect(() => {
+    const state = useTypingStore.getState();
+    // Don't touch text during an active session or if the intro hasn't been played yet
+    if (state.isActive || state.isFinished || !state.hasPlayedIntro) return;
+
+    let count = 30;
+    if (mode === "timed") {
+      const baseWpm =
+        level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
+      count = Math.ceil((baseWpm * duration) / 60);
+    } else {
+      count = wordCount;
+    }
+
+    const text =
+      mode === "curriculum"
+        ? generateCurriculumText(curriculumStage, count)
+        : getRandomWords(level as any, count);
+
+    useTypingStore.setState({ targetText: text, typedText: "", mistakes: 0, keystrokes: 0 });
+  }, [mode, level, duration, wordCount, curriculumStage]);
 
   const handleStart = () => {
     const state = useTypingStore.getState();
