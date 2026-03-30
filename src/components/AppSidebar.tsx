@@ -11,7 +11,9 @@ import {
   Target,
   Trophy,
   X,
+  FileText,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useTypingStore } from "@/store/useTypingStore";
 import { useSession, signOut } from "next-auth/react";
 import {
@@ -24,12 +26,10 @@ interface AppSidebarProps {
   isGoalsOpen: boolean;
   isHistoryOpen: boolean;
   isDocsOpen: boolean;
-  isPrivacyOpen: boolean;
   isRewardsOpen: boolean;
   onOpenGoals: () => void;
   onOpenHistory: () => void;
   onOpenDocs: () => void;
-  onOpenPrivacy: () => void;
   onOpenRewards: () => void;
   onOpenProfile: () => void;
 }
@@ -94,18 +94,17 @@ export function AppSidebar({
   isGoalsOpen,
   isHistoryOpen,
   isDocsOpen,
-  isPrivacyOpen,
   isRewardsOpen,
   onOpenGoals,
   onOpenHistory,
   onOpenDocs,
-  onOpenPrivacy,
   onOpenRewards,
   onOpenProfile,
 }: AppSidebarProps) {
   const { dailyGoal, weeklyGoal, goalStreak } = useTypingStore();
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   const primaryGoal = useMemo(
     () =>
@@ -226,9 +225,18 @@ export function AppSidebar({
           <SidebarNavItem
             icon={<Shield size={18} />}
             label="Privacy"
-            active={isPrivacyOpen}
             onClick={() => {
-              onOpenPrivacy();
+              router.push("/privacy");
+              close();
+            }}
+            expanded={isOpen}
+          />
+
+          <SidebarNavItem
+            icon={<FileText size={18} />}
+            label="Terms"
+            onClick={() => {
+              router.push("/terms");
               close();
             }}
             expanded={isOpen}

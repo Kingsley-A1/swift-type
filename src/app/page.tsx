@@ -8,7 +8,6 @@ import { Keyboard } from "@/components/Keyboard";
 import { PostSessionStats } from "@/components/PostSessionStats";
 import { UserGuide } from "@/components/UserGuide";
 import { SwiftAI } from "@/components/SwiftAI";
-import { PrivacyPolicy } from "@/components/PrivacyPolicy";
 import { GoalPanel } from "@/components/GoalPanel";
 import { GoalCompleteModal } from "@/components/GoalCompleteModal";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -52,7 +51,6 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isSwiftAIOpen, setIsSwiftAIOpen] = useState(false);
-  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isGoalOpen, setIsGoalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isRewardsOpen, setIsRewardsOpen] = useState(false);
@@ -207,10 +205,6 @@ export default function Home() {
         onClose={() => setIsHistoryOpen(false)}
       />
       <GoalPanel isOpen={isGoalOpen} onClose={() => setIsGoalOpen(false)} />
-      <PrivacyPolicy
-        isOpen={isPrivacyOpen}
-        onClose={() => setIsPrivacyOpen(false)}
-      />
       <RewardsPanel
         isOpen={isRewardsOpen}
         onClose={() => setIsRewardsOpen(false)}
@@ -230,12 +224,10 @@ export default function Home() {
         isGoalsOpen={isGoalOpen}
         isHistoryOpen={isHistoryOpen}
         isDocsOpen={isGuideOpen}
-        isPrivacyOpen={isPrivacyOpen}
         isRewardsOpen={isRewardsOpen}
         onOpenGoals={() => setIsGoalOpen(true)}
         onOpenHistory={() => setIsHistoryOpen(true)}
         onOpenDocs={() => setIsGuideOpen(true)}
-        onOpenPrivacy={() => setIsPrivacyOpen(true)}
         onOpenRewards={() => setIsRewardsOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
       />
