@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s | Swift Type",
   },
   description:
-    "Swift Type is a free, fast, adaptive typing trainer. Practice touch typing, improve your WPM, and master your keyboard with real-time feedback and beautiful analytics.",
+    "Swift Type is  fast, adaptive typing trainer. Practice touch typing, improve your WPM, and master your keyboard with real-time feedback and beautiful analytics.",
   keywords: [
     "typing trainer",
     "touch typing",
@@ -41,6 +41,7 @@ export const metadata: Metadata = {
     "typing game",
     "adaptive typing",
     "typing tutor",
+    "fast typing"
   ],
   authors: [{ name: "Swift Type" }],
   creator: "Swift Type",
