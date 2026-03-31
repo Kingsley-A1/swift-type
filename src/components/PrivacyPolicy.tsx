@@ -170,7 +170,7 @@ export function PrivacyPolicy() {
           <PolicyBullet>
             <strong>Google Gemini AI</strong> — AI coaching responses.
             Subject to Google&apos;s Gemini API Data Usage Policies.
-            (Google sign-in is coming soon.)
+            (Google sign-in is now active.)
           </PolicyBullet>
           <PolicyBullet>
             <strong>GitHub OAuth</strong> — Identity verification for
