@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "smoke:swift-ai": "node --experimental-strip-types scripts/swift-ai-session1-smoke.ts",
     "type": "module"
   },
   "dependencies": {
@@ -35,6 +36,7 @@
     "recharts": "^2.15.0",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.0.1",
+    "zod": "^4.3.6",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

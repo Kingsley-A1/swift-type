@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithToolCalls,
+  type UIMessage,
+} from "ai";
 import { useSession } from "next-auth/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -17,24 +21,40 @@ import {
   Copy,
   ThumbsUp,
   ThumbsDown,
+  Target,
+  ExternalLink,
+  Play,
 } from "lucide-react";
 import clsx from "clsx";
 import { useNetworkStatus } from "@/lib/useNetworkStatus";
+import {
+  resolveSwiftAIToolParts,
+  type SwiftAISessionConfig,
+  type SwiftAIToolTarget,
+} from "@/lib/swift-ai-tool-parts";
 
 interface SwiftAIChatAreaProps {
   chatId: string;
   onTitleUpdate: (title: string) => void;
+  onNavigate?: (target: SwiftAIToolTarget) => void;
+  onStartSession?: (config: SwiftAISessionConfig) => void;
 }
 
 export function SwiftAIChatArea({
   chatId,
   onTitleUpdate,
+  onNavigate,
+  onStartSession,
 }: SwiftAIChatAreaProps) {
   const { data: session } = useSession();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const hasAutoTitled = useRef(false);
   const [input, setInput] = useState("");
+  const [historyStatus, setHistoryStatus] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
     null,
   );
@@ -44,12 +64,43 @@ export function SwiftAIChatArea({
   >({});
   const isOnline = useNetworkStatus();
 
-  const { messages, sendMessage, status, stop, setMessages } =
+  const { messages, sendMessage, addToolOutput, status, stop, setMessages } =
     useChat({
       transport: new DefaultChatTransport({
         api: "/api/chat",
         body: { chatSessionId: chatId },
       }),
+
+      sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+
+      async onToolCall({ toolCall }) {
+        if (toolCall.dynamic) return;
+
+        // navigateTo and startSession are client-side tools (no execute on server)
+        if (toolCall.toolName === "navigateTo") {
+          const input = toolCall.input as { target: string; label: string };
+          addToolOutput({
+            tool: "navigateTo",
+            toolCallId: toolCall.toolCallId,
+            output: JSON.stringify({ opened: input.target }),
+          });
+        }
+
+        if (toolCall.toolName === "startSession") {
+          const input = toolCall.input as {
+            mode: string;
+            level: string;
+            duration?: number;
+            wordCount?: number;
+          };
+          addToolOutput({
+            tool: "startSession",
+            toolCallId: toolCall.toolCallId,
+            output: JSON.stringify({ started: true, ...input }),
+          });
+        }
+      },
+
       onFinish: ({ messages: allMsgs }) => {
         // Auto-title after the first exchange using the server-side title route.
         if (!hasAutoTitled.current && allMsgs.length <= 2) {
@@ -89,23 +140,43 @@ export function SwiftAIChatArea({
       },
     });
 
-  // Safe regenerate: trim the last assistant message and re-send the last user
-  // message. The SDK's built-in regenerate() crashes when messages were
-  // hydrated from R2 storage because it can't find them in its internal state.
+  // Safe regenerate: remove last assistant message and re-send last user msg.
+  // Guarded to prevent duplicate sends on rapid clicks.
+  const regeneratingRef = useRef(false);
   function handleRegenerate() {
+    if (regeneratingRef.current || isActive) return;
+    regeneratingRef.current = true;
+
     const trimmed = [...messages];
-    // Remove the last assistant message if present
-    if (trimmed.length > 0 && trimmed[trimmed.length - 1].role === "assistant") {
+    // Remove the last completed exchange before re-sending the prompt.
+    if (
+      trimmed.length > 0 &&
+      trimmed[trimmed.length - 1].role === "assistant"
+    ) {
       trimmed.pop();
     }
-    const lastUser = [...trimmed].reverse().find((m) => m.role === "user");
-    if (!lastUser) return;
+    const lastUser =
+      trimmed.length > 0 && trimmed[trimmed.length - 1].role === "user"
+        ? trimmed.pop()
+        : [...trimmed].reverse().find((m) => m.role === "user");
+    if (!lastUser) {
+      regeneratingRef.current = false;
+      return;
+    }
+
     setMessages(trimmed);
-    const textPart = lastUser.parts?.find((p: { type: string }) => p.type === "text") as
-      | { type: "text"; text: string }
-      | undefined;
+    const textPart = lastUser.parts?.find(
+      (p: { type: string }) => p.type === "text",
+    ) as { type: "text"; text: string } | undefined;
     const text = textPart?.text ?? "";
-    if (text) sendMessage({ text });
+    if (text) {
+      sendMessage({ text });
+    }
+
+    // Reset the guard once streaming starts (small delay)
+    setTimeout(() => {
+      regeneratingRef.current = false;
+    }, 1000);
   }
 
   async function persistMessages(nextMessages: UIMessage[]) {
@@ -116,29 +187,53 @@ export function SwiftAIChatArea({
     });
   }
 
+  const loadChatHistory = useCallback(
+    async (signal?: AbortSignal) => {
+      hasAutoTitled.current = false;
+      setSelectedMessageId(null);
+      setCopiedMessageId(null);
+      setMessageFeedback({});
+      setHistoryStatus("loading");
+      setHistoryError(null);
+      setMessages([]);
+
+      try {
+        const response = await fetch(`/api/chat/sessions/${chatId}`, { signal });
+        if (!response.ok) {
+          throw new Error("Failed to load conversation");
+        }
+
+        const data = await response.json();
+        const nextMessages = Array.isArray(data) ? data : data.messages || [];
+        const nextFeedback =
+          !Array.isArray(data) && data.feedback ? data.feedback : {};
+
+        setMessageFeedback(nextFeedback);
+        setMessages(nextMessages);
+        if (nextMessages.length > 0) {
+          hasAutoTitled.current = true;
+        }
+        setHistoryStatus("ready");
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+
+        setMessages([]);
+        setMessageFeedback({});
+        setHistoryStatus("error");
+        setHistoryError("Couldn\'t load this conversation. Try again.");
+      }
+    },
+    [chatId, setMessages],
+  );
+
   // Load history when chat changes
   useEffect(() => {
-    hasAutoTitled.current = false;
-    setSelectedMessageId(null);
-    setCopiedMessageId(null);
-    setMessageFeedback({});
-    fetch(`/api/chat/sessions/${chatId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        // Handle both older array returns and newer object returns
-        const msgs = Array.isArray(data) ? data : data.messages || [];
-        const fb = !Array.isArray(data) && data.feedback ? data.feedback : {};
-
-        setMessageFeedback(fb);
-        if (msgs.length > 0) {
-          setMessages(msgs);
-          hasAutoTitled.current = true;
-        } else {
-          setMessages([]);
-        }
-      })
-      .catch(() => setMessages([]));
-  }, [chatId, setMessages]);
+    const controller = new AbortController();
+    void loadChatHistory(controller.signal);
+    return () => controller.abort();
+  }, [chatId, loadChatHistory]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -183,15 +278,13 @@ export function SwiftAIChatArea({
     }
 
     requestAnimationFrame(() => {
-      const textarea = textareaRef.current;
-      if (!textarea) {
+      const inputElement = inputRef.current;
+      if (!inputElement) {
         return;
       }
 
-      textarea.focus();
-      textarea.style.height = "auto";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
-      textarea.setSelectionRange(nextInput.length, nextInput.length);
+      inputElement.focus();
+      inputElement.setSelectionRange(nextInput.length, nextInput.length);
     });
   }
 
@@ -237,7 +330,14 @@ export function SwiftAIChatArea({
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar">
-        {messages.length === 0 ? (
+        {historyStatus === "loading" ? (
+          <MessagePaneSkeleton />
+        ) : historyStatus === "error" ? (
+          <MessagePaneError
+            message={historyError || "Couldn\'t load this conversation."}
+            onRetry={() => void loadChatHistory()}
+          />
+        ) : messages.length === 0 ? (
           <WelcomeMessage
             name={userName}
             onSend={(text) => {
@@ -301,6 +401,8 @@ export function SwiftAIChatArea({
                       }
                     : undefined
                 }
+                onNavigate={onNavigate}
+                onStartSession={onStartSession}
                 isStreaming={
                   isActive &&
                   idx === messages.length - 1 &&
@@ -317,15 +419,16 @@ export function SwiftAIChatArea({
       </div>
 
       {/* Input */}
-      <div className="shrink-0 border-t border-gray-100 dark:border-white/6 p-4">
+      <div className="shrink-0 border-t border-gray-100 dark:border-white/6 px-4 py-3">
         <div className="max-w-2xl mx-auto">
-          <div className="relative">
-            <textarea
-              ref={textareaRef}
+          <div className="flex items-end gap-2">
+            <input
+              ref={inputRef}
+              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   if (input.trim() && status === "ready" && isOnline) {
                     sendMessage({ text: input });
@@ -333,61 +436,47 @@ export function SwiftAIChatArea({
                   }
                 }
               }}
-              placeholder="Ask Swift anything about typing..."
-              rows={1}
+              placeholder="Ask Swift anything..."
               disabled={status !== "ready" || !isOnline}
-              className="w-full resize-none rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3 pl-4 pr-22 py-3 text-sm text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-brand-orange/40 dark:focus:border-brand-orange/30 focus:ring-2 focus:ring-brand-orange/10 transition-all"
-              style={{ maxHeight: "160px", overflowY: "hidden" }}
-              onInput={(e) => {
-                const t = e.target as HTMLTextAreaElement;
-                t.style.height = "auto";
-                const capped = Math.min(t.scrollHeight, 160);
-                t.style.height = capped + "px";
-                t.style.overflowY = t.scrollHeight > 160 ? "auto" : "hidden";
-              }}
+              className="flex-1 h-10 rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3 px-4 text-sm text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-brand-orange/40 dark:focus:border-brand-orange/30 focus:ring-2 focus:ring-brand-orange/10 transition-all disabled:opacity-50"
             />
 
-            <div className="absolute right-2 bottom-2 flex items-center gap-1.5">
-              {isActive ? (
-                <button
-                  type="button"
-                  onClick={stop}
-                  className="p-1.5 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-                  title="Stop generating"
-                >
-                  <Square size={15} />
-                </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (input.trim() && isOnline) {
-                        sendMessage({ text: input });
-                        setInput("");
+            {isActive ? (
+              <button
+                type="button"
+                onClick={stop}
+                className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                title="Stop generating"
+              >
+                <Square size={14} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  if (input.trim() && isOnline) {
+                    sendMessage({ text: input });
+                    setInput("");
+                  }
+                }}
+                disabled={!input.trim() || !isOnline}
+                className={clsx(
+                  "shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  input.trim() && isOnline
+                    ? "text-white hover:opacity-90 active:scale-95"
+                    : "bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-gray-600 cursor-not-allowed",
+                )}
+                style={
+                  input.trim() && isOnline
+                    ? {
+                        background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
                       }
-                    }}
-                    disabled={!input.trim() || !isOnline}
-                    className={clsx(
-                      "p-1.5 rounded-lg transition-all",
-                      input.trim() && isOnline
-                        ? "text-white hover:opacity-90"
-                        : "bg-transparent text-gray-300 dark:text-gray-600 cursor-not-allowed",
-                    )}
-                    style={
-                      input.trim() && isOnline
-                        ? {
-                            background:
-                              "linear-gradient(135deg, #ff6b35, #ff8c5a)",
-                          }
-                        : undefined
-                    }
-                  >
-                    <Send size={15} />
-                  </button>
-                </>
-              )}
-            </div>
+                    : undefined
+                }
+              >
+                <Send size={14} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -421,6 +510,8 @@ function MessageBubble({
   onRegenerate,
   feedback,
   onFeedbackChange,
+  onNavigate,
+  onStartSession,
 }: {
   message: UIMessage;
   userName: string;
@@ -435,9 +526,12 @@ function MessageBubble({
   onRegenerate?: () => void;
   feedback?: "up" | "down" | null;
   onFeedbackChange?: (value: "up" | "down") => void;
+  onNavigate?: (target: SwiftAIToolTarget) => void;
+  onStartSession?: (config: SwiftAISessionConfig) => void;
 }) {
   const isUser = message.role === "user";
   const textContent = getMessageText(message);
+  const toolParts = resolveSwiftAIToolParts(message.parts);
 
   return (
     <div className={clsx("flex gap-3", isUser && "flex-row-reverse")}>
@@ -502,6 +596,74 @@ function MessageBubble({
               isStreaming={isStreaming && !isUser}
             />
           </button>
+
+          {/* Tool results rendered inline below the text bubble */}
+          {!isUser && toolParts.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {toolParts.map((part) => {
+                if (part.kind === "create-goal") {
+                  return (
+                    <button
+                      key={part.id}
+                      onClick={() => onNavigate?.(part.target)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+                    >
+                      <Target size={12} />
+                      {part.label}
+                    </button>
+                  );
+                }
+
+                if (part.kind === "navigate") {
+                  return (
+                    <button
+                      key={part.id}
+                      onClick={() => onNavigate?.(part.target)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-brand-orange/20 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-[11px] font-semibold text-brand-orange hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors"
+                    >
+                      <ExternalLink size={12} />
+                      {part.label}
+                    </button>
+                  );
+                }
+
+                if (part.kind === "start-session") {
+                  return (
+                    <button
+                      key={part.id}
+                      onClick={() => onStartSession?.(part.config)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-brand-orange/20 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-[11px] font-semibold text-brand-orange hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors"
+                    >
+                      <Play size={12} fill="currentColor" />
+                      {part.label}
+                    </button>
+                  );
+                }
+
+                if (part.kind === "pending") {
+                  return (
+                    <span
+                      key={part.id}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/4 px-3 py-1.5 text-[11px] font-medium text-gray-400 dark:text-gray-500"
+                    >
+                      <Sparkles size={11} className="animate-spin" />
+                      {part.label}
+                    </span>
+                  );
+                }
+
+                return (
+                  <span
+                    key={part.id}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 dark:border-rose-400/20 bg-rose-50 dark:bg-rose-500/10 px-3 py-1.5 text-[11px] font-medium text-rose-600 dark:text-rose-300"
+                  >
+                    <AlertCircle size={11} />
+                    {part.label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
           {isLastUserMessage && isSelected && (onEdit || onCopy) && (
             <div className="mt-2 flex items-center gap-2 text-[11px]">
@@ -594,17 +756,25 @@ function MessageContent({
         components={{
           // Paragraphs
           p: ({ children }) => (
-            <p className="mb-2 last:mb-0 text-[13.5px] leading-relaxed">{children}</p>
+            <p className="mb-2 last:mb-0 text-[13.5px] leading-relaxed">
+              {children}
+            </p>
           ),
           // Headings
           h1: ({ children }) => (
-            <h1 className="text-[15px] font-bold mt-3 mb-1.5 text-gray-900 dark:text-white">{children}</h1>
+            <h1 className="text-[15px] font-bold mt-3 mb-1.5 text-gray-900 dark:text-white">
+              {children}
+            </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-[14px] font-bold mt-3 mb-1 text-gray-800 dark:text-gray-100">{children}</h2>
+            <h2 className="text-[14px] font-bold mt-3 mb-1 text-gray-800 dark:text-gray-100">
+              {children}
+            </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-[13px] font-semibold mt-2 mb-1 text-gray-700 dark:text-gray-200">{children}</h3>
+            <h3 className="text-[13px] font-semibold mt-2 mb-1 text-gray-700 dark:text-gray-200">
+              {children}
+            </h3>
           ),
           // Inline code
           code: ({ children, className }) => {
@@ -612,7 +782,9 @@ function MessageContent({
             if (isBlock) {
               return (
                 <pre className="mt-2 mb-2 rounded-xl bg-gray-900 dark:bg-black/40 px-4 py-3 overflow-x-auto">
-                  <code className="text-[12px] font-mono text-gray-100">{children}</code>
+                  <code className="text-[12px] font-mono text-gray-100">
+                    {children}
+                  </code>
                 </pre>
               );
             }
@@ -625,20 +797,28 @@ function MessageContent({
           pre: ({ children }) => <>{children}</>,
           // Lists
           ul: ({ children }) => (
-            <ul className="my-1.5 space-y-0.5 pl-4 list-disc marker:text-brand-orange">{children}</ul>
+            <ul className="my-1.5 space-y-0.5 pl-4 list-disc marker:text-brand-orange">
+              {children}
+            </ul>
           ),
           ol: ({ children }) => (
-            <ol className="my-1.5 space-y-0.5 pl-4 list-decimal marker:text-brand-orange">{children}</ol>
+            <ol className="my-1.5 space-y-0.5 pl-4 list-decimal marker:text-brand-orange">
+              {children}
+            </ol>
           ),
           li: ({ children }) => (
             <li className="text-[13.5px] leading-relaxed">{children}</li>
           ),
           // Bold / Italic
           strong: ({ children }) => (
-            <strong className="font-semibold text-gray-900 dark:text-white">{children}</strong>
+            <strong className="font-semibold text-gray-900 dark:text-white">
+              {children}
+            </strong>
           ),
           em: ({ children }) => (
-            <em className="italic text-gray-700 dark:text-gray-300">{children}</em>
+            <em className="italic text-gray-700 dark:text-gray-300">
+              {children}
+            </em>
           ),
           // Tables (GFM)
           table: ({ children }) => (
@@ -650,10 +830,14 @@ function MessageContent({
             <thead className="bg-gray-50 dark:bg-white/5">{children}</thead>
           ),
           th: ({ children }) => (
-            <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{children}</th>
+            <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">
+              {children}
+            </th>
           ),
           td: ({ children }) => (
-            <td className="px-3 py-2 border-t border-gray-100 dark:border-white/8 text-gray-600 dark:text-gray-300">{children}</td>
+            <td className="px-3 py-2 border-t border-gray-100 dark:border-white/8 text-gray-600 dark:text-gray-300">
+              {children}
+            </td>
           ),
           // Blockquote
           blockquote: ({ children }) => (
@@ -662,7 +846,9 @@ function MessageContent({
             </blockquote>
           ),
           // Horizontal rule
-          hr: () => <hr className="my-3 border-gray-200 dark:border-white/10" />,
+          hr: () => (
+            <hr className="my-3 border-gray-200 dark:border-white/10" />
+          ),
         }}
       >
         {content}
@@ -738,6 +924,22 @@ function SuggestionChip({
 // ─── TYPING INDICATOR ────────────────────────────────────────────────────────
 
 function TypingIndicator() {
+  const loadingPhrases = [
+    "Thinking through your stats...",
+    "Reviewing your weak spots...",
+    "Lining up the next best drill...",
+    "Writing a sharper answer...",
+  ];
+  const [phraseIndex, setPhraseIndex] = useState(0);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setPhraseIndex((current) => (current + 1) % loadingPhrases.length);
+    }, 1500);
+
+    return () => window.clearInterval(intervalId);
+  }, [loadingPhrases.length]);
+
   return (
     <div className="flex gap-3">
       <div
@@ -747,21 +949,58 @@ function TypingIndicator() {
         <Sparkles size={12} />
       </div>
       <div className="bg-gray-50 dark:bg-white/4 border border-brand-orange/20 dark:border-brand-orange/15 rounded-2xl rounded-tl-md px-4 py-3">
-        <div className="flex items-center gap-1">
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-bounce"
-            style={{ animationDelay: "0ms" }}
-          />
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-bounce"
-            style={{ animationDelay: "150ms" }}
-          />
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-bounce"
-            style={{ animationDelay: "300ms" }}
-          />
+        <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 dark:text-gray-400">
+          <span className="inline-block h-2 w-2 rounded-full bg-brand-orange animate-pulse" />
+          <span>{loadingPhrases[phraseIndex]}</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function MessagePaneSkeleton() {
+  return (
+    <div className="max-w-2xl mx-auto px-5 py-4 space-y-5">
+      {[0, 1, 2].map((row) => (
+        <div key={row} className="flex gap-3">
+          <div className="h-7 w-7 shrink-0 rounded-lg bg-gray-200 dark:bg-white/8 animate-pulse" />
+          <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+            <div className="h-2.5 w-16 rounded bg-gray-200 dark:bg-white/8 animate-pulse" />
+            <div className="rounded-2xl rounded-tl-md border border-gray-100 dark:border-white/6 bg-gray-50 dark:bg-white/4 p-4">
+              <div className="h-3 w-4/5 rounded bg-gray-200 dark:bg-white/8 animate-pulse" />
+              <div className="mt-2 h-3 w-3/5 rounded bg-gray-200 dark:bg-white/8 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MessagePaneError({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center px-8 text-center">
+      <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center mb-3">
+        <AlertCircle size={18} className="text-rose-500" />
+      </div>
+      <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+        Conversation unavailable
+      </p>
+      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+        {message}
+      </p>
+      <button
+        onClick={onRetry}
+        className="mt-4 rounded-lg border border-gray-200 dark:border-white/8 px-3 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 hover:border-brand-orange/30 hover:text-brand-orange transition-colors"
+      >
+        Retry loading chat
+      </button>
     </div>
   );
 }

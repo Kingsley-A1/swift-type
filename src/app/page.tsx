@@ -16,7 +16,7 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { ProfilePanel } from "@/components/ProfilePanel";
 import { ReviewsPanel } from "@/components/ReviewsPanel";
 import { useTypingStore } from "@/store/useTypingStore";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { getRandomWords } from "@/data/dictionary";
 import {
@@ -31,7 +31,15 @@ import {
   fetchRewardsFromServer,
 } from "@/lib/syncService";
 
-type PanelId = "goals" | "history" | "guide" | "rewards" | "profile" | "swiftai" | "reviews" | null;
+type PanelId =
+  | "goals"
+  | "history"
+  | "guide"
+  | "rewards"
+  | "profile"
+  | "swiftai"
+  | "reviews"
+  | null;
 
 export default function Home() {
   const {
@@ -60,14 +68,60 @@ export default function Home() {
   const openOnly = (panel: PanelId) => setOpenPanel(panel);
   const closePanel = () => setOpenPanel(null);
 
-  const isGuideOpen    = openPanel === "guide";
-  const isSwiftAIOpen  = openPanel === "swiftai";
-  const isGoalOpen     = openPanel === "goals";
-  const isHistoryOpen  = openPanel === "history";
-  const isRewardsOpen  = openPanel === "rewards";
-  const isProfileOpen  = openPanel === "profile";
-  const isReviewsOpen  = openPanel === "reviews";
-  const anyPanelOpen   = openPanel !== null;
+  const isGuideOpen = openPanel === "guide";
+  const isSwiftAIOpen = openPanel === "swiftai";
+  const isGoalOpen = openPanel === "goals";
+  const isHistoryOpen = openPanel === "history";
+  const isRewardsOpen = openPanel === "rewards";
+  const isProfileOpen = openPanel === "profile";
+  const isReviewsOpen = openPanel === "reviews";
+  const anyPanelOpen = openPanel !== null;
+
+  // Handlers for SwiftAI tool actions
+  const handleAINavigate = useCallback((target: string) => {
+    const panelMap: Record<string, PanelId> = {
+      goals: "goals",
+      history: "history",
+      guide: "guide",
+      rewards: "rewards",
+      profile: "profile",
+      swiftai: "swiftai",
+      reviews: "reviews",
+    };
+    const panel = panelMap[target];
+    if (panel) openOnly(panel);
+  }, []);
+
+  const handleAIStartSession = useCallback(
+    (config: {
+      mode: string;
+      level: string;
+      duration?: number;
+      wordCount?: number;
+    }) => {
+      closePanel(); // close SwiftAI first
+      const { setConfig } = useTypingStore.getState();
+      setConfig({
+        mode: config.mode as any,
+        level: config.level as any,
+        ...(config.duration ? { duration: config.duration } : {}),
+        ...(config.wordCount ? { wordCount: config.wordCount } : {}),
+      });
+      const lvl = config.level || "beginner";
+      const baseWpm =
+        lvl === "advanced" ? 100 : lvl === "intermediate" ? 60 : 20;
+      const count =
+        config.mode === "timed"
+          ? Math.ceil((baseWpm * (config.duration || 60)) / 60)
+          : config.wordCount || 25;
+      startSession(
+        config.mode === "curriculum"
+          ? generateCurriculumText(curriculumStage, count)
+          : getRandomWords(lvl as any, count),
+      );
+    },
+    [curriculumStage, startSession],
+  );
 
   // Keep guest goals fresh
   useEffect(() => {
@@ -102,7 +156,9 @@ export default function Home() {
       ? primaryReward.metadata.goalTitle
       : primaryReward?.description;
 
-  const prevSessionCount = useRef(useTypingStore.getState().savedSessions.length);
+  const prevSessionCount = useRef(
+    useTypingStore.getState().savedSessions.length,
+  );
 
   // Auto-sync new sessions to DB
   useEffect(() => {
@@ -121,13 +177,18 @@ export default function Home() {
   // Global keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const isTypingInput = target?.dataset?.typingInput === "true";
+      if ((tag === "INPUT" || tag === "TEXTAREA") && !isTypingInput) return;
 
       // Esc: close open panel first; if none open and session active, stop it
       if (e.key === "Escape") {
         e.preventDefault();
-        if (anyPanelOpen) { closePanel(); return; }
+        if (anyPanelOpen) {
+          closePanel();
+          return;
+        }
         if (isActive) endSession();
         return;
       }
@@ -139,31 +200,59 @@ export default function Home() {
         const state = useTypingStore.getState();
         if (
           !state.hasPlayedIntro &&
-          state.targetText === "swift type teaches you touch typing happy learning click enter to start"
+          state.targetText ===
+            "swift type teaches you touch typing happy learning click enter to start"
         ) {
-          state.setConfig({ mode: "timed", duration: 60, hasPlayedIntro: true });
+          state.setConfig({
+            mode: "timed",
+            duration: 60,
+            hasPlayedIntro: true,
+          });
           startSession(state.targetText);
           return;
         }
-        const baseWpm = level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
-        const count = mode === "timed" ? Math.ceil((baseWpm * duration) / 60) : wordCount;
+        const baseWpm =
+          level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
+        const count =
+          mode === "timed" ? Math.ceil((baseWpm * duration) / 60) : wordCount;
         startSession(
           mode === "curriculum"
             ? generateCurriculumText(curriculumStage, count)
             : getRandomWords(level as any, count),
         );
       }
-      if (e.key === "Tab") { e.preventDefault(); resetSession(); }
+      if (e.key === "Tab") {
+        e.preventDefault();
+        resetSession();
+      }
 
       // Ctrl/Cmd+Shift+S — toggle Swift AI
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "s"
+      ) {
         e.preventDefault();
         setOpenPanel((p) => (p === "swiftai" ? null : "swiftai"));
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [isActive, isFinished, isGuideOpen, isSwiftAIOpen, anyPanelOpen, mode, level, startSession, resetSession, endSession]);
+  }, [
+    anyPanelOpen,
+    curriculumStage,
+    duration,
+    endSession,
+    isActive,
+    isFinished,
+    isGuideOpen,
+    isSwiftAIOpen,
+    level,
+    mode,
+    resetSession,
+    startSession,
+    wordCount,
+  ]);
 
   return (
     <>
@@ -178,6 +267,8 @@ export default function Home() {
         onClose={closePanel}
         onDocsOpen={() => openOnly("guide")}
         isDocsOpen={isGuideOpen}
+        onNavigate={handleAINavigate}
+        onStartSession={handleAIStartSession}
       />
       <HistoryPanel isOpen={isHistoryOpen} onClose={closePanel} />
       <GoalPanel isOpen={isGoalOpen} onClose={closePanel} />
@@ -220,7 +311,7 @@ export default function Home() {
       />
 
       {/* Full-viewport container */}
-      <div className="h-dvh pl-[72px]">
+      <div className="h-dvh pl-18">
         <main
           className="w-full max-w-5xl mx-auto flex flex-col"
           style={{
@@ -238,7 +329,7 @@ export default function Home() {
 
           {!isFinished ? (
             <>
-              <TypingDisplay />
+              <TypingDisplay isBlocked={anyPanelOpen} />
               <LiveStats />
             </>
           ) : (

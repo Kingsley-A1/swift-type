@@ -1,23 +1,40 @@
-import { streamText, UIMessage, convertToModelMessages } from "ai";
+import { streamText, UIMessage, convertToModelMessages, tool } from "ai";
 import { google } from "@ai-sdk/google";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { sessions, userStats, chatSessions, userRewards, userReviews } from "@/db/schema";
+import {
+  sessions,
+  userStats,
+  chatSessions,
+  userRewards,
+  userReviews,
+} from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { saveChatMessages } from "@/lib/r2";
-import { getActiveGoals } from "@/lib/goalService";
-import { formatGoalProgress } from "@/lib/goals";
+import { getActiveGoals, createGoal } from "@/lib/goalService";
+import {
+  formatGoalProgress,
+  createGoalWindow,
+  GOAL_TEMPLATES,
+} from "@/lib/goals";
 
 // ─── CONTEXT CACHE (60s TTL per user) ────────────────────────────────────────
 // Prevents 5 DB queries on every back-to-back chat message.
 
-const contextCache = new Map<string, { context: TypingContext; expiresAt: number }>();
+const contextCache = new Map<
+  string,
+  { context: TypingContext; expiresAt: number }
+>();
 const CACHE_TTL_MS = 60_000;
 
 function getCachedContext(userId: string): TypingContext | null {
   const entry = contextCache.get(userId);
   if (!entry) return null;
-  if (Date.now() > entry.expiresAt) { contextCache.delete(userId); return null; }
+  if (Date.now() > entry.expiresAt) {
+    contextCache.delete(userId);
+    return null;
+  }
   return entry.context;
 }
 
@@ -152,9 +169,12 @@ function buildTypingContext(
   // Community reviews (top 6 for citation)
   if (allReviews && allReviews.length > 0) {
     ctx.reviewCount = allReviews.length;
-    ctx.communityReviews = allReviews.slice(0, 6).map(
-      (r) => `${r.userName} (${r.role}${r.organisation ? ` @ ${r.organisation}` : ""}): "${r.content}"`
-    );
+    ctx.communityReviews = allReviews
+      .slice(0, 6)
+      .map(
+        (r) =>
+          `${r.userName} (${r.role}${r.organisation ? ` @ ${r.organisation}` : ""}): "${r.content}"`,
+      );
   }
 
   return ctx;
@@ -217,6 +237,25 @@ ${ctx.communityReviews?.join("\n") ?? ""}
 - Never recalculate, merge, or invent numbers.
 - If a metric is missing, say it is unavailable instead of guessing.
 
+## KING TECH FOUNDATION
+Swift Type is built and maintained by King Tech Foundation, a tech organisation led by Kingsley Maduabuchi.
+- Website: https://kingtech.com.ng
+- Partnerships: https://kingtech.com.ng/partnerships
+- When a user shows dedication, improved consistently, or asks about advanced coaching, you may naturally mention: "If you love what we're building, King Tech Foundation is always looking for partners to push typing education further — check out kingtech.com.ng/partnerships."
+- Keep it organic. Only mention partnerships when genuinely relevant (e.g. user asks who built this, user hits a big milestone, user wants to contribute). Never force it. Maximum once per conversation.
+
+## TOOLS
+You have access to tools that let you take real actions on behalf of the user. USE THEM — do not just talk about doing things.
+- **createGoal**: Actually create a goal for the user when they ask for one, or when you recommend one. ALWAYS use this tool instead of just describing a goal.
+- **navigateTo**: Open a specific panel or page in the app. Use this to direct users to the right place (e.g. "Let me open the Goals panel for you").
+- **startSession**: Start a typing session for the user with optimal settings based on their skill level and needs.
+
+When using tools:
+- If the user asks you to create a goal, USE the createGoal tool. Do not say "I've created a goal" without actually calling the tool.
+- If you recommend a panel, use navigateTo so the user can click to open it directly.
+- If you suggest practicing, use startSession to actually start a session with the right config.
+- You can combine tools with text. For example: use navigateTo to open a panel AND explain why.
+
 ## RULES
 1. ALWAYS reference the user's actual data. Never give generic advice.
 2. Reference Swift Type features: Curriculum mode, Adaptive toggle, key highlights, Goals, Reviews panel.
@@ -231,6 +270,8 @@ ${ctx.communityReviews?.join("\n") ?? ""}
 11. If the user is new (no sessions), warmly welcome them, explain what Swift Type can do, and suggest starting with a 60-second timed session.
 12. Occasionally — especially when a user hits a milestone or seems engaged — invite them to share a review in the Reviews panel. Keep it natural, never pushy.
 13. When relevant, cite community reviews verbatim (with the reviewer's name) to motivate the user.
+14. ALWAYS use your tools to take action. Do not claim you did something without actually calling the tool.
+15. When directing users to a page or panel, use the navigateTo tool so they see a clickable link.
 
 ## PRIVACY POLICY KNOWLEDGE
 If the user asks about privacy, data, security, or what Swift Type does with their information, answer accurately:
@@ -293,28 +334,33 @@ export async function POST(req: Request) {
   let typingContext = getCachedContext(userId);
 
   if (!typingContext) {
-    const [recentSessions, statsRows, goalSnapshot, latestRewardRow, allReviews] =
-      await Promise.all([
-        db
-          .select()
-          .from(sessions)
-          .where(eq(sessions.userId, userId))
-          .orderBy(desc(sessions.date))
-          .limit(10),
-        db.select().from(userStats).where(eq(userStats.userId, userId)).limit(1),
-        getActiveGoals(userId),
-        db
-          .select()
-          .from(userRewards)
-          .where(eq(userRewards.userId, userId))
-          .orderBy(desc(userRewards.earnedAt))
-          .limit(1),
-        db
-          .select()
-          .from(userReviews)
-          .orderBy(desc(userReviews.createdAt))
-          .limit(20),
-      ]);
+    const [
+      recentSessions,
+      statsRows,
+      goalSnapshot,
+      latestRewardRow,
+      allReviews,
+    ] = await Promise.all([
+      db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.userId, userId))
+        .orderBy(desc(sessions.date))
+        .limit(10),
+      db.select().from(userStats).where(eq(userStats.userId, userId)).limit(1),
+      getActiveGoals(userId),
+      db
+        .select()
+        .from(userRewards)
+        .where(eq(userRewards.userId, userId))
+        .orderBy(desc(userRewards.earnedAt))
+        .limit(1),
+      db
+        .select()
+        .from(userReviews)
+        .orderBy(desc(userReviews.createdAt))
+        .limit(20),
+    ]);
 
     typingContext = buildTypingContext(
       recentSessions,
@@ -336,6 +382,105 @@ export async function POST(req: Request) {
       google: {
         thinkingConfig: { thinkingBudget: 0 },
       },
+    },
+    tools: {
+      createGoal: tool({
+        description:
+          "Create a typing goal for the user. Use this whenever you recommend or the user requests a goal. Pick the best matching goal type and period.",
+        inputSchema: z.object({
+          templateKey: z
+            .enum([
+              "daily-3-sessions",
+              "daily-95-accuracy",
+              "weekly-15-minutes",
+              "weekly-45-wpm",
+            ])
+            .describe("The goal template key to use"),
+        }),
+        execute: async ({ templateKey }) => {
+          const template = GOAL_TEMPLATES.find((t) => t.key === templateKey);
+          if (!template)
+            return { success: false, error: "Unknown goal template" };
+
+          const now = Date.now();
+          const window = createGoalWindow(template.periodType, now);
+
+          const result = await createGoal(userId, {
+            title: template.title,
+            periodType: template.periodType,
+            goalType: template.goalType,
+            targetValue: template.targetValue,
+            requiredSessions: template.requiredSessions,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            startedAt: window.startedAt,
+            endsAt: window.endsAt,
+          });
+
+          // Invalidate cached context so next message picks up the new goal
+          contextCache.delete(userId);
+
+          const goal =
+            template.periodType === "daily"
+              ? result.snapshot.dailyGoal
+              : result.snapshot.weeklyGoal;
+
+          return {
+            success: true,
+            goalTitle: template.title,
+            goalType: template.goalType,
+            targetValue: template.targetValue,
+            periodType: template.periodType,
+            progress: goal ? formatGoalProgress(goal) : "0",
+          };
+        },
+      }),
+
+      navigateTo: tool({
+        description:
+          "Open a panel or page in Swift Type. Use this to direct users to the right place with a clickable action. The user will see a button they can click.",
+        inputSchema: z.object({
+          target: z
+            .enum([
+              "goals",
+              "history",
+              "guide",
+              "rewards",
+              "profile",
+              "reviews",
+              "privacy",
+              "terms",
+            ])
+            .describe("The panel or page to open"),
+          label: z
+            .string()
+            .describe(
+              "The text shown on the clickable button, e.g. 'Open Goals Panel'",
+            ),
+        }),
+      }),
+
+      startSession: tool({
+        description:
+          "Start a typing session for the user with optimal settings. Use this when you suggest they practice, or when they ask to start typing.",
+        inputSchema: z.object({
+          mode: z
+            .enum(["timed", "words", "curriculum"])
+            .describe("The session mode"),
+          level: z
+            .enum(["beginner", "intermediate", "advanced"])
+            .describe(
+              "Skill level — pick based on user's current WPM and accuracy",
+            ),
+          duration: z
+            .number()
+            .optional()
+            .describe("Duration in seconds for timed mode (15, 30, 60, 120)"),
+          wordCount: z
+            .number()
+            .optional()
+            .describe("Word count for words mode (10, 25, 50, 100)"),
+        }),
+      }),
     },
     onFinish({ text }) {
       // Save messages to R2 after streaming completes (fire-and-forget)

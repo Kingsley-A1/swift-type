@@ -20,6 +20,13 @@ interface SwiftAIProps {
   onClose: () => void;
   onDocsOpen?: () => void;
   isDocsOpen?: boolean;
+  onNavigate?: (target: string) => void;
+  onStartSession?: (config: {
+    mode: string;
+    level: string;
+    duration?: number;
+    wordCount?: number;
+  }) => void;
 }
 
 export function SwiftAI({
@@ -27,6 +34,8 @@ export function SwiftAI({
   onClose,
   onDocsOpen,
   isDocsOpen,
+  onNavigate,
+  onStartSession,
 }: SwiftAIProps) {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -223,6 +232,8 @@ export function SwiftAI({
                     onTitleUpdate={(title) =>
                       handleRenameChat(activeChatId, title)
                     }
+                    onNavigate={onNavigate}
+                    onStartSession={onStartSession}
                   />
                 ) : (
                   <EmptyState onNewChat={handleNewChat} />
