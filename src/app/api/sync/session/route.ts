@@ -49,6 +49,10 @@ export async function POST(req: Request) {
     wpm: Number(data.wpm),
     accuracy: Number(data.accuracy),
     duration: Number(data.duration),
+    timezone:
+      typeof data.timezone === "string" && data.timezone.length > 0
+        ? data.timezone
+        : "UTC",
   });
 
   return NextResponse.json({

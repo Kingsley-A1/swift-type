@@ -12,7 +12,9 @@ import {
   createEmptyGoalSnapshot,
   createEmptyGoalStreak,
   createGoalWindow,
+  didGoalStreakChange,
   expireGoalRecord,
+  getGoalSnapshotTimezone,
   normalizeGoalRecord,
   shouldGoalBeCompleted,
   updateGoalStreak,
@@ -373,6 +375,13 @@ export async function updateGoalProgressFromSession(
 ): Promise<GoalMutationResult> {
   await expireStaleGoalsForUser(userId, session.date);
 
+  const streakRows = await db
+    .select()
+    .from(userStreaks)
+    .where(eq(userStreaks.userId, userId))
+    .limit(1);
+  const previousStreak = mapStreakRow(streakRows[0]);
+
   const activeRows = await db
     .select()
     .from(userGoals)
@@ -404,20 +413,56 @@ export async function updateGoalProgressFromSession(
         })
         .where(eq(userGoals.id, goal.id));
 
-      if (
-        goal.status !== "completed" &&
-        nextGoal.status === "completed" &&
-        nextGoal.periodType === "daily" &&
-        nextGoal.completedAt
-      ) {
-        await updateStreak(userId, nextGoal.completedAt, nextGoal.timezone);
-        streakUpdated = true;
-      }
-
       if (goal.status !== "completed" && nextGoal.status === "completed") {
         completedGoals.push(nextGoal);
       }
     }
+  }
+
+  const streakTimezone = getGoalSnapshotTimezone(
+    {
+      dailyGoal:
+        activeRows
+          .map(mapGoalRow)
+          .find((goal) => goal.periodType === "daily") ?? null,
+      weeklyGoal:
+        activeRows
+          .map(mapGoalRow)
+          .find((goal) => goal.periodType === "weekly") ?? null,
+      streak: previousStreak,
+    },
+    session.timezone || "UTC",
+  );
+  const nextStreak = updateGoalStreak(
+    previousStreak,
+    session.date,
+    streakTimezone,
+  );
+
+  if (didGoalStreakChange(previousStreak, nextStreak)) {
+    await db
+      .insert(userStreaks)
+      .values({
+        userId,
+        currentStreak: nextStreak.currentStreak,
+        bestStreak: nextStreak.bestStreak,
+        lastQualifiedAt: nextStreak.lastQualifiedAt
+          ? new Date(nextStreak.lastQualifiedAt)
+          : null,
+        updatedAt: new Date(session.date),
+      })
+      .onConflictDoUpdate({
+        target: userStreaks.userId,
+        set: {
+          currentStreak: nextStreak.currentStreak,
+          bestStreak: nextStreak.bestStreak,
+          lastQualifiedAt: nextStreak.lastQualifiedAt
+            ? new Date(nextStreak.lastQualifiedAt)
+            : null,
+          updatedAt: new Date(session.date),
+        },
+      });
+    streakUpdated = true;
   }
 
   const snapshot = await loadGoalSnapshot(userId);

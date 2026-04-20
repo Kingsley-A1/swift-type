@@ -1,46 +1,55 @@
 "use client";
 
 import { useTypingStore } from "@/store/useTypingStore";
-import React, { useEffect, useRef, memo, forwardRef } from "react";
+import React, { useEffect, useRef, useState, memo, forwardRef } from "react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 
 const CharSpan = memo(
   forwardRef<
     HTMLSpanElement,
-    { char: string; typed: string | undefined; isCaret: boolean }
-  >(({ char, typed, isCaret }, ref) => {
+    {
+      expectedChar: string;
+      displayChar: string;
+      typed: string | undefined;
+      isCaret: boolean;
+    }
+  >(({ expectedChar, displayChar, typed, isCaret }, ref) => {
     let colorClass = "text-gray-600 dark:text-gray-400"; // untyped
     let bgClass = "";
 
     if (typed != null) {
-      if (typed === char) {
+      if (typed === expectedChar) {
         colorClass = "text-brand-orange";
       } else {
-        colorClass = "text-red-600 dark:text-red-500 underline decoration-red-600 dark:decoration-red-500 underline-offset-4";
-        if (char === " ") {
+        colorClass =
+          "text-red-600 dark:text-red-500 underline decoration-red-600 dark:decoration-red-500 underline-offset-4";
+        if (expectedChar === " ") {
           bgClass = "bg-red-500/20 rounded-[2px]";
         }
       }
     }
 
     return (
-      <span ref={ref} className={clsx("relative inline-block", colorClass, bgClass)}>
+      <span
+        ref={ref}
+        className={clsx("relative inline-block", colorClass, bgClass)}
+      >
         {isCaret && (
           <motion.span
-            className="absolute left-[-1px] top-[10%] h-[82%] w-[2px] bg-brand-orange rounded-full block"
+            className="absolute -left-px top-[10%] h-[82%] w-0.5 bg-brand-orange rounded-full block"
             animate={{ opacity: [1, 0, 1] }}
             transition={{ repeat: Infinity, duration: 0.85 }}
           />
         )}
-        {char === " " ? "\u00A0" : char}
+        {displayChar === " " ? "\u00A0" : displayChar}
       </span>
     );
-  })
+  }),
 );
 CharSpan.displayName = "CharSpan";
 
-export function TypingDisplay() {
+export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
   const {
     targetText,
     typedText,
@@ -51,15 +60,20 @@ export function TypingDisplay() {
     resetSession,
     endSession,
   } = useTypingStore();
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const activeCharRef = useRef<HTMLSpanElement>(null);
 
-  // Keep focus on input when active
+  // Keep focus on input when active (but not when blocked by a panel)
   useEffect(() => {
-    if (isActive) inputRef.current?.focus();
-  }, [isActive]);
+    if (isBlocked) {
+      inputRef.current?.blur();
+    } else if (isActive) {
+      inputRef.current?.focus();
+    }
+  }, [isActive, isBlocked]);
 
   // Auto-scroll the container to keep the active character vertically centered
   useEffect(() => {
@@ -71,16 +85,66 @@ export function TypingDisplay() {
     }
   }, [typedText.length, isActive]);
 
+  useEffect(() => {
+    const handleModifierState = (event: KeyboardEvent) => {
+      setIsCapsLockOn(event.getModifierState("CapsLock"));
+    };
+
+    window.addEventListener("keydown", handleModifierState);
+    window.addEventListener("keyup", handleModifierState);
+
+    return () => {
+      window.removeEventListener("keydown", handleModifierState);
+      window.removeEventListener("keyup", handleModifierState);
+    };
+  }, []);
+
+  function getStoredCharacter(pressedChar: string, expectedChar: string) {
+    const isLetter =
+      /^[a-z]$/i.test(pressedChar) && /^[a-z]$/i.test(expectedChar);
+    if (isLetter && pressedChar.toLowerCase() === expectedChar.toLowerCase()) {
+      return expectedChar;
+    }
+
+    return pressedChar;
+  }
+
+  function getDisplayCharacter(char: string) {
+    if (!isCapsLockOn || !/[a-z]/i.test(char)) {
+      return char;
+    }
+
+    return char.toUpperCase();
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Tab") { e.preventDefault(); resetSession(); return; }
-    if (e.key === "Escape") { e.preventDefault(); if (isActive) endSession(); return; }
+    if (e.key === "Tab") {
+      e.preventDefault();
+      resetSession();
+      return;
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (isActive) endSession();
+      return;
+    }
+    if (isBlocked) return;
     if (!isActive) return;
-    if (e.key === "Backspace") { deleteChar(); return; }
+    if (e.key === "Backspace") {
+      deleteChar();
+      return;
+    }
     if (e.key.length === 1) {
       e.preventDefault();
-      const correct = targetText[typedText.length] === e.key;
-      typeChar(e.key);
-      if (typeof window !== "undefined" && (window as any).__swiftTypePlaySound) {
+      const expectedChar = targetText[typedText.length] ?? "";
+      const storedChar = getStoredCharacter(e.key, expectedChar);
+      const correct = storedChar === expectedChar;
+      setIsCapsLockOn(e.getModifierState("CapsLock"));
+      typeChar(storedChar);
+      if (
+        typeof window !== "undefined" &&
+        (window as any).__swiftTypePlaySound
+      ) {
         (window as any).__swiftTypePlaySound(correct ? "correct" : "error");
       }
     }
@@ -93,7 +157,7 @@ export function TypingDisplay() {
       ref={containerRef}
       className="typing-panel relative w-full px-6 py-4 mb-2 cursor-text overflow-y-auto"
       style={{ minHeight: "88px", maxHeight: "140px", scrollbarWidth: "none" }}
-      onClick={() => inputRef.current?.focus()}
+      onClick={() => !isBlocked && inputRef.current?.focus()}
     >
       {/* Hidden input receiver */}
       <input
@@ -103,6 +167,8 @@ export function TypingDisplay() {
         onKeyDown={handleKeyDown}
         aria-label="Typing input"
         readOnly
+        tabIndex={isBlocked ? -1 : 0}
+        data-typing-input="true"
       />
 
       {/* Characters */}
@@ -118,7 +184,8 @@ export function TypingDisplay() {
             <CharSpan
               key={i}
               ref={isCaret ? activeCharRef : null}
-              char={char}
+              expectedChar={char}
+              displayChar={getDisplayCharacter(char)}
               typed={typed}
               isCaret={isCaret}
             />
@@ -128,7 +195,7 @@ export function TypingDisplay() {
         {/* Caret at end */}
         {isActive && typedText.length === targetText.length && (
           <motion.span
-            className="inline-block w-[2px] h-[1.1em] bg-brand-orange rounded-full ml-0.5 mt-[0.25em]"
+            className="inline-block w-0.5 h-[1.1em] bg-brand-orange rounded-full ml-0.5 mt-[0.25em]"
             animate={{ opacity: [1, 0, 1] }}
             transition={{ repeat: Infinity, duration: 0.85 }}
           />

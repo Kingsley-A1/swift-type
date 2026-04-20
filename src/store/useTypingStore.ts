@@ -30,6 +30,7 @@ export interface SessionHistory {
   duration: number;
   keystrokes: number;
   historyData: WpmDataPoint[];
+  timezone?: string;
 }
 
 export interface KeyStats {
@@ -221,7 +222,10 @@ export const useTypingStore = create<TypeState>()(
       rewards: [],
       rewardQueue: [],
 
-      setConfig: (config) => set((draft) => { Object.assign(draft, config); }),
+      setConfig: (config) =>
+        set((draft) => {
+          Object.assign(draft, config);
+        }),
 
       startSession: (text: string) =>
         set({
@@ -266,7 +270,11 @@ export const useTypingStore = create<TypeState>()(
 
           // Mutate perKeyStats in-place — no object clone on every keystroke
           if (!draft.perKeyStats[targetChar]) {
-            draft.perKeyStats[targetChar] = { hits: 0, misses: 0, totalTimeMs: 0 };
+            draft.perKeyStats[targetChar] = {
+              hits: 0,
+              misses: 0,
+              totalTimeMs: 0,
+            };
           }
           draft.perKeyStats[targetChar].hits += isCorrect ? 1 : 0;
           draft.perKeyStats[targetChar].misses += isCorrect ? 0 : 1;
@@ -278,7 +286,11 @@ export const useTypingStore = create<TypeState>()(
             if (/[a-zA-Z]/.test(prevChar) && /[a-zA-Z]/.test(targetChar)) {
               const bigram = (prevChar + targetChar).toLowerCase();
               if (!draft.nGramStats[bigram]) {
-                draft.nGramStats[bigram] = { occurrences: 0, misses: 0, totalTimeMs: 0 };
+                draft.nGramStats[bigram] = {
+                  occurrences: 0,
+                  misses: 0,
+                  totalTimeMs: 0,
+                };
               }
               draft.nGramStats[bigram].occurrences += 1;
               draft.nGramStats[bigram].misses += isCorrect ? 0 : 1;
@@ -296,11 +308,19 @@ export const useTypingStore = create<TypeState>()(
             const timeElapsedMin = (now - (draft.startTime || now)) / 1000 / 60;
             const netWPM =
               timeElapsedMin > 0
-                ? Math.max(0, Math.round((draft.keystrokes - draft.mistakes) / 5 / timeElapsedMin))
+                ? Math.max(
+                    0,
+                    Math.round(
+                      (draft.keystrokes - draft.mistakes) / 5 / timeElapsedMin,
+                    ),
+                  )
                 : 0;
             const accuracy =
               draft.keystrokes > 0
-                ? Math.round(((draft.keystrokes - draft.mistakes) / draft.keystrokes) * 100)
+                ? Math.round(
+                    ((draft.keystrokes - draft.mistakes) / draft.keystrokes) *
+                      100,
+                  )
                 : 0;
 
             const newSession: SessionHistory = {
@@ -312,16 +332,32 @@ export const useTypingStore = create<TypeState>()(
               duration: draft.duration - draft.timeLeft,
               keystrokes: draft.keystrokes,
               historyData: [...draft.wpmHistory],
+              timezone:
+                Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
             };
 
-            const snapIn = { dailyGoal: draft.dailyGoal, weeklyGoal: draft.weeklyGoal, goalStreak: draft.goalStreak };
+            const snapIn = {
+              dailyGoal: draft.dailyGoal,
+              weeklyGoal: draft.weeklyGoal,
+              goalStreak: draft.goalStreak,
+            };
             const nextGoalState = getUpdatedGoalState(snapIn, newSession);
-            const localRewardEvents = getLocalRewardEvents({ ...snapIn, rewards: draft.rewards }, newSession, nextGoalState);
+            const localRewardEvents = getLocalRewardEvents(
+              { ...snapIn, rewards: draft.rewards },
+              newSession,
+              nextGoalState,
+            );
 
             draft.isActive = false;
             draft.isFinished = true;
-            draft.savedSessions = [newSession, ...draft.savedSessions].slice(0, 200);
-            draft.rewards = [...localRewardEvents, ...draft.rewards].slice(0, 120);
+            draft.savedSessions = [newSession, ...draft.savedSessions].slice(
+              0,
+              200,
+            );
+            draft.rewards = [...localRewardEvents, ...draft.rewards].slice(
+              0,
+              120,
+            );
             draft.rewardQueue = [...draft.rewardQueue, ...localRewardEvents];
             draft.dailyGoal = nextGoalState.dailyGoal;
             draft.weeklyGoal = nextGoalState.weeklyGoal;
@@ -372,7 +408,8 @@ export const useTypingStore = create<TypeState>()(
             const accuracy =
               draft.keystrokes > 0
                 ? Math.round(
-                    ((draft.keystrokes - draft.mistakes) / draft.keystrokes) * 100,
+                    ((draft.keystrokes - draft.mistakes) / draft.keystrokes) *
+                      100,
                   )
                 : 0;
 
@@ -385,6 +422,8 @@ export const useTypingStore = create<TypeState>()(
               duration: draft.duration,
               keystrokes: draft.keystrokes,
               historyData: [...draft.wpmHistory],
+              timezone:
+                Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
             };
 
             const snapIn = {
@@ -402,8 +441,14 @@ export const useTypingStore = create<TypeState>()(
             draft.timeLeft = 0;
             draft.isActive = false;
             draft.isFinished = true;
-            draft.savedSessions = [newSession, ...draft.savedSessions].slice(0, 200);
-            draft.rewards = [...localRewardEvents, ...draft.rewards].slice(0, 120);
+            draft.savedSessions = [newSession, ...draft.savedSessions].slice(
+              0,
+              200,
+            );
+            draft.rewards = [...localRewardEvents, ...draft.rewards].slice(
+              0,
+              120,
+            );
             draft.rewardQueue = [...draft.rewardQueue, ...localRewardEvents];
             draft.dailyGoal = nextGoalState.dailyGoal;
             draft.weeklyGoal = nextGoalState.weeklyGoal;
@@ -446,6 +491,7 @@ export const useTypingStore = create<TypeState>()(
             duration: state.duration - state.timeLeft,
             keystrokes: state.keystrokes,
             historyData: state.wpmHistory,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
           };
 
           const nextGoalState = getUpdatedGoalState(state, newSession);
@@ -530,7 +576,7 @@ export const useTypingStore = create<TypeState>()(
           rewards,
           rewardQueue: state.rewardQueue,
         })),
-    })),  // closes immer((set, get) => ({  ...  }))
+    })), // closes immer((set, get) => ({  ...  }))
     {
       name: "swiftyper-storage",
       partialize: (state: TypeState) =>

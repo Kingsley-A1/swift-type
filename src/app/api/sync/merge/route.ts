@@ -26,6 +26,7 @@ export async function POST(req: Request) {
     mode: string;
     duration: number;
     keystrokes: number;
+    timezone?: string;
     historyData?: Array<{ second: number; wpm: number; raw: number }>;
   };
 
@@ -92,6 +93,7 @@ export async function POST(req: Request) {
       wpm: Number(sessionRow.wpm),
       accuracy: Number(sessionRow.accuracy),
       duration: Number(sessionRow.duration),
+      timezone: sessionRow.timezone || "UTC",
     });
 
     goalSnapshot = result.snapshot;

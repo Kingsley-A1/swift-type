@@ -11,6 +11,7 @@ export interface GoalSessionInput {
   wpm: number;
   accuracy: number;
   duration: number;
+  timezone?: string;
 }
 
 export interface GoalRecord {
@@ -366,6 +367,28 @@ export function updateGoalStreak(
   };
 }
 
+export function getGoalSnapshotTimezone(
+  snapshot: GoalSnapshot,
+  fallbackTimezone = "UTC",
+): string {
+  return (
+    snapshot.dailyGoal?.timezone ||
+    snapshot.weeklyGoal?.timezone ||
+    fallbackTimezone
+  );
+}
+
+export function didGoalStreakChange(
+  previous: GoalStreak,
+  next: GoalStreak,
+): boolean {
+  return (
+    previous.currentStreak !== next.currentStreak ||
+    previous.bestStreak !== next.bestStreak ||
+    previous.lastQualifiedAt !== next.lastQualifiedAt
+  );
+}
+
 export function applySessionToGoalSnapshot(
   snapshot: GoalSnapshot,
   session: GoalSessionInput,
@@ -384,21 +407,11 @@ export function applySessionToGoalSnapshot(
     ? applySessionToGoal(weeklyGoal, session)
     : null;
 
-  let nextStreak = snapshot.streak;
-
-  if (
-    dailyGoal &&
-    nextDailyGoal &&
-    dailyGoal.status !== "completed" &&
-    nextDailyGoal.status === "completed" &&
-    nextDailyGoal.completedAt
-  ) {
-    nextStreak = updateGoalStreak(
-      snapshot.streak,
-      nextDailyGoal.completedAt,
-      nextDailyGoal.timezone,
-    );
-  }
+  const nextStreak = updateGoalStreak(
+    snapshot.streak,
+    session.date,
+    getGoalSnapshotTimezone(snapshot, session.timezone || "UTC"),
+  );
 
   return {
     dailyGoal: nextDailyGoal,
