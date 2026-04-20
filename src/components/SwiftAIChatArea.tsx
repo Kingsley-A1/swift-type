@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useSession } from "next-auth/react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Send,
   Square,
@@ -42,7 +44,7 @@ export function SwiftAIChatArea({
   >({});
   const isOnline = useNetworkStatus();
 
-  const { messages, sendMessage, status, stop, regenerate, setMessages } =
+  const { messages, sendMessage, status, stop, setMessages } =
     useChat({
       transport: new DefaultChatTransport({
         api: "/api/chat",
@@ -74,18 +76,37 @@ export function SwiftAIChatArea({
                 }
 
                 const fallbackTitle =
-                  text.slice(0, 40) + (text.length > 40 ? "…" : "");
+                  text.slice(0, 40) + (text.length > 40 ? "\u2026" : "");
                 onTitleUpdate(fallbackTitle);
               })
               .catch(() => {
                 const fallbackTitle =
-                  text.slice(0, 40) + (text.length > 40 ? "…" : "");
+                  text.slice(0, 40) + (text.length > 40 ? "\u2026" : "");
                 onTitleUpdate(fallbackTitle);
               });
           }
         }
       },
     });
+
+  // Safe regenerate: trim the last assistant message and re-send the last user
+  // message. The SDK's built-in regenerate() crashes when messages were
+  // hydrated from R2 storage because it can't find them in its internal state.
+  function handleRegenerate() {
+    const trimmed = [...messages];
+    // Remove the last assistant message if present
+    if (trimmed.length > 0 && trimmed[trimmed.length - 1].role === "assistant") {
+      trimmed.pop();
+    }
+    const lastUser = [...trimmed].reverse().find((m) => m.role === "user");
+    if (!lastUser) return;
+    setMessages(trimmed);
+    const textPart = lastUser.parts?.find((p: { type: string }) => p.type === "text") as
+      | { type: "text"; text: string }
+      | undefined;
+    const text = textPart?.text ?? "";
+    if (text) sendMessage({ text });
+  }
 
   async function persistMessages(nextMessages: UIMessage[]) {
     await fetch(`/api/chat/sessions/${chatId}`, {
@@ -206,7 +227,7 @@ export function SwiftAIChatArea({
             Something went wrong. The response couldn&apos;t be generated.
           </p>
           <button
-            onClick={() => regenerate()}
+            onClick={() => handleRegenerate()}
             className="text-[11px] font-semibold text-red-600 dark:text-red-400 underline hover:no-underline"
           >
             Retry
@@ -255,7 +276,7 @@ export function SwiftAIChatArea({
                 }
                 onRegenerate={
                   idx === lastAssistantMessageIndex && !isActive
-                    ? () => regenerate()
+                    ? () => handleRegenerate()
                     : undefined
                 }
                 feedback={messageFeedback[m.id] ?? null}
@@ -557,7 +578,7 @@ function MessageBubble({
   );
 }
 
-// ─── MESSAGE CONTENT (simple markdown-like rendering) ────────────────────────
+// ─── MESSAGE CONTENT (react-markdown with GFM) ───────────────────────────────
 
 function MessageContent({
   content,
@@ -566,30 +587,86 @@ function MessageContent({
   content: string;
   isStreaming?: boolean;
 }) {
-  const paragraphs = content.split(/\n\n+/);
-
   return (
-    <div className="space-y-2">
-      {paragraphs.map((p, i) => {
-        const lines = p.split("\n");
-        const isLast = i === paragraphs.length - 1;
-        return (
-          <div
-            key={i}
-            style={
-              isStreaming && isLast
-                ? { animation: "streamReveal 0.12s ease-out" }
-                : undefined
+    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Paragraphs
+          p: ({ children }) => (
+            <p className="mb-2 last:mb-0 text-[13.5px] leading-relaxed">{children}</p>
+          ),
+          // Headings
+          h1: ({ children }) => (
+            <h1 className="text-[15px] font-bold mt-3 mb-1.5 text-gray-900 dark:text-white">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-[14px] font-bold mt-3 mb-1 text-gray-800 dark:text-gray-100">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-[13px] font-semibold mt-2 mb-1 text-gray-700 dark:text-gray-200">{children}</h3>
+          ),
+          // Inline code
+          code: ({ children, className }) => {
+            const isBlock = className?.includes("language-");
+            if (isBlock) {
+              return (
+                <pre className="mt-2 mb-2 rounded-xl bg-gray-900 dark:bg-black/40 px-4 py-3 overflow-x-auto">
+                  <code className="text-[12px] font-mono text-gray-100">{children}</code>
+                </pre>
+              );
             }
-          >
-            {lines.map((line, j) => (
-              <p key={j} className={j > 0 ? "mt-1" : ""}>
-                {renderInline(line)}
-              </p>
-            ))}
-          </div>
-        );
-      })}
+            return (
+              <code className="px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-[12px] font-mono text-brand-orange">
+                {children}
+              </code>
+            );
+          },
+          pre: ({ children }) => <>{children}</>,
+          // Lists
+          ul: ({ children }) => (
+            <ul className="my-1.5 space-y-0.5 pl-4 list-disc marker:text-brand-orange">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="my-1.5 space-y-0.5 pl-4 list-decimal marker:text-brand-orange">{children}</ol>
+          ),
+          li: ({ children }) => (
+            <li className="text-[13.5px] leading-relaxed">{children}</li>
+          ),
+          // Bold / Italic
+          strong: ({ children }) => (
+            <strong className="font-semibold text-gray-900 dark:text-white">{children}</strong>
+          ),
+          em: ({ children }) => (
+            <em className="italic text-gray-700 dark:text-gray-300">{children}</em>
+          ),
+          // Tables (GFM)
+          table: ({ children }) => (
+            <div className="my-2 overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
+              <table className="w-full text-[12px]">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-gray-50 dark:bg-white/5">{children}</thead>
+          ),
+          th: ({ children }) => (
+            <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{children}</th>
+          ),
+          td: ({ children }) => (
+            <td className="px-3 py-2 border-t border-gray-100 dark:border-white/8 text-gray-600 dark:text-gray-300">{children}</td>
+          ),
+          // Blockquote
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-2 border-brand-orange/50 pl-3 my-2 text-gray-500 dark:text-gray-400 italic">
+              {children}
+            </blockquote>
+          ),
+          // Horizontal rule
+          hr: () => <hr className="my-3 border-gray-200 dark:border-white/10" />,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
       {isStreaming && (
         <span
           className="inline-block w-0.5 h-[0.85em] bg-brand-orange align-middle ml-0.5"
@@ -598,31 +675,6 @@ function MessageContent({
       )}
     </div>
   );
-}
-
-function renderInline(text: string) {
-  // Bold: **text**, Code: `text`
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className="font-semibold">
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    if (part.startsWith("`") && part.endsWith("`")) {
-      return (
-        <code
-          key={i}
-          className="px-1 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-[12px] font-mono"
-        >
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    return part;
-  });
 }
 
 // ─── WELCOME ─────────────────────────────────────────────────────────────────

@@ -26,7 +26,7 @@ const FINGER_COLOR_DARK: Record<string, { bg: string; shadow: string }> = {
   action: { bg: "#2a2825", shadow: "#151412" },
 };
 
-export function Keyboard() {
+export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [capsLock, setCapsLock] = useState(false);
   const [kbMode, setKbMode] = useState<"windows" | "mac">("windows");
@@ -120,10 +120,12 @@ export function Keyboard() {
 
       {/* Keyboard body */}
       <div
-        className="w-full rounded-xl p-3"
+        className="w-full rounded-xl p-3 relative transition-opacity duration-200"
         style={{
           background: isDark ? "rgba(30,32,38,0.95)" : "rgba(245,245,240,0.95)",
           border: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
+          opacity: isBlocked ? 0.35 : 1,
+          pointerEvents: isBlocked ? "none" : "auto",
         }}
       >
         <div className="flex flex-col gap-[5px] w-full">

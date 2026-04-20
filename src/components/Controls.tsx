@@ -14,7 +14,7 @@ import {
   generateCurriculumText,
   CURRICULUM_STAGES,
 } from "@/lib/adaptiveEngine";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { HintModal } from "./HintModal";
 import clsx from "clsx";
 
@@ -116,7 +116,7 @@ export function Controls() {
   const hintBtnRef = useRef<HTMLButtonElement>(null);
   const audioCtx = useRef<AudioContext | null>(null);
 
-  const playSound = (type: "correct" | "error") => {
+  const playSound = useCallback((type: "correct" | "error") => {
     if (!soundEnabled) return;
     if (!audioCtx.current) audioCtx.current = new AudioContext();
     const ctx = audioCtx.current;
@@ -130,11 +130,13 @@ export function Controls() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.1);
-  };
+  }, [soundEnabled]);
 
-  if (typeof window !== "undefined") {
+  // Register sound handler on window — properly cleaned up on unmount
+  useEffect(() => {
     (window as any).__swiftTypePlaySound = playSound;
-  }
+    return () => { (window as any).__swiftTypePlaySound = undefined; };
+  }, [playSound]);
 
   // Regenerate preview text when config changes (and no session is running)
   useEffect(() => {

@@ -2,11 +2,28 @@ import { streamText, UIMessage, convertToModelMessages } from "ai";
 import { google } from "@ai-sdk/google";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { sessions, userStats, chatSessions, userRewards } from "@/db/schema";
+import { sessions, userStats, chatSessions, userRewards, userReviews } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { saveChatMessages } from "@/lib/r2";
 import { getActiveGoals } from "@/lib/goalService";
 import { formatGoalProgress } from "@/lib/goals";
+
+// ─── CONTEXT CACHE (60s TTL per user) ────────────────────────────────────────
+// Prevents 5 DB queries on every back-to-back chat message.
+
+const contextCache = new Map<string, { context: TypingContext; expiresAt: number }>();
+const CACHE_TTL_MS = 60_000;
+
+function getCachedContext(userId: string): TypingContext | null {
+  const entry = contextCache.get(userId);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) { contextCache.delete(userId); return null; }
+  return entry.context;
+}
+
+function setCachedContext(userId: string, context: TypingContext) {
+  contextCache.set(userId, { context, expiresAt: Date.now() + CACHE_TTL_MS });
+}
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -24,6 +41,8 @@ interface TypingContext {
   bestStreak?: number;
   latestReward?: string;
   streakState?: "on_track" | "at_risk" | "missed";
+  communityReviews?: string[];
+  reviewCount?: number;
 }
 
 // ─── CONTEXT BUILDER ─────────────────────────────────────────────────────────
@@ -33,6 +52,7 @@ function buildTypingContext(
   stats: typeof userStats.$inferSelect | undefined,
   goalSnapshot: Awaited<ReturnType<typeof getActiveGoals>>,
   latestReward?: typeof userRewards.$inferSelect,
+  allReviews?: (typeof userReviews.$inferSelect)[],
 ): TypingContext {
   const ctx: TypingContext = { totalSessions: recentSessions.length };
   const normalizedSessions = recentSessions.map((session) => ({
@@ -129,20 +149,30 @@ function buildTypingContext(
     }
   }
 
+  // Community reviews (top 6 for citation)
+  if (allReviews && allReviews.length > 0) {
+    ctx.reviewCount = allReviews.length;
+    ctx.communityReviews = allReviews.slice(0, 6).map(
+      (r) => `${r.userName} (${r.role}${r.organisation ? ` @ ${r.organisation}` : ""}): "${r.content}"`
+    );
+  }
+
   return ctx;
 }
 
 // ─── SYSTEM PROMPT ───────────────────────────────────────────────────────────
 
 function buildSystemPrompt(userName: string, ctx: TypingContext): string {
-  return `You are Swift AI — the intelligent typing coach built into Swift Type, a keyboard mastery platform.
+  return `You are Swift AI — the intelligent typing coach built into Swift Type, a next-gen productivity-first keyboard mastery platform.
 
 ## IDENTITY
 - Name: Swift AI (or just "Swift")
-- Personality: Warm, encouraging, concise. Call the user "${userName}". Celebrate progress, normalize struggle.
+- Built by: King Tech Foundation, led by Kingsley Maduabuchi (Founder)
+- Platform: Swift Type — a next-generation, productivity-first efficient typing coach
+- Personality: Warm, encouraging, concise, occasionally witty. Call the user "${userName}". Celebrate progress, normalize struggle, and keep them coming back.
 - Expertise: Touch typing, keyboard ergonomics, muscle memory, speed building, accuracy strategies.
 
-## KNOWLEDGE
+## KNOWLEDGE  
 - Home row (ASDF JKL;) is the foundation of all touch typing
 - Speed comes from accuracy first, then muscle memory, then reducing finger travel
 - Common plateaus at 40, 60, 80 WPM — each needs different techniques
@@ -176,6 +206,10 @@ ${ctx.currentStreak ? `CURRENT_STREAK=${ctx.currentStreak}` : "CURRENT_STREAK=0"
 ${ctx.latestReward ? `LATEST_REWARD=${ctx.latestReward}` : "LATEST_REWARD=none"}
 ${ctx.streakState ? `STREAK_STATE=${ctx.streakState}` : "STREAK_STATE=unknown"}
 
+## COMMUNITY REVIEWS
+${ctx.reviewCount ? `Swift Type has ${ctx.reviewCount} community review(s). You may cite these naturally to encourage ${userName}:` : "No community reviews yet — if appropriate, gently invite the user to be the first to leave one in the Reviews panel."}
+${ctx.communityReviews?.join("\n") ?? ""}
+
 ## DATA INTEGRITY
 - USER DATA is the source of truth.
 - CANONICAL METRICS is the preferred block for quoting exact stats.
@@ -185,18 +219,21 @@ ${ctx.streakState ? `STREAK_STATE=${ctx.streakState}` : "STREAK_STATE=unknown"}
 
 ## RULES
 1. ALWAYS reference the user's actual data. Never give generic advice.
-2. Reference Swift Type features: Curriculum mode, Adaptive toggle, key highlights.
+2. Reference Swift Type features: Curriculum mode, Adaptive toggle, key highlights, Goals, Reviews panel.
 3. Keep responses concise — 2-4 paragraphs max unless asked for detail.
 4. If asked about anything unrelated to typing, politely redirect.
-5. Never say you're "an AI" or "a language model." You are Swift AI, the built-in coach.
+5. Never say you're "an AI" or "a language model." You are Swift AI, the built-in coach from King Tech Foundation.
 6. When quoting stats, repeat the exact labels and values from USER DATA.
-7. If the user has an active goal or streak, use it naturally in your coaching and recommendations.
+7. If the user has an active goal or streak, use it naturally in your coaching.
 8. Celebrate completions and suggest the next logical goal upgrade only when momentum is stable.
 9. If STREAK_STATE=missed, recommend smaller, easier next goals instead of pushing harder.
 10. If STREAK_STATE=at_risk, prioritize one short session today before any advanced drills.
+11. If the user is new (no sessions), warmly welcome them, explain what Swift Type can do, and suggest starting with a 60-second timed session.
+12. Occasionally — especially when a user hits a milestone or seems engaged — invite them to share a review in the Reviews panel. Keep it natural, never pushy.
+13. When relevant, cite community reviews verbatim (with the reviewer's name) to motivate the user.
 
 ## PRIVACY POLICY KNOWLEDGE
-If the user asks about privacy, data, security, or what Swift Type does with their information, answer accurately using the following facts:
+If the user asks about privacy, data, security, or what Swift Type does with their information, answer accurately:
 
 **What Swift Type collects:**
 - Typing session data: WPM, accuracy, keystroke timing, character error maps (to power coaching).
@@ -252,37 +289,49 @@ export async function POST(req: Request) {
     return new Response("Chat session not found", { status: 404 });
   }
 
-  const [recentSessions, statsRows, goalSnapshot, latestRewardRow] =
-    await Promise.all([
-      db
-        .select()
-        .from(sessions)
-        .where(eq(sessions.userId, userId))
-        .orderBy(desc(sessions.date))
-        .limit(10),
-      db.select().from(userStats).where(eq(userStats.userId, userId)).limit(1),
-      getActiveGoals(userId),
-      db
-        .select()
-        .from(userRewards)
-        .where(eq(userRewards.userId, userId))
-        .orderBy(desc(userRewards.earnedAt))
-        .limit(1),
-    ]);
+  // Check cache first — rebuild only if expired (60s TTL)
+  let typingContext = getCachedContext(userId);
 
-  const typingContext = buildTypingContext(
-    recentSessions,
-    statsRows[0],
-    goalSnapshot,
-    latestRewardRow[0],
-  );
+  if (!typingContext) {
+    const [recentSessions, statsRows, goalSnapshot, latestRewardRow, allReviews] =
+      await Promise.all([
+        db
+          .select()
+          .from(sessions)
+          .where(eq(sessions.userId, userId))
+          .orderBy(desc(sessions.date))
+          .limit(10),
+        db.select().from(userStats).where(eq(userStats.userId, userId)).limit(1),
+        getActiveGoals(userId),
+        db
+          .select()
+          .from(userRewards)
+          .where(eq(userRewards.userId, userId))
+          .orderBy(desc(userRewards.earnedAt))
+          .limit(1),
+        db
+          .select()
+          .from(userReviews)
+          .orderBy(desc(userReviews.createdAt))
+          .limit(20),
+      ]);
+
+    typingContext = buildTypingContext(
+      recentSessions,
+      statsRows[0],
+      goalSnapshot,
+      latestRewardRow[0],
+      allReviews,
+    );
+    setCachedContext(userId, typingContext);
+  }
   const systemPrompt = buildSystemPrompt(userName, typingContext);
 
   const result = streamText({
     model: google("gemini-2.5-flash"),
     system: systemPrompt,
     messages: await convertToModelMessages(messages),
-    temperature: 0,
+    temperature: 0.4,
     providerOptions: {
       google: {
         thinkingConfig: { thinkingBudget: 0 },

@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   Shield,
+  Star,
   Target,
   Trophy,
   X,
@@ -27,11 +28,13 @@ interface AppSidebarProps {
   isHistoryOpen: boolean;
   isDocsOpen: boolean;
   isRewardsOpen: boolean;
+  isReviewsOpen: boolean;
   onOpenGoals: () => void;
   onOpenHistory: () => void;
   onOpenDocs: () => void;
   onOpenRewards: () => void;
   onOpenProfile: () => void;
+  onOpenReviews: () => void;
 }
 
 interface SidebarNavItemProps {
@@ -95,11 +98,13 @@ export function AppSidebar({
   isHistoryOpen,
   isDocsOpen,
   isRewardsOpen,
+  isReviewsOpen,
   onOpenGoals,
   onOpenHistory,
   onOpenDocs,
   onOpenRewards,
   onOpenProfile,
+  onOpenReviews,
 }: AppSidebarProps) {
   const { dailyGoal, weeklyGoal, goalStreak } = useTypingStore();
   const { data: session, status } = useSession();
@@ -248,6 +253,17 @@ export function AppSidebar({
             active={isRewardsOpen}
             onClick={() => {
               onOpenRewards();
+              close();
+            }}
+            expanded={isOpen}
+          />
+
+          <SidebarNavItem
+            icon={<Star size={18} />}
+            label="Reviews"
+            active={isReviewsOpen}
+            onClick={() => {
+              onOpenReviews();
               close();
             }}
             expanded={isOpen}

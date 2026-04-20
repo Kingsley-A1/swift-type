@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 import {
   GoalPeriodType,
   GoalRecord,
@@ -188,7 +189,7 @@ interface TypeState {
 
 export const useTypingStore = create<TypeState>()(
   persist(
-    (set, get): TypeState => ({
+    immer<TypeState>((set, get) => ({
       level: "beginner",
       duration: 60,
       wordCount: 30,
@@ -220,19 +221,7 @@ export const useTypingStore = create<TypeState>()(
       rewards: [],
       rewardQueue: [],
 
-      setConfig: (
-        config: Partial<
-          Pick<
-            TypeState,
-            | "level"
-            | "duration"
-            | "wordCount"
-            | "curriculumStage"
-            | "mode"
-            | "hasPlayedIntro"
-          >
-        >,
-      ) => set((state: TypeState) => ({ ...state, ...config })),
+      setConfig: (config) => set((draft) => { Object.assign(draft, config); }),
 
       startSession: (text: string) =>
         set({
@@ -265,89 +254,53 @@ export const useTypingStore = create<TypeState>()(
         }),
 
       typeChar: (char: string) =>
-        set((state: TypeState) => {
-          if (!state.isActive) return state;
+        set((draft) => {
+          if (!draft.isActive) return;
 
-          const isCorrect = state.targetText[state.typedText.length] === char;
-          const targetChar = state.targetText[state.typedText.length];
+          const isCorrect = draft.targetText[draft.typedText.length] === char;
+          const targetChar = draft.targetText[draft.typedText.length];
           const now = Date.now();
-          const timeDiff = state.lastKeystrokeTime
-            ? now - state.lastKeystrokeTime
+          const timeDiff = draft.lastKeystrokeTime
+            ? now - draft.lastKeystrokeTime
             : 0;
 
-          // Track N-gram / Per-Key stats for adaptive learning
-          const currentKeyStats = state.perKeyStats[targetChar] || {
-            hits: 0,
-            misses: 0,
-            totalTimeMs: 0,
-          };
+          // Mutate perKeyStats in-place — no object clone on every keystroke
+          if (!draft.perKeyStats[targetChar]) {
+            draft.perKeyStats[targetChar] = { hits: 0, misses: 0, totalTimeMs: 0 };
+          }
+          draft.perKeyStats[targetChar].hits += isCorrect ? 1 : 0;
+          draft.perKeyStats[targetChar].misses += isCorrect ? 0 : 1;
+          draft.perKeyStats[targetChar].totalTimeMs += timeDiff;
 
-          // N-gram logic: bigram tracking (previous char + current char)
-          let newNGramStats = state.nGramStats;
-          if (state.typedText.length > 0) {
-            const prevChar = state.targetText[state.typedText.length - 1];
-            // Only track alphabetic n-grams
+          // Mutate nGramStats in-place — no object clone on every keystroke
+          if (draft.typedText.length > 0) {
+            const prevChar = draft.targetText[draft.typedText.length - 1];
             if (/[a-zA-Z]/.test(prevChar) && /[a-zA-Z]/.test(targetChar)) {
               const bigram = (prevChar + targetChar).toLowerCase();
-              const currentBgStats = state.nGramStats[bigram] || {
-                occurrences: 0,
-                misses: 0,
-                totalTimeMs: 0,
-              };
-              newNGramStats = {
-                ...state.nGramStats,
-                [bigram]: {
-                  occurrences: currentBgStats.occurrences + 1,
-                  misses: currentBgStats.misses + (!isCorrect ? 1 : 0),
-                  totalTimeMs: currentBgStats.totalTimeMs + timeDiff,
-                },
-              };
+              if (!draft.nGramStats[bigram]) {
+                draft.nGramStats[bigram] = { occurrences: 0, misses: 0, totalTimeMs: 0 };
+              }
+              draft.nGramStats[bigram].occurrences += 1;
+              draft.nGramStats[bigram].misses += isCorrect ? 0 : 1;
+              draft.nGramStats[bigram].totalTimeMs += timeDiff;
             }
           }
 
-          const newTypedText = state.typedText + char;
-          const isFinished = newTypedText.length >= state.targetText.length;
+          const newTypedText = draft.typedText + char;
+          draft.typedText = newTypedText;
+          draft.keystrokes += 1;
+          draft.mistakes += isCorrect ? 0 : 1;
+          draft.lastKeystrokeTime = now;
 
-          const updateObj: any = {
-            typedText: newTypedText,
-            keystrokes: state.keystrokes + 1,
-            mistakes: state.mistakes + (isCorrect ? 0 : 1),
-            lastKeystrokeTime: now,
-            perKeyStats: {
-              ...state.perKeyStats,
-              [targetChar]: {
-                hits: currentKeyStats.hits + (isCorrect ? 1 : 0),
-                misses: currentKeyStats.misses + (!isCorrect ? 1 : 0),
-                totalTimeMs: currentKeyStats.totalTimeMs + timeDiff,
-              },
-            },
-            nGramStats: newNGramStats,
-          };
-
-          if (isFinished) {
-            const timeElapsedStr = (now - (state.startTime || now)) / 1000 / 60;
-            const rawWPM =
-              timeElapsedStr > 0
-                ? updateObj.keystrokes / 5 / timeElapsedStr
-                : 0;
+          if (newTypedText.length >= draft.targetText.length) {
+            const timeElapsedMin = (now - (draft.startTime || now)) / 1000 / 60;
             const netWPM =
-              timeElapsedStr > 0
-                ? Math.max(
-                    0,
-                    Math.round(
-                      (updateObj.keystrokes - updateObj.mistakes) /
-                        5 /
-                        timeElapsedStr,
-                    ),
-                  )
+              timeElapsedMin > 0
+                ? Math.max(0, Math.round((draft.keystrokes - draft.mistakes) / 5 / timeElapsedMin))
                 : 0;
             const accuracy =
-              updateObj.keystrokes > 0
-                ? Math.round(
-                    ((updateObj.keystrokes - updateObj.mistakes) /
-                      updateObj.keystrokes) *
-                      100,
-                  )
+              draft.keystrokes > 0
+                ? Math.round(((draft.keystrokes - draft.mistakes) / draft.keystrokes) * 100)
                 : 0;
 
             const newSession: SessionHistory = {
@@ -355,30 +308,25 @@ export const useTypingStore = create<TypeState>()(
               date: now,
               wpm: netWPM,
               accuracy,
-              mode: state.mode,
-              duration: state.duration - state.timeLeft, // how long it took
-              keystrokes: updateObj.keystrokes,
-              historyData: state.wpmHistory,
+              mode: draft.mode,
+              duration: draft.duration - draft.timeLeft,
+              keystrokes: draft.keystrokes,
+              historyData: [...draft.wpmHistory],
             };
 
-            const nextGoalState = getUpdatedGoalState(state, newSession);
-            const localRewardEvents = getLocalRewardEvents(
-              state,
-              newSession,
-              nextGoalState,
-            );
+            const snapIn = { dailyGoal: draft.dailyGoal, weeklyGoal: draft.weeklyGoal, goalStreak: draft.goalStreak };
+            const nextGoalState = getUpdatedGoalState(snapIn, newSession);
+            const localRewardEvents = getLocalRewardEvents({ ...snapIn, rewards: draft.rewards }, newSession, nextGoalState);
 
-            Object.assign(updateObj, {
-              isActive: false,
-              isFinished: true,
-              savedSessions: [newSession, ...state.savedSessions].slice(0, 200),
-              rewards: [...localRewardEvents, ...state.rewards].slice(0, 120),
-              rewardQueue: [...state.rewardQueue, ...localRewardEvents],
-              ...nextGoalState,
-            });
+            draft.isActive = false;
+            draft.isFinished = true;
+            draft.savedSessions = [newSession, ...draft.savedSessions].slice(0, 200);
+            draft.rewards = [...localRewardEvents, ...draft.rewards].slice(0, 120);
+            draft.rewardQueue = [...draft.rewardQueue, ...localRewardEvents];
+            draft.dailyGoal = nextGoalState.dailyGoal;
+            draft.weeklyGoal = nextGoalState.weeklyGoal;
+            draft.goalStreak = nextGoalState.goalStreak;
           }
-
-          return updateObj;
         }),
 
       deleteChar: () =>
@@ -390,46 +338,41 @@ export const useTypingStore = create<TypeState>()(
         }),
 
       tick: () =>
-        set((state: TypeState) => {
-          if (!state.isActive) return state;
+        set((draft) => {
+          if (!draft.isActive) return;
 
           const now = Date.now();
-          const timeElapsedStr = (now - (state.startTime || now)) / 1000 / 60;
+          const timeElapsedMin = (now - (draft.startTime || now)) / 1000 / 60;
           const rawWPM =
-            timeElapsedStr > 0 ? state.keystrokes / 5 / timeElapsedStr : 0;
+            timeElapsedMin > 0 ? draft.keystrokes / 5 / timeElapsedMin : 0;
           const netWPM =
-            timeElapsedStr > 0
+            timeElapsedMin > 0
               ? Math.max(
                   0,
                   Math.round(
-                    (state.keystrokes - state.mistakes) / 5 / timeElapsedStr,
+                    (draft.keystrokes - draft.mistakes) / 5 / timeElapsedMin,
                   ),
                 )
               : 0;
 
           const currentElapsedSeconds = Math.floor(
-            (now - (state.startTime || now)) / 1000,
+            (now - (draft.startTime || now)) / 1000,
           );
-          const newWpmHistory = [
-            ...state.wpmHistory,
-            {
-              second: currentElapsedSeconds,
-              wpm: netWPM,
-              raw: Math.round(rawWPM),
-            },
-          ];
 
-          if (state.mode !== "timed") {
-            return { wpmHistory: newWpmHistory };
-          }
+          // Push in-place — no array spread every second
+          draft.wpmHistory.push({
+            second: currentElapsedSeconds,
+            wpm: netWPM,
+            raw: Math.round(rawWPM),
+          });
 
-          if (state.timeLeft <= 1) {
-            // Finish session, save history
+          if (draft.mode !== "timed") return;
+
+          if (draft.timeLeft <= 1) {
             const accuracy =
-              state.keystrokes > 0
+              draft.keystrokes > 0
                 ? Math.round(
-                    ((state.keystrokes - state.mistakes) / state.keystrokes) *
-                      100,
+                    ((draft.keystrokes - draft.mistakes) / draft.keystrokes) * 100,
                   )
                 : 0;
 
@@ -438,35 +381,37 @@ export const useTypingStore = create<TypeState>()(
               date: now,
               wpm: netWPM,
               accuracy,
-              mode: state.mode,
-              duration: state.duration,
-              keystrokes: state.keystrokes,
-              historyData: newWpmHistory,
+              mode: draft.mode,
+              duration: draft.duration,
+              keystrokes: draft.keystrokes,
+              historyData: [...draft.wpmHistory],
             };
 
-            const nextGoalState = getUpdatedGoalState(state, newSession);
+            const snapIn = {
+              dailyGoal: draft.dailyGoal,
+              weeklyGoal: draft.weeklyGoal,
+              goalStreak: draft.goalStreak,
+            };
+            const nextGoalState = getUpdatedGoalState(snapIn, newSession);
             const localRewardEvents = getLocalRewardEvents(
-              state,
+              { ...snapIn, rewards: draft.rewards },
               newSession,
               nextGoalState,
             );
 
-            return {
-              timeLeft: 0,
-              isActive: false,
-              isFinished: true,
-              wpmHistory: newWpmHistory,
-              savedSessions: [newSession, ...state.savedSessions].slice(0, 200), // Keep last 200
-              rewards: [...localRewardEvents, ...state.rewards].slice(0, 120),
-              rewardQueue: [...state.rewardQueue, ...localRewardEvents],
-              ...nextGoalState,
-            };
+            draft.timeLeft = 0;
+            draft.isActive = false;
+            draft.isFinished = true;
+            draft.savedSessions = [newSession, ...draft.savedSessions].slice(0, 200);
+            draft.rewards = [...localRewardEvents, ...draft.rewards].slice(0, 120);
+            draft.rewardQueue = [...draft.rewardQueue, ...localRewardEvents];
+            draft.dailyGoal = nextGoalState.dailyGoal;
+            draft.weeklyGoal = nextGoalState.weeklyGoal;
+            draft.goalStreak = nextGoalState.goalStreak;
+            return;
           }
 
-          return {
-            timeLeft: state.timeLeft - 1,
-            wpmHistory: newWpmHistory,
-          };
+          draft.timeLeft -= 1;
         }),
 
       endSession: () =>
@@ -585,7 +530,7 @@ export const useTypingStore = create<TypeState>()(
           rewards,
           rewardQueue: state.rewardQueue,
         })),
-    }),
+    })),  // closes immer((set, get) => ({  ...  }))
     {
       name: "swiftyper-storage",
       partialize: (state: TypeState) =>
@@ -600,5 +545,5 @@ export const useTypingStore = create<TypeState>()(
           rewards: state.rewards,
         }) as unknown as TypeState,
     },
-  ),
-);
+  ), // closes persist(
+); // closes create()(

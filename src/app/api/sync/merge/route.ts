@@ -46,19 +46,22 @@ export async function POST(req: Request) {
   );
 
   if (sortedSessions.length > 0) {
-    await db.insert(sessions).values(
-      sortedSessions.map((s) => ({
-        id: s.id,
-        userId,
-        date: new Date(s.date),
-        wpm: s.wpm,
-        accuracy: s.accuracy,
-        mode: s.mode,
-        duration: s.duration,
-        keystrokes: s.keystrokes,
-        historyData: s.historyData,
-      })),
-    );
+    await db
+      .insert(sessions)
+      .values(
+        sortedSessions.map((s) => ({
+          id: s.id,
+          userId,
+          date: new Date(s.date),
+          wpm: s.wpm,
+          accuracy: s.accuracy,
+          mode: s.mode,
+          duration: s.duration,
+          keystrokes: s.keystrokes,
+          historyData: s.historyData,
+        })),
+      )
+      .onConflictDoNothing(); // Idempotent — already-synced sessions are silently skipped
   }
 
   // Upsert stats

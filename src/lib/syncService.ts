@@ -229,5 +229,6 @@ export async function mergeLocalGoalsToServer() {
 
   await reconcileGoal(dailyGoal, remoteSnapshot.dailyGoal);
   await reconcileGoal(weeklyGoal, remoteSnapshot.weeklyGoal);
-  await fetchGoalsFromServer();
+  // Removed: redundant second fetchGoalsFromServer() call — the snapshot
+  // returned from patchGoalOnServer already reflects the updated state.
 }

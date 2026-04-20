@@ -6,6 +6,7 @@ import {
   jsonb,
   boolean,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 
 // ─── AUTH TABLES (NextAuth Drizzle Adapter) ──────────────────────────────────
@@ -64,22 +65,29 @@ export const verificationTokens = pgTable(
 
 // ─── SWIFT TYPE TABLES ───────────────────────────────────────────────────────
 
-export const sessions = pgTable("typing_sessions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  date: timestamp("date", { mode: "date" }).notNull(),
-  wpm: integer("wpm").notNull(),
-  accuracy: integer("accuracy").notNull(),
-  mode: text("mode").notNull(),
-  duration: integer("duration").notNull(),
-  keystrokes: integer("keystrokes").notNull(),
-  historyData:
-    jsonb("history_data").$type<
-      Array<{ second: number; wpm: number; raw: number }>
-    >(),
-});
+export const sessions = pgTable(
+  "typing_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    date: timestamp("date", { mode: "date" }).notNull(),
+    wpm: integer("wpm").notNull(),
+    accuracy: integer("accuracy").notNull(),
+    mode: text("mode").notNull(),
+    duration: integer("duration").notNull(),
+    keystrokes: integer("keystrokes").notNull(),
+    historyData:
+      jsonb("history_data").$type<
+        Array<{ second: number; wpm: number; raw: number }>
+      >(),
+  },
+  (table) => [
+    index("typing_sessions_user_id_idx").on(table.userId),
+    index("typing_sessions_date_idx").on(table.date),
+  ],
+);
 
 export const userStats = pgTable("user_stats", {
   userId: text("user_id")
@@ -115,28 +123,34 @@ export const userPreferences = pgTable("user_preferences", {
   sidebarDismissedAt: timestamp("sidebar_dismissed_at", { mode: "date" }),
 });
 
-export const userGoals = pgTable("user_goals", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  periodType: text("period_type").notNull(),
-  goalType: text("goal_type").notNull(),
-  targetValue: integer("target_value").notNull(),
-  currentValue: integer("current_value").notNull().default(0),
-  requiredSessions: integer("required_sessions").notNull().default(1),
-  currentSessions: integer("current_sessions").notNull().default(0),
-  status: text("status").notNull().default("active"),
-  timezone: text("timezone").notNull().default("UTC"),
-  startedAt: timestamp("started_at", { mode: "date" }).notNull(),
-  endsAt: timestamp("ends_at", { mode: "date" }).notNull(),
-  completedAt: timestamp("completed_at", { mode: "date" }),
-  createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
-  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
-});
+export const userGoals = pgTable(
+  "user_goals",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    periodType: text("period_type").notNull(),
+    goalType: text("goal_type").notNull(),
+    targetValue: integer("target_value").notNull(),
+    currentValue: integer("current_value").notNull().default(0),
+    requiredSessions: integer("required_sessions").notNull().default(1),
+    currentSessions: integer("current_sessions").notNull().default(0),
+    status: text("status").notNull().default("active"),
+    timezone: text("timezone").notNull().default("UTC"),
+    startedAt: timestamp("started_at", { mode: "date" }).notNull(),
+    endsAt: timestamp("ends_at", { mode: "date" }).notNull(),
+    completedAt: timestamp("completed_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
+  },
+  (table) => [
+    index("user_goals_user_id_idx").on(table.userId),
+  ],
+);
 
 export const userStreaks = pgTable("user_streaks", {
   userId: text("user_id")
@@ -167,21 +181,66 @@ export const userRewards = pgTable(
   },
   (table) => [
     uniqueIndex("user_reward_key_idx").on(table.userId, table.rewardKey),
+    index("user_rewards_user_id_idx").on(table.userId),
   ],
 );
 
-export const chatSessions = pgTable("chat_sessions", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  title: text("title").notNull().default("New Chat"),
-  isPinned: boolean("is_pinned").default(false),
-  feedback: jsonb("feedback")
-    .$type<Record<string, "up" | "down" | null>>()
-    .default({}),
-  createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
-  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
-});
+export const chatSessions = pgTable(
+  "chat_sessions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text("title").notNull().default("New Chat"),
+    isPinned: boolean("is_pinned").default(false),
+    feedback: jsonb("feedback")
+      .$type<Record<string, "up" | "down" | null>>()
+      .default({}),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
+  },
+  (table) => [
+    index("chat_sessions_user_id_idx").on(table.userId),
+  ],
+);
+
+// ─── USER REVIEWS (Testimonials) ─────────────────────────────────────────────
+
+export const REVIEW_ROLES = [
+  "Founder", "CTO", "Developer", "Engineer", "Instructor",
+  "Learner", "Enthusiast", "Explorer", "Swift Typist",
+] as const;
+
+export type ReviewRole = typeof REVIEW_ROLES[number];
+
+export const ROLE_PRIORITY: Record<ReviewRole, number> = {
+  "Founder": 1, "CTO": 2, "Developer": 3, "Engineer": 4, "Instructor": 5,
+  "Learner": 6, "Enthusiast": 7, "Explorer": 8, "Swift Typist": 9,
+};
+
+export const KEY_ROLES: ReviewRole[] = ["Founder", "CTO", "Developer", "Engineer", "Instructor"];
+
+export const userReviews = pgTable(
+  "user_reviews",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    userName: text("user_name").notNull(),
+    userImage: text("user_image"),
+    content: text("content").notNull(),
+    role: text("role").notNull().default("Swift Typist"),
+    organisation: text("organisation"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("user_reviews_user_id_idx").on(table.userId),
+  ],
+);

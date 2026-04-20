@@ -14,6 +14,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { RewardsPanel } from "@/components/RewardsPanel";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { ProfilePanel } from "@/components/ProfilePanel";
+import { ReviewsPanel } from "@/components/ReviewsPanel";
 import { useTypingStore } from "@/store/useTypingStore";
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -29,6 +30,8 @@ import {
   mergeLocalGoalsToServer,
   fetchRewardsFromServer,
 } from "@/lib/syncService";
+
+type PanelId = "goals" | "history" | "guide" | "rewards" | "profile" | "swiftai" | "reviews" | null;
 
 export default function Home() {
   const {
@@ -49,33 +52,35 @@ export default function Home() {
   } = useTypingStore();
 
   const { data: session, status } = useSession();
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [isSwiftAIOpen, setIsSwiftAIOpen] = useState(false);
-  const [isGoalOpen, setIsGoalOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isRewardsOpen, setIsRewardsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // ── Single panel state: only one panel open at a time ─────────────────────
+  const [openPanel, setOpenPanel] = useState<PanelId>(null);
   const bootstrappedUserId = useRef<string | null>(null);
 
-  // Keep guest goals fresh and hide finished windows after they expire.
+  const openOnly = (panel: PanelId) => setOpenPanel(panel);
+  const closePanel = () => setOpenPanel(null);
+
+  const isGuideOpen    = openPanel === "guide";
+  const isSwiftAIOpen  = openPanel === "swiftai";
+  const isGoalOpen     = openPanel === "goals";
+  const isHistoryOpen  = openPanel === "history";
+  const isRewardsOpen  = openPanel === "rewards";
+  const isProfileOpen  = openPanel === "profile";
+  const isReviewsOpen  = openPanel === "reviews";
+  const anyPanelOpen   = openPanel !== null;
+
+  // Keep guest goals fresh
   useEffect(() => {
     refreshGoalStatuses();
     const intervalId = window.setInterval(refreshGoalStatuses, 60_000);
     return () => window.clearInterval(intervalId);
   }, [refreshGoalStatuses]);
 
-  // One-time bootstrapping per authenticated user: merge local sessions, then merge local goals.
+  // One-time bootstrap per authenticated user
   useEffect(() => {
-    if (status !== "authenticated" || !session?.user?.id) {
-      return;
-    }
-
-    if (bootstrappedUserId.current === session.user.id) {
-      return;
-    }
-
+    if (status !== "authenticated" || !session?.user?.id) return;
+    if (bootstrappedUserId.current === session.user.id) return;
     bootstrappedUserId.current = session.user.id;
-
     void (async () => {
       await mergeLocalDataToServer();
       await mergeLocalGoalsToServer();
@@ -84,132 +89,104 @@ export default function Home() {
   }, [session?.user?.id, status]);
 
   const primaryReward =
-    rewardQueue.find((reward) => reward.rewardType === "goal_completion") ??
+    rewardQueue.find((r) => r.rewardType === "goal_completion") ??
     rewardQueue[0] ??
     null;
   const companionReward =
-    rewardQueue.find((reward) => reward.rewardType === "rank") ??
-    rewardQueue.find((reward) => reward.rewardType === "streak") ??
-    rewardQueue.find((reward) => reward.rewardType === "milestone") ??
+    rewardQueue.find((r) => r.rewardType === "rank") ??
+    rewardQueue.find((r) => r.rewardType === "streak") ??
+    rewardQueue.find((r) => r.rewardType === "milestone") ??
     null;
-
   const completedGoalTitle =
     typeof primaryReward?.metadata?.goalTitle === "string"
       ? primaryReward.metadata.goalTitle
       : primaryReward?.description;
 
-  const prevSessionCount = useRef(
-    useTypingStore.getState().savedSessions.length,
-  );
+  const prevSessionCount = useRef(useTypingStore.getState().savedSessions.length);
 
-  // Auto-sync: whenever a new session is saved, push it to DB
+  // Auto-sync new sessions to DB
   useEffect(() => {
     if (status !== "authenticated") return;
-
     const unsub = useTypingStore.subscribe((state) => {
       const newLen = state.savedSessions.length;
       if (newLen > prevSessionCount.current) {
         prevSessionCount.current = newLen;
-        const latest = state.savedSessions[0];
-        syncSessionToServer(latest);
+        syncSessionToServer(state.savedSessions[0]);
         syncStatsToServer();
       }
     });
-
     return unsub;
   }, [status]);
 
-  // Global keyboard shortcuts (Enter=start, Tab=reset, Esc=stop)
+  // Global keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (isGuideOpen || isSwiftAIOpen) return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
+      // Esc: close open panel first; if none open and session active, stop it
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (anyPanelOpen) { closePanel(); return; }
+        if (isActive) endSession();
+        return;
+      }
+
+      if (isGuideOpen || isSwiftAIOpen) return;
+
       if (e.key === "Enter" && !isActive && !isFinished) {
         e.preventDefault();
-
         const state = useTypingStore.getState();
         if (
           !state.hasPlayedIntro &&
-          state.targetText ===
-            "swift type teaches you touch typing happy learning click enter to start"
+          state.targetText === "swift type teaches you touch typing happy learning click enter to start"
         ) {
-          state.setConfig({
-            mode: "timed",
-            duration: 60,
-            hasPlayedIntro: true,
-          });
+          state.setConfig({ mode: "timed", duration: 60, hasPlayedIntro: true });
           startSession(state.targetText);
           return;
         }
-
-        const baseWpm =
-          level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
-        const count =
-          mode === "timed" ? Math.ceil((baseWpm * duration) / 60) : wordCount;
+        const baseWpm = level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
+        const count = mode === "timed" ? Math.ceil((baseWpm * duration) / 60) : wordCount;
         startSession(
           mode === "curriculum"
             ? generateCurriculumText(curriculumStage, count)
             : getRandomWords(level as any, count),
         );
       }
-      if (e.key === "Tab") {
+      if (e.key === "Tab") { e.preventDefault(); resetSession(); }
+
+      // Ctrl/Cmd+Shift+S — toggle Swift AI
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        resetSession();
-      }
-      if (e.key === "Escape" && isActive) {
-        e.preventDefault();
-        endSession();
-      }
-      // Ctrl/Cmd + Shift + S — toggle Swift AI panel
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "s"
-      ) {
-        e.preventDefault();
-        setIsSwiftAIOpen((prev) => !prev);
+        setOpenPanel((p) => (p === "swiftai" ? null : "swiftai"));
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [
-    isActive,
-    isFinished,
-    isGuideOpen,
-    isSwiftAIOpen,
-    mode,
-    level,
-    startSession,
-    resetSession,
-    endSession,
-  ]);
+  }, [isActive, isFinished, isGuideOpen, isSwiftAIOpen, anyPanelOpen, mode, level, startSession, resetSession, endSession]);
 
   return (
     <>
       <UserGuide
         isOpen={isGuideOpen}
-        onClose={() => setIsGuideOpen(false)}
-        onAskSwift={() => setIsSwiftAIOpen(true)}
+        onClose={closePanel}
+        onAskSwift={() => openOnly("swiftai")}
         isSwiftAIOpen={isSwiftAIOpen}
       />
       <SwiftAI
         isOpen={isSwiftAIOpen}
-        onClose={() => setIsSwiftAIOpen(false)}
-        onDocsOpen={() => setIsGuideOpen(true)}
+        onClose={closePanel}
+        onDocsOpen={() => openOnly("guide")}
         isDocsOpen={isGuideOpen}
       />
-      <HistoryPanel
-        isOpen={isHistoryOpen}
-        onClose={() => setIsHistoryOpen(false)}
-      />
-      <GoalPanel isOpen={isGoalOpen} onClose={() => setIsGoalOpen(false)} />
+      <HistoryPanel isOpen={isHistoryOpen} onClose={closePanel} />
+      <GoalPanel isOpen={isGoalOpen} onClose={closePanel} />
       <RewardsPanel
         isOpen={isRewardsOpen}
-        onClose={() => setIsRewardsOpen(false)}
-        onOpenGoals={() => setIsGoalOpen(true)}
+        onClose={closePanel}
+        onOpenGoals={() => openOnly("goals")}
       />
+      <ReviewsPanel isOpen={isReviewsOpen} onClose={closePanel} />
       <GoalCompleteModal
         isOpen={rewardQueue.length > 0}
         onClose={clearRewardQueue}
@@ -225,22 +202,24 @@ export default function Home() {
         isHistoryOpen={isHistoryOpen}
         isDocsOpen={isGuideOpen}
         isRewardsOpen={isRewardsOpen}
-        onOpenGoals={() => setIsGoalOpen(true)}
-        onOpenHistory={() => setIsHistoryOpen(true)}
-        onOpenDocs={() => setIsGuideOpen(true)}
-        onOpenRewards={() => setIsRewardsOpen(true)}
-        onOpenProfile={() => setIsProfileOpen(true)}
+        isReviewsOpen={isReviewsOpen}
+        onOpenGoals={() => openOnly("goals")}
+        onOpenHistory={() => openOnly("history")}
+        onOpenDocs={() => openOnly("guide")}
+        onOpenRewards={() => openOnly("rewards")}
+        onOpenProfile={() => openOnly("profile")}
+        onOpenReviews={() => openOnly("reviews")}
       />
 
       <ProfilePanel
         isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        onAskGenius={() => setIsSwiftAIOpen(true)}
-        onViewStats={() => setIsHistoryOpen(true)}
-        onPractice={() => setIsProfileOpen(false)}
+        onClose={closePanel}
+        onAskGenius={() => openOnly("swiftai")}
+        onViewStats={() => openOnly("history")}
+        onPractice={closePanel}
       />
 
-      {/* Full-viewport container — no scroll */}
+      {/* Full-viewport container */}
       <div className="h-dvh pl-[72px]">
         <main
           className="w-full max-w-5xl mx-auto flex flex-col"
@@ -251,16 +230,12 @@ export default function Home() {
             borderRight: "1px solid rgba(255,107,53,0.09)",
           }}
         >
-          {/* Header */}
           <Header
-            onHistoryOpen={() => setIsHistoryOpen(true)}
-            onSwiftAIOpen={() => setIsSwiftAIOpen(true)}
+            onHistoryOpen={() => openOnly("history")}
+            onSwiftAIOpen={() => openOnly("swiftai")}
           />
-
-          {/* Controls */}
           <Controls />
 
-          {/* Typing area + Stats OR Post-session */}
           {!isFinished ? (
             <>
               <TypingDisplay />
@@ -270,14 +245,12 @@ export default function Home() {
             <PostSessionStats />
           )}
 
-          {/* Keyboard — takes remaining space */}
           {!isFinished && (
             <div className="flex-1 min-h-0 flex flex-col justify-end">
-              <Keyboard />
+              <Keyboard isBlocked={anyPanelOpen} />
             </div>
           )}
 
-          {/* Credit */}
           <div className="shrink-0 flex justify-center pt-1 pb-0.5">
             <span
               className="text-[11px] font-medium tracking-wide"
