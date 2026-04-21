@@ -34,6 +34,11 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
 
   const { targetText, typedText, isActive } = useTypingStore();
 
+  // Clear highlighted keys immediately when session stops
+  useEffect(() => {
+    if (!isActive) setActiveKeys(new Set());
+  }, [isActive]);
+
   const nextChar =
     isActive && typedText.length < targetText.length
       ? targetText[typedText.length]
@@ -73,6 +78,7 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      if (!isActive) return; // only highlight during an active session
       setActiveKeys((p) => new Set(p).add(e.code));
       if (e.code === "CapsLock") setCapsLock(e.getModifierState("CapsLock"));
     };
@@ -89,7 +95,7 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, []);
+  }, [isActive]);
 
   const colors = isDark ? FINGER_COLOR_DARK : FINGER_COLOR;
 

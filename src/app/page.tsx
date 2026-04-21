@@ -313,13 +313,7 @@ export default function Home() {
       {/* Full-viewport container */}
       <div className="h-dvh pl-18">
         <main
-          className="w-full max-w-5xl mx-auto flex flex-col"
-          style={{
-            height: "100dvh",
-            padding: "16px 24px",
-            borderLeft: "1px solid rgba(255,107,53,0.09)",
-            borderRight: "1px solid rgba(255,107,53,0.09)",
-          }}
+          className="mx-auto flex h-dvh w-full max-w-6xl flex-col border-x border-brand-orange/10 px-4 py-3 sm:px-5 lg:px-7"
         >
           <Header
             onHistoryOpen={() => openOnly("history")}
@@ -347,7 +341,7 @@ export default function Home() {
               className="text-[11px] font-medium tracking-wide"
               style={{ color: "rgba(253, 175, 8, 0.96)" }}
             >
-              Engineered by Kingsley Maduabuchi
+              Engineered by King Tech Foundation
             </span>
           </div>
         </main>

@@ -157,7 +157,7 @@ export function ProfilePanel({
                     }}
                   >
                     <Sparkles size={15} />
-                    Ask Genius
+                    Ask Swift
                   </button>
                   <button
                     onClick={onViewStats}

@@ -22,7 +22,11 @@ import {
   getGoalProgressRatio,
   getGoalTemplates,
 } from "@/lib/goals";
-import { createGoalOnServer, patchGoalOnServer } from "@/lib/syncService";
+import {
+  createGoalOnServer,
+  fetchGoalsFromServer,
+  patchGoalOnServer,
+} from "@/lib/syncService";
 
 interface GoalPanelProps {
   isOpen: boolean;
@@ -132,7 +136,11 @@ export function GoalPanel({ isOpen, onClose }: GoalPanelProps) {
     }
 
     refreshGoalStatuses();
-  }, [isOpen, refreshGoalStatuses]);
+
+    if (status === "authenticated") {
+      void fetchGoalsFromServer();
+    }
+  }, [isOpen, refreshGoalStatuses, status]);
 
   const templates = useMemo(
     () => getGoalTemplates(selectedPeriod),

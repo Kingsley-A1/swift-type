@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen,
@@ -106,9 +106,10 @@ export function AppSidebar({
   onOpenProfile,
   onOpenReviews,
 }: AppSidebarProps) {
-  const { dailyGoal, weeklyGoal, goalStreak } = useTypingStore();
+  const { dailyGoal, weeklyGoal, goalStreak, savedSessions } = useTypingStore();
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [hasOwnReview, setHasOwnReview] = useState<boolean | null>(null);
   const router = useRouter();
 
   const primaryGoal = useMemo(
@@ -133,6 +134,35 @@ export function AppSidebar({
     : "No goal";
 
   const isAuthed = status === "authenticated";
+  const shouldPromptReview =
+    isAuthed &&
+    hasOwnReview === false &&
+    savedSessions.length >= 5 &&
+    !isReviewsOpen;
+
+  useEffect(() => {
+    if (!isAuthed) {
+      setHasOwnReview(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    void fetch("/api/reviews", { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to load review status");
+        }
+        return response.json() as Promise<{ myReview?: { id: string } | null }>;
+      })
+      .then((payload) => setHasOwnReview(Boolean(payload.myReview)))
+      .catch(() => {
+        // Keep the indicator conservative when the status cannot be resolved.
+        setHasOwnReview(null);
+      });
+
+    return () => controller.abort();
+  }, [isAuthed, isReviewsOpen]);
 
   function close() {
     setIsOpen(false);
@@ -262,11 +292,19 @@ export function AppSidebar({
             icon={<Star size={18} />}
             label="Reviews"
             active={isReviewsOpen}
+            highlighted={shouldPromptReview}
             onClick={() => {
               onOpenReviews();
               close();
             }}
             expanded={isOpen}
+            trailing={
+              shouldPromptReview && isOpen ? (
+                <span className="rounded-full border border-brand-orange/20 bg-brand-orange/10 px-2 py-0.5 text-[10px] font-bold text-brand-orange">
+                  New
+                </span>
+              ) : undefined
+            }
           />
         </div>
 

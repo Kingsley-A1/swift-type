@@ -155,8 +155,12 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
   return (
     <div
       ref={containerRef}
-      className="typing-panel relative w-full px-6 py-4 mb-2 cursor-text overflow-y-auto"
-      style={{ minHeight: "88px", maxHeight: "140px", scrollbarWidth: "none" }}
+      className="typing-panel relative mb-2.5 w-full cursor-text overflow-y-auto px-6 py-4"
+      style={{
+        height: "160px",
+        scrollbarWidth: "thin",
+        scrollbarColor: "rgba(255,107,53,0.25) transparent",
+      }}
       onClick={() => !isBlocked && inputRef.current?.focus()}
     >
       {/* Hidden input receiver */}

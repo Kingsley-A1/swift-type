@@ -12,6 +12,23 @@ interface RewardCardProps {
   completedGoalTitle?: string;
 }
 
+function readMetadataNumber(
+  metadata: RewardRecord["metadata"],
+  key: string,
+): number | null {
+  const value = metadata?.[key];
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
 function toFileName(reward: RewardRecord) {
   const normalized = reward.title
     .toLowerCase()
@@ -37,6 +54,13 @@ export function RewardCard({
 
     return "Swift Type User";
   }, [userName]);
+  const displayStreakCount = useMemo(() => {
+    return (
+      readMetadataNumber(reward.metadata, "currentStreak") ??
+      readMetadataNumber(reward.metadata, "threshold") ??
+      streakCount
+    );
+  }, [reward.metadata, streakCount]);
 
   const canNativeShare =
     typeof navigator !== "undefined" && typeof navigator.share === "function";
@@ -142,79 +166,79 @@ export function RewardCard({
     <div className="space-y-4">
       <div
         ref={cardRef}
-        className="w-full relative overflow-hidden rounded-[24px] border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 dark:backdrop-blur-xl shadow-sm flex flex-col p-6 font-sans aspect-[12/7]"
+        className="relative flex w-full flex-col overflow-hidden rounded-[28px] border border-gray-200 bg-white p-6 font-sans shadow-sm dark:border-white/10 dark:bg-black/35 dark:backdrop-blur-xl"
+        style={{ minHeight: "280px" }}
       >
         {/* Soft atmospheric glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-[64px] -mr-20 -mt-20 pointer-events-none" />
+        <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-brand-orange/10 blur-3xl" />
 
-        <div className="flex-1 flex flex-col justify-between relative z-10 w-full">
-          {/* Header row with Logo */}
-          <div className="flex justify-between items-start w-full">
-            <div className="flex items-center gap-2">
-              {/* Logo icon */}
-              <Image src="/logo-192.png" alt="SwiftType" width={24} height={24} className="rounded" />
-              <span className="font-bold text-gray-900 dark:text-white tracking-tight flex gap-1 items-baseline text-lg">
+        <div className="relative z-10 flex h-full flex-1 flex-col justify-between">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/logo-192.png"
+                alt="SwiftType"
+                width={24}
+                height={24}
+                className="rounded"
+              />
+              <span className="flex items-baseline gap-1 text-lg font-bold tracking-tight text-gray-900 dark:text-white">
                 Swift
                 <span className="text-brand-orange">Type</span>
               </span>
             </div>
 
-            {/* Tiny badge */}
-            <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-brand-orange bg-brand-orange/10 rounded-full">
-              Achievement
+            <div className="rounded-full border border-brand-orange/20 bg-brand-orange/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-orange">
+              Reward Card
             </div>
           </div>
 
-          {/* Central message */}
-          <div className="my-6">
-            <h3 className="text-gray-900 dark:text-white text-3xl font-black tracking-tight mb-2">
+          <div className="my-5">
+            <h3 className="mb-2 text-2xl font-black tracking-tight text-gray-900 dark:text-white">
               {reward.title}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium leading-relaxed max-w-[85%]">
+            <p className="max-w-[92%] text-sm font-medium leading-relaxed text-gray-500 dark:text-gray-400">
               {reward.description}
             </p>
             {completedGoalTitle && (
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-3 flex items-center gap-1.5">
+              <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 size={14} className="opacity-80" />
                 Goal completed: {completedGoalTitle}
               </p>
             )}
           </div>
 
-          {/* Footer stats row */}
-          <div className="flex items-end justify-between w-full pt-4 border-t border-gray-100 dark:border-white/5">
-            <div className="flex gap-6">
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 font-bold mb-1">
-                  Streak
-                </p>
-                <div className="flex items-center gap-1.5">
-                  <Flame size={16} className="text-brand-orange" />
-                  <span className="text-gray-900 dark:text-white font-black text-xl leading-none">
-                    {streakCount}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 font-bold mb-1">
-                  Date
-                </p>
-                <p className="text-gray-900 dark:text-white font-bold text-sm">
-                  {new Date(reward.earnedAt).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
+          <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4 dark:border-white/8">
+            <div>
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
+                Streak
+              </p>
+              <div className="flex items-center gap-1.5">
+                <Flame size={16} className="text-brand-orange" />
+                <span className="text-xl font-black leading-none text-gray-900 dark:text-white">
+                  {displayStreakCount}
+                </span>
               </div>
             </div>
 
+            <div>
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
+                Date
+              </p>
+              <p className="text-sm font-bold text-gray-900 dark:text-white">
+                {new Date(reward.earnedAt).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 font-bold mb-1">
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
                 Typist
               </p>
-              <p className="text-gray-900 dark:text-white font-bold text-sm">
+              <p className="truncate text-sm font-bold text-gray-900 dark:text-white">
                 {displayName}
               </p>
             </div>
@@ -222,11 +246,11 @@ export function RewardCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
         <button
           onClick={handleDownload}
           disabled={isProcessing}
-          className="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 border border-gray-200 dark:border-white/10 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:border-brand-orange/30 hover:text-brand-orange transition-colors disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-orange px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-500 disabled:opacity-60"
         >
           <Download size={14} />
           Download PNG
@@ -235,7 +259,7 @@ export function RewardCard({
         <button
           onClick={handleCopy}
           disabled={isProcessing}
-          className="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 border border-gray-200 dark:border-white/10 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:border-brand-orange/30 hover:text-brand-orange transition-colors disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-brand-orange/30 hover:text-brand-orange disabled:opacity-60 dark:border-white/10 dark:text-gray-200"
         >
           <Copy size={14} />
           Copy
@@ -244,15 +268,17 @@ export function RewardCard({
         <button
           onClick={handleShare}
           disabled={isProcessing || !canNativeShare}
-          className="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 border border-gray-200 dark:border-white/10 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:border-brand-orange/30 hover:text-brand-orange transition-colors disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-brand-orange/30 hover:text-brand-orange disabled:opacity-50 dark:border-white/10 dark:text-gray-200"
+          title="Share"
+          aria-label="Share"
         >
           <Share2 size={14} />
-          Share
+          <span className="sm:hidden">Share</span>
         </button>
       </div>
 
       {statusMessage && (
-        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold inline-flex items-center gap-1.5">
+        <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 size={13} />
           {statusMessage}
         </p>
