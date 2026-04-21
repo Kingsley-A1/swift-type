@@ -207,6 +207,69 @@ export const chatSessions = pgTable(
   ],
 );
 
+export const adminUsers = pgTable(
+  "admin_users",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    email: text("email").unique().notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+    lastLoginAt: timestamp("last_login_at", { mode: "date" }),
+  },
+  (table) => [
+    index("admin_users_email_idx").on(table.email),
+  ],
+);
+
+export const adminSessions = pgTable(
+  "admin_sessions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    adminUserId: text("admin_user_id")
+      .notNull()
+      .references(() => adminUsers.id, { onDelete: "cascade" }),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { mode: "date" }).defaultNow(),
+    endedAt: timestamp("ended_at", { mode: "date" }),
+  },
+  (table) => [
+    index("admin_sessions_admin_user_id_idx").on(table.adminUserId),
+    index("admin_sessions_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const adminAuditLogs = pgTable(
+  "admin_audit_logs",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    adminUserId: text("admin_user_id").references(() => adminUsers.id, {
+      onDelete: "set null",
+    }),
+    action: text("action").notNull(),
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id"),
+    durationMs: integer("duration_ms"),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+  },
+  (table) => [
+    index("admin_audit_logs_admin_user_id_idx").on(table.adminUserId),
+    index("admin_audit_logs_created_at_idx").on(table.createdAt),
+    index("admin_audit_logs_entity_type_idx").on(table.entityType),
+  ],
+);
+
 // ─── USER REVIEWS (Testimonials) ─────────────────────────────────────────────
 
 export const REVIEW_ROLES = [
