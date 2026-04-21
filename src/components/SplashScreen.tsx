@@ -3,14 +3,26 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export function SplashScreen({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
+  const isAdminRoute = pathname.startsWith("/admin");
 
   useEffect(() => {
+    if (isAdminRoute) {
+      setIsLoading(false);
+      return;
+    }
+
     const timer = setTimeout(() => setIsLoading(false), 2000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAdminRoute]);
+
+  if (isAdminRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <>
@@ -21,7 +33,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 1.03 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+            className="fixed inset-0 z-9999 flex flex-col items-center justify-center"
             style={{
               background: "linear-gradient(135deg, #ffffff 0%, #f4f6fb 50%, #eef2ff 100%)",
             }}
