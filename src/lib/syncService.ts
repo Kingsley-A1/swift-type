@@ -25,6 +25,14 @@ function applyRewardEvents(events?: RewardRecord[] | null) {
   useTypingStore.getState().addRewardEvents(events);
 }
 
+export function applyGoalMutationResult(
+  snapshot?: GoalSnapshot | null,
+  rewardEvents?: RewardRecord[] | null,
+) {
+  applyGoalSnapshot(snapshot);
+  applyRewardEvents(rewardEvents);
+}
+
 export async function syncSessionToServer(session: SessionHistory) {
   try {
     const response = await fetch("/api/sync/session", {
@@ -38,8 +46,7 @@ export async function syncSessionToServer(session: SessionHistory) {
     }
 
     const data = await response.json();
-    applyGoalSnapshot(data.goalSnapshot);
-    applyRewardEvents(data.rewardEvents);
+    applyGoalMutationResult(data.goalSnapshot, data.rewardEvents);
   } catch {
     // Silently fail — localStorage is the source of truth
   }
@@ -75,8 +82,7 @@ export async function mergeLocalDataToServer() {
     }
 
     const data = await response.json();
-    applyGoalSnapshot(data.goalSnapshot);
-    applyRewardEvents(data.rewardEvents);
+    applyGoalMutationResult(data.goalSnapshot, data.rewardEvents);
   } catch {
     // Silently fail
   }
@@ -99,8 +105,7 @@ export async function fetchGoalsFromServer() {
     const snapshot = "goalSnapshot" in data ? data.goalSnapshot : data;
     const rewardEvents =
       "goalSnapshot" in data ? (data.rewardEvents ?? []) : [];
-    applyGoalSnapshot(snapshot);
-    applyRewardEvents(rewardEvents);
+    applyGoalMutationResult(snapshot, rewardEvents);
     return snapshot;
   } catch {
     return null;
@@ -122,8 +127,7 @@ export async function createGoalOnServer(goal: GoalInput) {
     goalSnapshot: GoalSnapshot;
     rewardEvents?: RewardRecord[];
   };
-  applyGoalSnapshot(data.goalSnapshot);
-  applyRewardEvents(data.rewardEvents);
+  applyGoalMutationResult(data.goalSnapshot, data.rewardEvents);
   return data.goalSnapshot;
 }
 
@@ -150,8 +154,7 @@ export async function patchGoalOnServer(
     goalSnapshot: GoalSnapshot;
     rewardEvents?: RewardRecord[];
   };
-  applyGoalSnapshot(data.goalSnapshot);
-  applyRewardEvents(data.rewardEvents);
+  applyGoalMutationResult(data.goalSnapshot, data.rewardEvents);
   return data.goalSnapshot;
 }
 

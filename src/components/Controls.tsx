@@ -33,18 +33,18 @@ function PillGroup<T extends string>({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
         {label}
       </span>
-      <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-white/8 bg-gray-100 dark:bg-white/5">
+      <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-white/8 bg-gray-100 dark:bg-white/5">
         {options.map((opt) => (
           <button
             key={opt.value}
             onClick={() => !disabled && onChange(opt.value)}
             disabled={disabled}
             className={clsx(
-              "px-2.5 py-1 text-[11px] font-semibold transition-all duration-100 select-none whitespace-nowrap",
+              "px-3 py-1.5 text-[12px] font-semibold transition-all duration-100 select-none whitespace-nowrap",
               value === opt.value
                 ? "bg-brand-orange text-white"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200",
@@ -81,7 +81,7 @@ function IconBtn({
       disabled={disabled}
       title={title}
       className={clsx(
-        "flex items-center justify-center w-7 h-7 rounded-lg border text-[11px] font-semibold transition-all duration-100",
+        "flex items-center justify-center h-8 w-8 rounded-xl border text-[11px] font-semibold transition-all duration-100",
         active
           ? activeClass
           : "border-gray-200 dark:border-white/8 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/15 hover:text-gray-700 dark:hover:text-gray-200",
@@ -211,36 +211,45 @@ export function Controls() {
   ];
 
   return (
-    <div className="control-card flex items-stretch mb-3 divide-x divide-gray-200 dark:divide-white/8">
+    <div className="control-card mb-3.5 flex items-stretch divide-x divide-gray-200 dark:divide-white/8">
       {/* ── Card 1 (2): Action Buttons ─────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 px-3 py-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-2 px-4 py-2.5">
+        {/* Start / Restart — primary action */}
         <button
           onClick={handleStart}
           disabled={isActive}
           title="Start (Enter)"
-          className="flex items-center justify-center w-7 h-7 rounded-lg bg-brand-orange text-white disabled:opacity-40 transition-all hover:bg-orange-500 active:scale-95"
+          className={clsx(
+            "flex h-9 items-center gap-1.5 rounded-xl px-4 text-[12px] font-bold transition-all duration-100 active:scale-95",
+            isActive
+              ? "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-white/8 dark:text-gray-500"
+              : "bg-brand-orange text-white hover:bg-orange-500",
+          )}
         >
           <Play size={12} fill="currentColor" />
+          Start
         </button>
+        {/* Stop */}
         <button
           onClick={endSession}
           disabled={!isActive}
           title="Stop (Esc)"
-          className="flex items-center justify-center w-7 h-7 rounded-lg border border-gray-200 dark:border-white/8 text-gray-500 dark:text-gray-400 disabled:opacity-40 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition-all active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-400 transition-all duration-100 hover:border-red-300 hover:bg-red-50 hover:text-red-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 dark:border-white/8 dark:text-gray-500 dark:hover:border-red-500/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
         >
-          <Square size={11} fill="currentColor" />
+          <Square size={12} fill="currentColor" />
         </button>
+        {/* Restart / Retry */}
         <button
           onClick={resetSession}
           title="Restart (Tab)"
-          className="flex items-center justify-center w-7 h-7 rounded-lg border border-gray-200 dark:border-white/8 text-gray-500 dark:text-gray-400 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition-all active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-400 transition-all duration-100 hover:border-brand-orange/40 hover:bg-brand-orange/5 hover:text-brand-orange active:scale-95 dark:border-white/8 dark:text-gray-500 dark:hover:border-brand-orange/30 dark:hover:text-brand-orange"
         >
-          <RotateCcw size={11} />
+          <RotateCcw size={12} />
         </button>
       </div>
 
       {/* ── Card 2 (6): Pill Selectors ─────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-2 flex-1 min-w-0">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5">
         <PillGroup
           label="Mode"
           options={modeOptions}
@@ -296,7 +305,7 @@ export function Controls() {
       </div>
 
       {/* ── Card 3 (2): Toggles ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 px-3 py-2 shrink-0 relative">
+      <div className="relative flex shrink-0 items-center gap-2 px-3.5 py-2.5">
         <IconBtn
           active={useAdaptive}
           disabled={isActive || mode === "curriculum"}
@@ -304,7 +313,7 @@ export function Controls() {
           title="Adaptive AI — drills your weak keys"
           activeClass="bg-brand-orange/10 text-brand-orange border-brand-orange/25"
         >
-          <Image src="/swift-ai-icon.png" alt="Swift AI" width={13} height={13} className="rounded-sm" />
+          <Image src="/swift-ai-icon.png" alt="Swift AI" width={14} height={14} className="rounded-sm" />
         </IconBtn>
 
         <IconBtn

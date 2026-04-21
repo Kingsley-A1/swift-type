@@ -1,3 +1,6 @@
+import type { GoalSnapshot } from "./goals";
+import type { RewardRecord } from "./rewards";
+
 export interface SwiftAISessionConfig {
   mode: "timed" | "words" | "curriculum";
   level: "beginner" | "intermediate" | "advanced";
@@ -26,6 +29,8 @@ export type SwiftAIToolDescriptor =
       kind: "create-goal";
       label: string;
       target: "goals";
+      goalSnapshot?: GoalSnapshot;
+      rewardEvents?: RewardRecord[];
     }
   | {
       id: string;
@@ -117,9 +122,7 @@ function parseSessionPayload(payload: Record<string, unknown> | null) {
   const level = payload.level;
   if (
     (mode !== "timed" && mode !== "words" && mode !== "curriculum") ||
-    (level !== "beginner" &&
-      level !== "intermediate" &&
-      level !== "advanced")
+    (level !== "beginner" && level !== "intermediate" && level !== "advanced")
   ) {
     return null;
   }
@@ -132,6 +135,24 @@ function parseSessionPayload(payload: Record<string, unknown> | null) {
     wordCount:
       typeof payload.wordCount === "number" ? payload.wordCount : undefined,
   } as SwiftAISessionConfig;
+}
+
+function parseGoalSnapshot(value: unknown): GoalSnapshot | undefined {
+  const snapshot = asRecord(value);
+  if (!snapshot) {
+    return undefined;
+  }
+
+  const streak = asRecord(snapshot.streak);
+  if (!streak) {
+    return undefined;
+  }
+
+  return value as GoalSnapshot;
+}
+
+function parseRewardEvents(value: unknown): RewardRecord[] | undefined {
+  return Array.isArray(value) ? (value as RewardRecord[]) : undefined;
 }
 
 export function resolveSwiftAIToolParts(
@@ -179,6 +200,8 @@ export function resolveSwiftAIToolParts(
               ? `${payload.goalTitle} · View Goals`
               : "Goal created · View Goals",
           target: "goals",
+          goalSnapshot: parseGoalSnapshot(payload.goalSnapshot),
+          rewardEvents: parseRewardEvents(payload.rewardEvents),
         });
         return;
       }

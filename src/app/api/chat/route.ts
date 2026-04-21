@@ -17,6 +17,8 @@ import {
   formatGoalProgress,
   createGoalWindow,
   GOAL_TEMPLATES,
+  getGoalSnapshotTimezone,
+  isGoalStreakAtRisk,
 } from "@/lib/goals";
 
 // ─── CONTEXT CACHE (60s TTL per user) ────────────────────────────────────────
@@ -45,21 +47,21 @@ function setCachedContext(userId: string, context: TypingContext) {
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
 interface TypingContext {
-  totalSessions: number;
-  averageWpm?: number;
-  averageAccuracy?: number;
-  bestWpm?: number;
-  recentSessions?: string;
-  weakestKeys?: string[];
-  weakestBigrams?: string[];
-  activeDailyGoal?: string;
-  activeWeeklyGoal?: string;
-  currentStreak?: number;
-  bestStreak?: number;
-  latestReward?: string;
-  streakState?: "on_track" | "at_risk" | "missed";
-  communityReviews?: string[];
-  reviewCount?: number;
+  totalSessions: number; //Total number of sessions a user completed
+  averageWpm?: number; //Average words per minute across all sessions
+  averageAccuracy?: number; //Average accuracy across all sessions
+  bestWpm?: number; //Best words per minute achieved in a session
+  recentSessions?: string; //Summary of recent sessions
+  weakestKeys?: string[]; //Keys with the highest error rates
+  weakestBigrams?: string[]; //Bigrams with the highest error rates
+  activeDailyGoal?: string; //Current active daily goal
+  activeWeeklyGoal?: string; //Current active weekly goal
+  currentStreak?: number; //Current streak count
+  bestStreak?: number; //Best streak count
+  latestReward?: string; //Latest reward earned
+  streakState?: "on_track" | "at_risk" | "missed"; //State of the current streak
+  communityReviews?: string[]; //Community reviews
+  reviewCount?: number; //Number of reviews
 }
 
 // ─── CONTEXT BUILDER ─────────────────────────────────────────────────────────
@@ -77,7 +79,7 @@ function buildTypingContext(
     wpm: Number(session.wpm),
     accuracy: Number(session.accuracy),
   }));
-
+// Calculate averages, bests, and summaries
   if (normalizedSessions.length > 0) {
     ctx.averageWpm = Math.round(
       normalizedSessions.reduce((sum, s) => sum + s.wpm, 0) /
@@ -152,18 +154,14 @@ function buildTypingContext(
     goalSnapshot.streak.currentStreak > 0 &&
     goalSnapshot.streak.lastQualifiedAt
   ) {
-    const now = new Date();
-    const last = new Date(goalSnapshot.streak.lastQualifiedAt);
-    const isSameDay =
-      now.getFullYear() === last.getFullYear() &&
-      now.getMonth() === last.getMonth() &&
-      now.getDate() === last.getDate();
-
-    if (!isSameDay && now.getHours() >= 18) {
-      ctx.streakState = "at_risk";
-    } else {
-      ctx.streakState = "on_track";
-    }
+    const timezone = getGoalSnapshotTimezone(goalSnapshot, "UTC");
+    ctx.streakState = isGoalStreakAtRisk(
+      goalSnapshot.streak,
+      timezone,
+      Date.now(),
+    )
+      ? "at_risk"
+      : "on_track";
   }
 
   // Community reviews (top 6 for citation)
@@ -431,6 +429,8 @@ export async function POST(req: Request) {
             targetValue: template.targetValue,
             periodType: template.periodType,
             progress: goal ? formatGoalProgress(goal) : "0",
+            goalSnapshot: result.snapshot,
+            rewardEvents: result.rewardEvents,
           };
         },
       }),

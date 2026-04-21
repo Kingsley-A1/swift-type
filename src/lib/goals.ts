@@ -321,7 +321,7 @@ export function applySessionToGoal(
   return nextGoal;
 }
 
-function getDaySerial(timestamp: number, timezone: string): number {
+export function getGoalDaySerial(timestamp: number, timezone: string): number {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: timezone || "UTC",
     year: "numeric",
@@ -337,15 +337,56 @@ function getDaySerial(timestamp: number, timezone: string): number {
   return Math.floor(Date.UTC(year, month - 1, day) / 86400000);
 }
 
+function getHourInTimezone(timestamp: number, timezone: string): number {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone || "UTC",
+    hour: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const hour = formatter
+    .formatToParts(new Date(timestamp))
+    .find((part) => part.type === "hour")?.value;
+
+  return Number(hour ?? 0);
+}
+
+export function isSameGoalDay(
+  leftTimestamp: number,
+  rightTimestamp: number,
+  timezone: string,
+): boolean {
+  return (
+    getGoalDaySerial(leftTimestamp, timezone) ===
+    getGoalDaySerial(rightTimestamp, timezone)
+  );
+}
+
+export function isGoalStreakAtRisk(
+  streak: GoalStreak,
+  timezone: string,
+  now = Date.now(),
+): boolean {
+  if (streak.currentStreak <= 0 || !streak.lastQualifiedAt) {
+    return false;
+  }
+
+  if (isSameGoalDay(streak.lastQualifiedAt, now, timezone)) {
+    return false;
+  }
+
+  return getHourInTimezone(now, timezone) >= 18;
+}
+
 export function updateGoalStreak(
   streak: GoalStreak,
   completedAt: number,
   timezone: string,
 ): GoalStreak {
-  const currentSerial = getDaySerial(completedAt, timezone);
+  const currentSerial = getGoalDaySerial(completedAt, timezone);
 
   if (streak.lastQualifiedAt) {
-    const previousSerial = getDaySerial(streak.lastQualifiedAt, timezone);
+    const previousSerial = getGoalDaySerial(streak.lastQualifiedAt, timezone);
     if (previousSerial === currentSerial) {
       return streak;
     }
@@ -505,14 +546,9 @@ export function getGoalReminderState(
   }
 
   if (snapshot.streak.currentStreak > 0 && snapshot.streak.lastQualifiedAt) {
-    const last = new Date(snapshot.streak.lastQualifiedAt);
-    const current = new Date(now);
-    const isSameDay =
-      last.getFullYear() === current.getFullYear() &&
-      last.getMonth() === current.getMonth() &&
-      last.getDate() === current.getDate();
+    const timezone = getGoalSnapshotTimezone(snapshot, "UTC");
 
-    if (!isSameDay && current.getHours() >= 18) {
+    if (isGoalStreakAtRisk(snapshot.streak, timezone, now)) {
       return {
         kind: "streak_risk",
         title: "Streak at risk",

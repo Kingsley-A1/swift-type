@@ -23,7 +23,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #1e1a2e 100%)",
+              background: "linear-gradient(135deg, #ffffff 0%, #f4f6fb 50%, #eef2ff 100%)",
             }}
           >
             {/* Logo Mark */}
@@ -41,7 +41,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
               >
                 <div className="w-24 h-24 rounded-[28px] flex items-center justify-center shadow-2xl overflow-hidden"
                   style={{
-                    boxShadow: "0 0 60px rgba(255,107,53,0.4), 0 20px 40px rgba(0,0,0,0.5)"
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.10)"
                   }}
                 >
                   <Image src="/logo-192.png" alt="SwiftType" width={96} height={96} priority />
@@ -55,10 +55,10 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
                 transition={{ delay: 0.4, duration: 0.5 }}
                 className="text-center"
               >
-                <h1 className="text-4xl font-black text-white tracking-tight">
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight">
                   Swift<span style={{ color: "#ff6b35" }}>Type</span>
                 </h1>
-                <p className="text-sm font-medium mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>
+                <p className="text-sm font-medium mt-2" style={{ color: "rgba(15,23,42,0.45)" }}>
                   Train your fingers. Master your keyboard.
                 </p>
               </motion.div>

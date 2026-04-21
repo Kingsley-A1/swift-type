@@ -41,6 +41,7 @@ export function SwiftAI({
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const isOnline = useNetworkStatus();
 
   const fetchSessions = useCallback(() => {
@@ -66,8 +67,16 @@ export function SwiftAI({
   useEffect(() => {
     if (!isOpen) {
       setActiveChatId(null);
+      setSidebarCollapsed(false);
     }
   }, [isOpen]);
+
+  // Auto-collapse sidebar when a chat is opened
+  useEffect(() => {
+    if (activeChatId !== null) {
+      setSidebarCollapsed(true);
+    }
+  }, [activeChatId]);
 
   // ESC to close
   useEffect(() => {
@@ -223,6 +232,8 @@ export function SwiftAI({
                 onRename={handleRenameChat}
                 onPin={handlePinChat}
                 onRetry={fetchSessions}
+                collapsed={sidebarCollapsed}
+                onCollapsedChange={setSidebarCollapsed}
               />
 
               <div className="flex-1 min-w-0">

@@ -1,18 +1,70 @@
-import assert from "node:assert/strict";
 import { resolveSwiftAIToolParts } from "../src/lib/swift-ai-tool-parts.ts";
+
+function assertEqual<T>(actual: T, expected: T, message?: string) {
+  if (actual !== expected) {
+    throw new Error(
+      message ?? `Expected ${String(expected)}, received ${String(actual)}`,
+    );
+  }
+}
 
 function main() {
   const createGoal = resolveSwiftAIToolParts([
     {
       type: "tool-createGoal",
       state: "output-available",
-      output: JSON.stringify({ success: true, goalTitle: "Complete 3 sessions today" }),
+      output: JSON.stringify({
+        success: true,
+        goalTitle: "Complete 3 sessions today",
+        goalSnapshot: {
+          dailyGoal: {
+            id: "goal-1",
+            title: "Complete 3 sessions today",
+            periodType: "daily",
+            goalType: "sessions_completed",
+            targetValue: 3,
+            currentValue: 0,
+            requiredSessions: 1,
+            currentSessions: 0,
+            status: "active",
+            timezone: "UTC",
+            startedAt: 1,
+            endsAt: 2,
+            completedAt: null,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+          weeklyGoal: null,
+          streak: {
+            currentStreak: 1,
+            bestStreak: 1,
+            lastQualifiedAt: 1,
+          },
+        },
+        rewardEvents: [
+          {
+            id: "reward-1",
+            rewardType: "goal_completion",
+            rewardKey: "goal:goal-1",
+            title: "Daily Goal Complete",
+            description: "Complete 3 sessions today",
+            earnedAt: 1,
+          },
+        ],
+      }),
       toolCallId: "goal-1",
     },
   ]);
-  assert.equal(createGoal.length, 1);
-  assert.equal(createGoal[0]?.kind, "create-goal");
-  assert.equal(createGoal[0]?.label, "Complete 3 sessions today · View Goals");
+  assertEqual(createGoal.length, 1);
+  assertEqual(createGoal[0]?.kind, "create-goal");
+  assertEqual(
+    createGoal[0]?.label,
+    "Complete 3 sessions today · View Goals",
+  );
+  if (createGoal[0]?.kind === "create-goal") {
+    assertEqual(createGoal[0].goalSnapshot?.streak.currentStreak, 1);
+    assertEqual(createGoal[0].rewardEvents?.[0]?.rewardKey, "goal:goal-1");
+  }
 
   const navigate = resolveSwiftAIToolParts([
     {
@@ -22,9 +74,9 @@ function main() {
       toolCallId: "nav-1",
     },
   ]);
-  assert.equal(navigate.length, 1);
-  assert.equal(navigate[0]?.kind, "navigate");
-  assert.equal(navigate[0]?.label, "Open Reviews Panel");
+  assertEqual(navigate.length, 1);
+  assertEqual(navigate[0]?.kind, "navigate");
+  assertEqual(navigate[0]?.label, "Open Reviews Panel");
 
   const session = resolveSwiftAIToolParts([
     {
@@ -34,9 +86,9 @@ function main() {
       toolCallId: "session-1",
     },
   ]);
-  assert.equal(session.length, 1);
-  assert.equal(session[0]?.kind, "start-session");
-  assert.equal(session[0]?.label, "Start timed session");
+  assertEqual(session.length, 1);
+  assertEqual(session[0]?.kind, "start-session");
+  assertEqual(session[0]?.label, "Start timed session");
 
   const malformed = resolveSwiftAIToolParts([
     {
@@ -46,8 +98,8 @@ function main() {
       toolCallId: "broken-1",
     },
   ]);
-  assert.equal(malformed.length, 1);
-  assert.equal(malformed[0]?.kind, "error");
+  assertEqual(malformed.length, 1);
+  assertEqual(malformed[0]?.kind, "error");
 
   console.log("Swift AI Session 1 smoke passed");
 }

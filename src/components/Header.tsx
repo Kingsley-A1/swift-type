@@ -1,6 +1,5 @@
-import { Moon, Sun, Sparkles, Flame } from "lucide-react";
+import { Sparkles, Flame } from "lucide-react";
 import Image from "next/image";
-import { useTheme } from "next-themes";
 import { useSession } from "next-auth/react";
 import { AuthModal } from "./AuthModal";
 import { useState, useEffect } from "react";
@@ -12,7 +11,6 @@ interface HeaderProps {
 }
 
 export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
-  const { theme, setTheme } = useTheme();
   const { data: session, status } = useSession();
   const { goalStreak } = useTypingStore();
   const [mounted, setMounted] = useState(false);
@@ -20,7 +18,6 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
 
   useEffect(() => setMounted(true), []);
 
-  const isDark = theme === "dark";
   const isAuthed = status === "authenticated";
   const streak = goalStreak.currentStreak;
 
@@ -65,18 +62,6 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
             <Sparkles size={13} />
             Ask Swift
           </button>
-
-          {/* Theme */}
-          {mounted && (
-            <button
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/8 text-[12px] font-semibold text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-white/15 hover:text-gray-800 dark:hover:text-white transition-all"
-              aria-label="Toggle theme"
-            >
-              {isDark ? <Sun size={13} /> : <Moon size={13} />}
-              {isDark ? "Light" : "Dark"}
-            </button>
-          )}
 
           {/* Auth */}
           {mounted &&

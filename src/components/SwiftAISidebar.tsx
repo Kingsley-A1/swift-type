@@ -35,6 +35,8 @@ interface SwiftAISidebarProps {
   onRename: (id: string, title: string) => void;
   onPin: (id: string, isPinned: boolean) => void;
   onRetry: () => void;
+  collapsed?: boolean;
+  onCollapsedChange?: (v: boolean) => void;
 }
 
 export function SwiftAISidebar({
@@ -48,11 +50,19 @@ export function SwiftAISidebar({
   onRename,
   onPin,
   onRetry,
+  collapsed: collapsedProp,
+  onCollapsedChange,
 }: SwiftAISidebarProps) {
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedInternal, setCollapsedInternal] = useState(false);
+
+  const collapsed = collapsedProp !== undefined ? collapsedProp : collapsedInternal;
+  const setCollapsed = (v: boolean) => {
+    setCollapsedInternal(v);
+    onCollapsedChange?.(v);
+  };
 
   const pinned = sessions.filter((s) => s.isPinned);
   const recent = sessions.filter((s) => !s.isPinned);

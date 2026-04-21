@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { useNetworkStatus } from "@/lib/useNetworkStatus";
+import { applyGoalMutationResult } from "@/lib/syncService";
 import {
   resolveSwiftAIToolParts,
   type SwiftAISessionConfig,
@@ -48,8 +49,9 @@ export function SwiftAIChatArea({
 }: SwiftAIChatAreaProps) {
   const { data: session } = useSession();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasAutoTitled = useRef(false);
+  const appliedToolResultIdsRef = useRef<Set<string>>(new Set());
   const [input, setInput] = useState("");
   const [historyStatus, setHistoryStatus] = useState<
     "loading" | "ready" | "error"
@@ -193,12 +195,15 @@ export function SwiftAIChatArea({
       setSelectedMessageId(null);
       setCopiedMessageId(null);
       setMessageFeedback({});
+      appliedToolResultIdsRef.current = new Set();
       setHistoryStatus("loading");
       setHistoryError(null);
       setMessages([]);
 
       try {
-        const response = await fetch(`/api/chat/sessions/${chatId}`, { signal });
+        const response = await fetch(`/api/chat/sessions/${chatId}`, {
+          signal,
+        });
         if (!response.ok) {
           throw new Error("Failed to load conversation");
         }
@@ -210,6 +215,7 @@ export function SwiftAIChatArea({
 
         setMessageFeedback(nextFeedback);
         setMessages(nextMessages);
+        appliedToolResultIdsRef.current = collectResolvedToolIds(nextMessages);
         if (nextMessages.length > 0) {
           hasAutoTitled.current = true;
         }
@@ -221,6 +227,7 @@ export function SwiftAIChatArea({
 
         setMessages([]);
         setMessageFeedback({});
+        appliedToolResultIdsRef.current = new Set();
         setHistoryStatus("error");
         setHistoryError("Couldn\'t load this conversation. Try again.");
       }
@@ -242,6 +249,28 @@ export function SwiftAIChatArea({
   }, [messages]);
 
   useEffect(() => {
+    if (historyStatus !== "ready") {
+      return;
+    }
+
+    for (const message of messages) {
+      const toolParts = resolveSwiftAIToolParts(message.parts);
+      for (const part of toolParts) {
+        if (part.kind !== "create-goal") {
+          continue;
+        }
+
+        if (appliedToolResultIdsRef.current.has(part.id)) {
+          continue;
+        }
+
+        appliedToolResultIdsRef.current.add(part.id);
+        applyGoalMutationResult(part.goalSnapshot, part.rewardEvents);
+      }
+    }
+  }, [historyStatus, messages]);
+
+  useEffect(() => {
     if (!copiedMessageId) {
       return;
     }
@@ -252,6 +281,32 @@ export function SwiftAIChatArea({
 
   const userName = session?.user?.name?.split(" ")[0] || "You";
   const isActive = status === "submitted" || status === "streaming";
+
+  const resizeComposer = useCallback(() => {
+    const element = inputRef.current;
+    if (!element) {
+      return;
+    }
+
+    element.style.height = "0px";
+    const nextHeight = Math.min(Math.max(element.scrollHeight, 80), 200);
+    element.style.height = `${nextHeight}px`;
+  }, []);
+
+  useEffect(() => {
+    resizeComposer();
+  }, [input, resizeComposer]);
+
+  function submitMessage() {
+    const trimmed = input.trim();
+    if (!trimmed || status !== "ready" || !isOnline) {
+      return;
+    }
+
+    sendMessage({ text: trimmed });
+    setInput("");
+  }
+
   const lastUserMessageIndex = [...messages]
     .map((message, index) => ({ message, index }))
     .reverse()
@@ -370,7 +425,8 @@ export function SwiftAIChatArea({
                     : undefined
                 }
                 onCopy={
-                  idx === lastUserMessageIndex
+                  idx === lastUserMessageIndex ||
+                  idx === lastAssistantMessageIndex
                     ? () => handleCopyMessage(m)
                     : undefined
                 }
@@ -421,24 +477,23 @@ export function SwiftAIChatArea({
       {/* Input */}
       <div className="shrink-0 border-t border-gray-100 dark:border-white/6 px-4 py-3">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-end gap-2">
-            <input
+          <div className="flex items-end gap-2.5">
+            <textarea
               ref={inputRef}
-              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onInput={resizeComposer}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  if (input.trim() && status === "ready" && isOnline) {
-                    sendMessage({ text: input });
-                    setInput("");
-                  }
+                  submitMessage();
                 }
               }}
+              rows={3}
               placeholder="Ask Swift anything..."
               disabled={status !== "ready" || !isOnline}
-              className="flex-1 h-10 rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3 px-4 text-sm text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-brand-orange/40 dark:focus:border-brand-orange/30 focus:ring-2 focus:ring-brand-orange/10 transition-all disabled:opacity-50"
+              aria-label="Message Swift AI"
+              className="flex-1 min-h-20 max-h-50 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3 px-4 py-2.5 text-sm leading-relaxed text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-brand-orange/40 dark:focus:border-brand-orange/30 focus:ring-2 focus:ring-brand-orange/10 transition-all disabled:opacity-50 resize-none overflow-y-auto"
             />
 
             {isActive ? (
@@ -447,19 +502,17 @@ export function SwiftAIChatArea({
                 onClick={stop}
                 className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
                 title="Stop generating"
+                aria-label="Stop generating"
               >
                 <Square size={14} />
               </button>
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  if (input.trim() && isOnline) {
-                    sendMessage({ text: input });
-                    setInput("");
-                  }
-                }}
+                onClick={submitMessage}
                 disabled={!input.trim() || !isOnline}
+                title="Send message"
+                aria-label="Send message"
                 className={clsx(
                   "shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all",
                   input.trim() && isOnline
@@ -492,6 +545,41 @@ function getMessageText(message: UIMessage) {
     )
     .map((part) => part.text)
     .join("");
+}
+
+function collectResolvedToolIds(messages: UIMessage[]) {
+  const ids = new Set<string>();
+
+  for (const message of messages) {
+    const toolParts = resolveSwiftAIToolParts(message.parts);
+    for (const part of toolParts) {
+      ids.add(part.id);
+    }
+  }
+
+  return ids;
+}
+
+function normalizeMarkdownHref(href?: string) {
+  const trimmed = href?.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (/^(javascript|data|vbscript):/i.test(trimmed)) {
+    return null;
+  }
+
+  return trimmed;
+}
+
+function getExternalHostnameLabel(href: string) {
+  try {
+    return new URL(href).hostname.replace(/^www\./i, "");
+  } catch {
+    return null;
+  }
 }
 
 // ─── MESSAGE BUBBLE ──────────────────────────────────────────────────────────
@@ -572,30 +660,34 @@ function MessageBubble({
             isUser && "items-end",
           )}
         >
-          <button
-            type="button"
-            onClick={isLastUserMessage ? onSelect : undefined}
-            className={clsx(
-              "text-left text-sm leading-relaxed rounded-2xl px-4 py-2.5 transition-all",
-              isUser
-                ? "bg-orange-50 dark:bg-orange-500/10 text-gray-800 dark:text-gray-200 rounded-tr-md"
-                : clsx(
-                    "bg-gray-50 dark:bg-white/4 text-gray-700 dark:text-gray-300 rounded-tl-md border",
-                    isStreaming
-                      ? "border-brand-orange/25 dark:border-brand-orange/20"
-                      : "border-gray-100 dark:border-white/6",
-                  ),
-              isLastUserMessage &&
-                "cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-500/16",
-              isSelected &&
-                "ring-2 ring-brand-orange/20 dark:ring-brand-orange/25",
-            )}
-          >
-            <MessageContent
-              content={textContent}
-              isStreaming={isStreaming && !isUser}
-            />
-          </button>
+          {isUser ? (
+            <button
+              type="button"
+              onClick={isLastUserMessage ? onSelect : undefined}
+              className={clsx(
+                "text-left text-sm leading-relaxed rounded-2xl px-4 py-2.5 transition-all",
+                "bg-orange-50 dark:bg-orange-500/10 text-gray-800 dark:text-gray-200 rounded-tr-md",
+                isLastUserMessage &&
+                  "cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-500/16",
+                isSelected &&
+                  "ring-2 ring-brand-orange/20 dark:ring-brand-orange/25",
+              )}
+            >
+              <MessageContent content={textContent} />
+            </button>
+          ) : (
+            <div
+              className={clsx(
+                "text-left text-sm leading-relaxed rounded-2xl px-4 py-2.5 select-text",
+                "bg-gray-50 dark:bg-white/4 text-gray-700 dark:text-gray-300 rounded-tl-md border",
+                isStreaming
+                  ? "border-brand-orange/25 dark:border-brand-orange/20"
+                  : "border-gray-100 dark:border-white/6",
+              )}
+            >
+              <MessageContent content={textContent} isStreaming={isStreaming} />
+            </div>
+          )}
 
           {/* Tool results rendered inline below the text bubble */}
           {!isUser && toolParts.length > 0 && (
@@ -692,6 +784,16 @@ function MessageBubble({
 
           {isLastAssistantMessage && onRegenerate && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
+              {onCopy && (
+                <button
+                  type="button"
+                  onClick={onCopy}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-gray-500 transition-colors hover:border-brand-orange/30 hover:text-brand-orange dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-brand-orange/20 dark:hover:text-brand-orange"
+                >
+                  <Copy size={12} />
+                  {isCopied ? "Copied" : "Copy"}
+                </button>
+              )}
               {onFeedbackChange && (
                 <>
                   <button
@@ -750,7 +852,7 @@ function MessageContent({
   isStreaming?: boolean;
 }) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
+    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed select-text">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -820,6 +922,47 @@ function MessageContent({
               {children}
             </em>
           ),
+          a: ({ children, href }) => {
+            const safeHref = normalizeMarkdownHref(href);
+
+            if (!safeHref) {
+              return (
+                <span className="text-gray-500 dark:text-gray-400">
+                  {children}
+                </span>
+              );
+            }
+
+            const isExternal = /^https?:\/\//i.test(safeHref);
+            const hostnameLabel = isExternal
+              ? getExternalHostnameLabel(safeHref)
+              : null;
+
+            return (
+              <a
+                href={safeHref}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noopener noreferrer" : undefined}
+                className={clsx(
+                  "transition-colors",
+                  isExternal
+                    ? "my-0.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-orange/20 bg-brand-orange/[0.08] px-2.5 py-1 text-[12px] font-medium text-brand-orange no-underline hover:border-brand-orange/35 hover:bg-brand-orange/[0.12]"
+                    : "inline-flex items-center gap-1 text-brand-orange underline decoration-brand-orange/40 underline-offset-3 hover:decoration-brand-orange",
+                )}
+                title={isExternal ? "Opens in a new tab" : undefined}
+              >
+                <span className={clsx(isExternal && "truncate")}>
+                  {children}
+                </span>
+                {hostnameLabel ? (
+                  <span className="rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-500 dark:bg-black/20 dark:text-gray-300">
+                    {hostnameLabel}
+                  </span>
+                ) : null}
+                {isExternal && <ExternalLink size={12} aria-hidden="true" />}
+              </a>
+            );
+          },
           // Tables (GFM)
           table: ({ children }) => (
             <div className="my-2 overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
