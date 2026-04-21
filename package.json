@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "smoke:swift-ai": "node --experimental-strip-types scripts/swift-ai-session1-smoke.ts",
-    "type": "module"
+    "smoke:swift-ai": "node --experimental-strip-types scripts/swift-ai-session1-smoke.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.43",
