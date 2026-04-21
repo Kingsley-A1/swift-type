@@ -25,6 +25,16 @@ Completed on April 20, 2026.
 2. Tool-result rendering now routes through guarded parsing so malformed or partial payloads degrade into safe inline error badges instead of runtime failures.
 3. A lightweight smoke script now covers the three action paths: create goal, open panel, and start session.
 
+## Swift AI Review 2
+
+The dedicated follow-up review now lives in SWIFT_AI_REVIEW_2.md.
+
+Batch 1 of that follow-up pass is now complete:
+
+1. Swift AI goal creation now hydrates the latest goal snapshot and any reward events into client state.
+2. Streak day checks now use shared timezone-aware helpers for reminders and Swift AI context.
+3. Streak reward cards now prefer the streak value captured in reward metadata, so older cards stay accurate.
+
 ## Session 2 — Training Engine Quality
 
 1. Replace curriculum-mode random character words with curated real-word sets per stage.

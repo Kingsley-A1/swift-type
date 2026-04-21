@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swift Type – Logo Concepts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #f8f9fb;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 40px 24px 80px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .header h1 span { color: #ff6b35; }
+    .header p {
+      font-size: 15px;
+      color: #64748b;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.03);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
+    }
+
+    .card-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 32px;
+      background: #fff;
+      position: relative;
+    }
+
+    .card-preview-dark {
+      background: #111318;
+    }
+
+    .card-info {
+      padding: 24px 28px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .card-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #ff6b35;
+      margin-bottom: 8px;
+    }
+    .card-label .num {
+      background: #ff6b35;
+      color: #fff;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-text {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.8px;
+      color: #1a1a2e;
+    }
+    .brand-text .accent { color: #ff6b35; }
+
+    .brand-text-white {
+      color: #fff;
+    }
+
+    .variants {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .variant-group {
+      text-align: center;
+    }
+    .variant-group small {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-top: 10px;
+    }
+
+    .section-divider {
+      text-align: center;
+      margin: 48px auto 32px;
+      max-width: 1100px;
+    }
+    .section-divider h2 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .section-divider p {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      .variants { flex-direction: column; gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Swift<span>Type</span> Logo Concepts</h1>
+    <p>Four professional logo directions — each designed to convey speed, precision, and industry-grade professionalism while maintaining the ST brand identity.</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- OPTION 1: Velocity Monogram -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-preview">
+        <div class="variants">
+          <div class="variant-group">
+            <div class="logo-row">
+              <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="52" height="52" rx="14" fill="#ff6b35"/>
+                <!-- Speed lines -->
+                <line x1="6" y1="18" x2="14" y2="18" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="4" y1="26" x2="13" y2="26" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="6" y1="34" x2="14" y2="34" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+                <!-- S -->
+                <path d="M18 20.5C18 17.5 20.5 15 24 15C27.5 15 29 17 29 19C29 23 18 22 18 29C18 32 20.5 34 24 34" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <!-- T -->
+                <path d="M30 15H44M37 15V37" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="brand-text">Swift<span class="accent">Type</span></span>
+            </div>
+            <small>Light Mode</small>
+          </div>
+          <div class="variant-group">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="52" height="52" rx="14" fill="#ff6b35"/>
+              <line x1="6" y1="18" x2="14" y2="18" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+              <line x1="4" y1="26" x2="13" y2="26" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round"/>
+              <line x1="6" y1="34" x2="14" y2="34" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M18 20.5C18 17.5 20.5 15 24 15C27.5 15 29 17 29 19C29 23 18 22 18 29C18 32 20.5 34 24 34" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M30 15H44M37 15V37" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <small>Icon Only</small>
+          </div>
+        </div>
+      </div>
+      <div class="card-info">
+        <div class="card-label"><span class="num">1</span> Velocity Monogram</div>
+        <div class="card-title">Speed Lines + Bold ST</div>
+        <div class="card-desc">Three horizontal motion lines trail behind a clean ST letterform inside a rounded square. Conveys raw speed and forward momentum — like keystrokes flying across the screen.</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- OPTION 2: Swift Strike -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-preview">
+        <div class="variants">
+          <div class="variant-group">
+            <div class="logo-row">
+              <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="52" height="52" rx="14" fill="url(#grad2)"/>
+                <defs>
+                  <linearGradient id="grad2" x1="0" y1="0" x2="52" y2="52">
+                    <stop offset="0%" stop-color="#ff8c5a"/>
+                    <stop offset="100%" stop-color="#ff5722"/>
+                  </linearGradient>
+                </defs>
+                <!-- Lightning bolt / swift strike forming abstract ST -->
+                <path d="M32 8L16 27H25L20 44L38 24H28L32 8Z" fill="white" opacity="0.95"/>
+              </svg>
+              <span class="brand-text">Swift<span class="accent">Type</span></span>
+            </div>
+            <small>Light Mode</small>
+          </div>
+          <div class="variant-group">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="52" height="52" rx="14" fill="url(#grad2b)"/>
+              <defs>
+                <linearGradient id="grad2b" x1="0" y1="0" x2="52" y2="52">
+                  <stop offset="0%" stop-color="#ff8c5a"/>
+                  <stop offset="100%" stop-color="#ff5722"/>
+                </linearGradient>
+              </defs>
+              <path d="M32 8L16 27H25L20 44L38 24H28L32 8Z" fill="white" opacity="0.95"/>
+            </svg>
+            <small>Icon Only</small>
+          </div>
+        </div>
+      </div>
+      <div class="card-info">
+        <div class="card-label"><span class="num">2</span> Swift Strike</div>
+        <div class="card-title">Lightning Bolt Mark</div>
+        <div class="card-desc">A single lightning bolt silhouette that subtly forms the S-curve and T-crossbar. Represents instant speed, electric energy, and precision — the feeling of being in the typing zone.</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- OPTION 3: Precision Cursor -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-preview">
+        <div class="variants">
+          <div class="variant-group">
+            <div class="logo-row">
+              <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="52" height="52" rx="14" fill="#1a1a2e"/>
+                <!-- Stylized S with cursor/caret integrated -->
+                <path d="M15 19C15 15.5 18 13 22 13C26 13 28.5 15 28.5 17.8C28.5 22.5 15 21 15 28.5C15 31.5 18 34 22 34C26 34 28.5 32 28.5 29" stroke="#ff6b35" stroke-width="3" stroke-linecap="round" fill="none"/>
+                <!-- Blinking cursor / T-bar -->
+                <rect x="33" y="13" width="3.5" height="24" rx="1.8" fill="#ff6b35"/>
+                <!-- Speed dot trail -->
+                <circle cx="42" cy="18" r="2" fill="#ff6b35" opacity="0.7"/>
+                <circle cx="42" cy="25" r="1.5" fill="#ff6b35" opacity="0.4"/>
+                <circle cx="42" cy="31" r="1" fill="#ff6b35" opacity="0.2"/>
+              </svg>
+              <span class="brand-text">Swift<span class="accent">Type</span></span>
+            </div>
+            <small>Light Mode</small>
+          </div>
+          <div class="variant-group">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="52" height="52" rx="14" fill="#1a1a2e"/>
+              <path d="M15 19C15 15.5 18 13 22 13C26 13 28.5 15 28.5 17.8C28.5 22.5 15 21 15 28.5C15 31.5 18 34 22 34C26 34 28.5 32 28.5 29" stroke="#ff6b35" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <rect x="33" y="13" width="3.5" height="24" rx="1.8" fill="#ff6b35"/>
+              <circle cx="42" cy="18" r="2" fill="#ff6b35" opacity="0.7"/>
+              <circle cx="42" cy="25" r="1.5" fill="#ff6b35" opacity="0.4"/>
+              <circle cx="42" cy="31" r="1" fill="#ff6b35" opacity="0.2"/>
+            </svg>
+            <small>Icon Only</small>
+          </div>
+        </div>
+      </div>
+      <div class="card-info">
+        <div class="card-label"><span class="num">3</span> Precision Cursor</div>
+        <div class="card-title">S-Curve + Typing Caret</div>
+        <div class="card-desc">A flowing S-curve paired with a bold typing cursor (the T). Fading dots suggest keystrokes trailing away. Dark navy background with orange accent — directly references the typing experience.</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- OPTION 4: Aerodynamic Mark -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="card">
+      <div class="card-preview">
+        <div class="variants">
+          <div class="variant-group">
+            <div class="logo-row">
+              <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="52" height="52" rx="14" fill="#ff6b35"/>
+                <!-- Abstract forward-leaning ST from a single elegant path -->
+                <!-- Upper arc (top of S + top of T crossbar) -->
+                <path d="M12 16H30C34 16 37 18.5 37 22C37 25.5 34 28 30 28H22C18 28 15 30.5 15 33.5C15 36.5 18 38.5 22 38.5H40" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <!-- T vertical -->
+                <line x1="40" y1="16" x2="40" y2="38.5" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                <!-- Forward arrow tip -->
+                <path d="M36 34L40 38.5L36 43" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/>
+              </svg>
+              <span class="brand-text">Swift<span class="accent">Type</span></span>
+            </div>
+            <small>Light Mode</small>
+          </div>
+          <div class="variant-group">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="52" height="52" rx="14" fill="#ff6b35"/>
+              <path d="M12 16H30C34 16 37 18.5 37 22C37 25.5 34 28 30 28H22C18 28 15 30.5 15 33.5C15 36.5 18 38.5 22 38.5H40" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <line x1="40" y1="16" x2="40" y2="38.5" stroke="white" stroke-width="3" stroke-linecap="round"/>
+              <path d="M36 34L40 38.5L36 43" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/>
+            </svg>
+            <small>Icon Only</small>
+          </div>
+        </div>
+      </div>
+      <div class="card-info">
+        <div class="card-label"><span class="num">4</span> Aerodynamic Flow</div>
+        <div class="card-title">Continuous Path ST</div>
+        <div class="card-desc">The S and T are formed from a single continuous flowing path — the S-curve naturally feeds into the T's vertical. A subtle arrow tip suggests forward progress. Elegant, sophisticated, and unmistakably about fluid motion.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Dark mode previews -->
+  <div class="section-divider">
+    <h2>Dark Mode Previews</h2>
+    <p>How each option renders on a dark background</p>
+  </div>
+
+  <div class="grid">
+    <!-- Dark 1 -->
+    <div class="card">
+      <div class="card-preview card-preview-dark">
+        <div class="logo-row">
+          <svg width="48" height="48" viewBox="0 0 52 52" fill="none"><rect width="52" height="52" rx="14" fill="#ff6b35"/><line x1="6" y1="18" x2="14" y2="18" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="26" x2="13" y2="26" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="34" x2="14" y2="34" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/><path d="M18 20.5C18 17.5 20.5 15 24 15C27.5 15 29 17 29 19C29 23 18 22 18 29C18 32 20.5 34 24 34" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M30 15H44M37 15V37" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="brand-text brand-text-white">Swift<span class="accent">Type</span></span>
+        </div>
+      </div>
+      <div class="card-info"><div class="card-label"><span class="num">1</span> Velocity Monogram</div></div>
+    </div>
+    <!-- Dark 2 -->
+    <div class="card">
+      <div class="card-preview card-preview-dark">
+        <div class="logo-row">
+          <svg width="48" height="48" viewBox="0 0 52 52" fill="none"><rect width="52" height="52" rx="14" fill="url(#grad2c)"/><defs><linearGradient id="grad2c" x1="0" y1="0" x2="52" y2="52"><stop offset="0%" stop-color="#ff8c5a"/><stop offset="100%" stop-color="#ff5722"/></linearGradient></defs><path d="M32 8L16 27H25L20 44L38 24H28L32 8Z" fill="white" opacity="0.95"/></svg>
+          <span class="brand-text brand-text-white">Swift<span class="accent">Type</span></span>
+        </div>
+      </div>
+      <div class="card-info"><div class="card-label"><span class="num">2</span> Swift Strike</div></div>
+    </div>
+    <!-- Dark 3 -->
+    <div class="card">
+      <div class="card-preview card-preview-dark">
+        <div class="logo-row">
+          <svg width="48" height="48" viewBox="0 0 52 52" fill="none"><rect width="52" height="52" rx="14" fill="#1a1a2e"/><path d="M15 19C15 15.5 18 13 22 13C26 13 28.5 15 28.5 17.8C28.5 22.5 15 21 15 28.5C15 31.5 18 34 22 34C26 34 28.5 32 28.5 29" stroke="#ff6b35" stroke-width="3" stroke-linecap="round" fill="none"/><rect x="33" y="13" width="3.5" height="24" rx="1.8" fill="#ff6b35"/><circle cx="42" cy="18" r="2" fill="#ff6b35" opacity="0.7"/><circle cx="42" cy="25" r="1.5" fill="#ff6b35" opacity="0.4"/><circle cx="42" cy="31" r="1" fill="#ff6b35" opacity="0.2"/></svg>
+          <span class="brand-text brand-text-white">Swift<span class="accent">Type</span></span>
+        </div>
+      </div>
+      <div class="card-info"><div class="card-label"><span class="num">3</span> Precision Cursor</div></div>
+    </div>
+    <!-- Dark 4 -->
+    <div class="card">
+      <div class="card-preview card-preview-dark">
+        <div class="logo-row">
+          <svg width="48" height="48" viewBox="0 0 52 52" fill="none"><rect width="52" height="52" rx="14" fill="#ff6b35"/><path d="M12 16H30C34 16 37 18.5 37 22C37 25.5 34 28 30 28H22C18 28 15 30.5 15 33.5C15 36.5 18 38.5 22 38.5H40" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="40" y1="16" x2="40" y2="38.5" stroke="white" stroke-width="3" stroke-linecap="round"/><path d="M36 34L40 38.5L36 43" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/></svg>
+          <span class="brand-text brand-text-white">Swift<span class="accent">Type</span></span>
+        </div>
+      </div>
+      <div class="card-info"><div class="card-label"><span class="num">4</span> Aerodynamic Flow</div></div>
+    </div>
+  </div>
+
+</body>
+</html>
