@@ -17,13 +17,41 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "https://swift-type-two.vercel.app");
+function normalizeSiteUrl(rawUrl?: string) {
+  if (!rawUrl) return null;
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return null;
 
-const ogImageUrl = `${siteUrl}/og-image-v2.jpg`;
+  const withProtocol = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(withProtocol);
+
+    if (
+      process.env.NODE_ENV === "production" &&
+      ["localhost", "127.0.0.1"].includes(parsed.hostname)
+    ) {
+      return null;
+    }
+
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
+const siteUrl =
+  normalizeSiteUrl(process.env.VERCEL_PROJECT_PRODUCTION_URL) ??
+  normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL) ??
+  normalizeSiteUrl(process.env.VERCEL_URL) ??
+  "https://swift-type-two.vercel.app";
+
+const ogImageVersion =
+  process.env.NEXT_PUBLIC_OG_IMAGE_VERSION?.trim() || "2026-04-22";
+const ogImagePath = `/og-image-v3.jpg?v=${encodeURIComponent(ogImageVersion)}`;
+const ogImageUrl = `${siteUrl}${ogImagePath}`;
 
 export const viewport: Viewport = {
   themeColor: "#ff6b35",
@@ -56,6 +84,9 @@ export const metadata: Metadata = {
   applicationName: "Swift Type",
   generator: "Next.js",
   metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
