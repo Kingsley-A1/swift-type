@@ -147,9 +147,7 @@ export const userGoals = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
   },
-  (table) => [
-    index("user_goals_user_id_idx").on(table.userId),
-  ],
+  (table) => [index("user_goals_user_id_idx").on(table.userId)],
 );
 
 export const userStreaks = pgTable("user_streaks", {
@@ -202,9 +200,7 @@ export const chatSessions = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
   },
-  (table) => [
-    index("chat_sessions_user_id_idx").on(table.userId),
-  ],
+  (table) => [index("chat_sessions_user_id_idx").on(table.userId)],
 );
 
 export const adminUsers = pgTable(
@@ -219,9 +215,7 @@ export const adminUsers = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
     lastLoginAt: timestamp("last_login_at", { mode: "date" }),
   },
-  (table) => [
-    index("admin_users_email_idx").on(table.email),
-  ],
+  (table) => [index("admin_users_email_idx").on(table.email)],
 );
 
 export const adminSessions = pgTable(
@@ -273,18 +267,38 @@ export const adminAuditLogs = pgTable(
 // ─── USER REVIEWS (Testimonials) ─────────────────────────────────────────────
 
 export const REVIEW_ROLES = [
-  "Founder", "CTO", "Developer", "Engineer", "Instructor",
-  "Learner", "Enthusiast", "Explorer", "Swift Typist",
+  "Founder",
+  "CTO",
+  "Developer",
+  "Engineer",
+  "Instructor",
+  "Learner",
+  "Enthusiast",
+  "Explorer",
+  "Swift Typist",
 ] as const;
 
-export type ReviewRole = typeof REVIEW_ROLES[number];
+export type ReviewRole = (typeof REVIEW_ROLES)[number];
 
 export const ROLE_PRIORITY: Record<ReviewRole, number> = {
-  "Founder": 1, "CTO": 2, "Developer": 3, "Engineer": 4, "Instructor": 5,
-  "Learner": 6, "Enthusiast": 7, "Explorer": 8, "Swift Typist": 9,
+  Founder: 1,
+  CTO: 2,
+  Developer: 3,
+  Engineer: 4,
+  Instructor: 5,
+  Learner: 6,
+  Enthusiast: 7,
+  Explorer: 8,
+  "Swift Typist": 9,
 };
 
-export const KEY_ROLES: ReviewRole[] = ["Founder", "CTO", "Developer", "Engineer", "Instructor"];
+export const KEY_ROLES: ReviewRole[] = [
+  "Founder",
+  "CTO",
+  "Developer",
+  "Engineer",
+  "Instructor",
+];
 
 export const userReviews = pgTable(
   "user_reviews",
@@ -303,7 +317,5 @@ export const userReviews = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
   },
-  (table) => [
-    uniqueIndex("user_reviews_user_id_idx").on(table.userId),
-  ],
+  (table) => [uniqueIndex("user_reviews_user_id_idx").on(table.userId)],
 );

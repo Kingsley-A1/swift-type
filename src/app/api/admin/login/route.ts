@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { authenticateAdmin, createAdminSession, setAdminSessionCookie } from "@/lib/adminAuth";
+import {
+  authenticateAdmin,
+  createAdminSession,
+  setAdminSessionCookie,
+} from "@/lib/adminAuth";
 import { recordAdminAudit } from "@/lib/adminAudit";
 
 function getClientInfo(request: Request) {
@@ -39,7 +43,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, adminId: admin.id });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to sign in";
+    const message =
+      error instanceof Error ? error.message : "Failed to sign in";
     return NextResponse.json({ message }, { status: 400 });
   }
 }

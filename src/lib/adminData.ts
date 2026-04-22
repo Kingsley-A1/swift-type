@@ -172,10 +172,13 @@ export interface AdminDashboardData {
     totalChatSessions: number;
     totalAdmins: number;
     activeAdminSessions: number;
+    totalAIFeedbackUp: number;
+    totalAIFeedbackDown: number;
   };
   trends: AdminTrendPoint[];
   users: AdminUserSummary[];
   topUsers: AdminUserSummary[];
+  recentReviews: ReviewRow[];
 }
 
 export interface AdminAuditEntry {
@@ -331,7 +334,11 @@ function buildUserSummary(
   const lastActiveAt = maxDate([
     user.createdAt,
     ...sessionRows.map((row) => row.date),
-    ...goalRows.flatMap((row) => [row.updatedAt, row.completedAt, row.createdAt]),
+    ...goalRows.flatMap((row) => [
+      row.updatedAt,
+      row.completedAt,
+      row.createdAt,
+    ]),
     ...rewardRows.map((row) => row.earnedAt),
     ...reviewRows.flatMap((row) => [row.updatedAt, row.createdAt]),
     ...chatRows.flatMap((row) => [row.updatedAt, row.createdAt]),
@@ -649,6 +656,16 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       0,
     );
 
+    let feedbackUp = 0;
+    let feedbackDown = 0;
+    for (const row of chatRows) {
+      const feedback = row.feedback ?? {};
+      for (const val of Object.values(feedback)) {
+        if (val === "up") feedbackUp += 1;
+        else if (val === "down") feedbackDown += 1;
+      }
+    }
+
     return {
       summary: {
         totalUsers: userRows.length,
@@ -678,6 +695,8 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         totalAdmins: adminRows.length,
         activeAdminSessions: adminSessionRows.filter((row) => !row.endedAt)
           .length,
+        totalAIFeedbackUp: feedbackUp,
+        totalAIFeedbackDown: feedbackDown,
       },
       trends,
       users: summaries,
@@ -690,6 +709,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
           return right.averageWpm - left.averageWpm;
         })
         .slice(0, 5),
+      recentReviews: reviewRows.slice(0, 6),
     };
   });
 }
@@ -716,13 +736,41 @@ export async function getAdminUserDetail(userId: string) {
       streakRows,
       statsRows,
     ] = await Promise.all([
-      db.select().from(sessions).where(eq(sessions.userId, userId)).orderBy(desc(sessions.date)),
-      db.select().from(userGoals).where(eq(userGoals.userId, userId)).orderBy(desc(userGoals.updatedAt)),
-      db.select().from(userRewards).where(eq(userRewards.userId, userId)).orderBy(desc(userRewards.earnedAt)),
-      db.select().from(userReviews).where(eq(userReviews.userId, userId)).orderBy(desc(userReviews.updatedAt)),
-      db.select().from(chatSessions).where(eq(chatSessions.userId, userId)).orderBy(desc(chatSessions.updatedAt)),
-      db.select().from(userPreferences).where(eq(userPreferences.userId, userId)).limit(1),
-      db.select().from(userStreaks).where(eq(userStreaks.userId, userId)).limit(1),
+      db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.userId, userId))
+        .orderBy(desc(sessions.date)),
+      db
+        .select()
+        .from(userGoals)
+        .where(eq(userGoals.userId, userId))
+        .orderBy(desc(userGoals.updatedAt)),
+      db
+        .select()
+        .from(userRewards)
+        .where(eq(userRewards.userId, userId))
+        .orderBy(desc(userRewards.earnedAt)),
+      db
+        .select()
+        .from(userReviews)
+        .where(eq(userReviews.userId, userId))
+        .orderBy(desc(userReviews.updatedAt)),
+      db
+        .select()
+        .from(chatSessions)
+        .where(eq(chatSessions.userId, userId))
+        .orderBy(desc(chatSessions.updatedAt)),
+      db
+        .select()
+        .from(userPreferences)
+        .where(eq(userPreferences.userId, userId))
+        .limit(1),
+      db
+        .select()
+        .from(userStreaks)
+        .where(eq(userStreaks.userId, userId))
+        .limit(1),
       db.select().from(userStats).where(eq(userStats.userId, userId)).limit(1),
     ]);
 
@@ -785,7 +833,10 @@ export async function getAdminUserDetail(userId: string) {
           Number(value.hits ?? 0) + Number(value.misses ?? 0) > 0
             ? roundNumber(
                 Number(value.totalTimeMs ?? 0) /
-                  Math.max(1, Number(value.hits ?? 0) + Number(value.misses ?? 0)),
+                  Math.max(
+                    1,
+                    Number(value.hits ?? 0) + Number(value.misses ?? 0),
+                  ),
               )
             : 0,
       }))
@@ -805,7 +856,9 @@ export async function getAdminUserDetail(userId: string) {
         misses: Number(value.misses ?? 0),
         averageTimeMs:
           Number(value.occurrences ?? 0) > 0
-            ? roundNumber(Number(value.totalTimeMs ?? 0) / Number(value.occurrences ?? 0))
+            ? roundNumber(
+                Number(value.totalTimeMs ?? 0) / Number(value.occurrences ?? 0),
+              )
             : 0,
       }))
       .sort((left, right) => {
@@ -817,7 +870,9 @@ export async function getAdminUserDetail(userId: string) {
       })
       .slice(0, 10);
 
-    const completedGoals = goalRows.filter((row) => row.status === "completed").length;
+    const completedGoals = goalRows.filter(
+      (row) => row.status === "completed",
+    ).length;
 
     return {
       overview: {
@@ -825,7 +880,10 @@ export async function getAdminUserDetail(userId: string) {
         goalCompletionRate: goalRows.length
           ? roundNumber((completedGoals / goalRows.length) * 100)
           : 0,
-        totalKeystrokes: sessionRows.reduce((sum, row) => sum + row.keystrokes, 0),
+        totalKeystrokes: sessionRows.reduce(
+          (sum, row) => sum + row.keystrokes,
+          0,
+        ),
         longestChatSpanMs: chats.reduce(
           (max, row) => Math.max(max, row.durationMs ?? 0),
           0,
@@ -857,14 +915,38 @@ export async function getAdminAuditTrail(limit = 250) {
       reviewRows,
       chatRows,
     ] = await Promise.all([
-      db.select().from(adminAuditLogs).orderBy(desc(adminAuditLogs.createdAt)).limit(limit),
+      db
+        .select()
+        .from(adminAuditLogs)
+        .orderBy(desc(adminAuditLogs.createdAt))
+        .limit(limit),
       db.select().from(adminUsers) as Promise<AdminRow[]>,
       db.select().from(users) as Promise<UserRow[]>,
-      db.select().from(sessions).orderBy(desc(sessions.date)).limit(limit) as Promise<SessionRow[]>,
-      db.select().from(userGoals).orderBy(desc(userGoals.updatedAt)).limit(limit) as Promise<GoalRow[]>,
-      db.select().from(userRewards).orderBy(desc(userRewards.earnedAt)).limit(limit) as Promise<RewardRow[]>,
-      db.select().from(userReviews).orderBy(desc(userReviews.updatedAt)).limit(limit) as Promise<ReviewRow[]>,
-      db.select().from(chatSessions).orderBy(desc(chatSessions.updatedAt)).limit(limit) as Promise<ChatSessionRow[]>,
+      db
+        .select()
+        .from(sessions)
+        .orderBy(desc(sessions.date))
+        .limit(limit) as Promise<SessionRow[]>,
+      db
+        .select()
+        .from(userGoals)
+        .orderBy(desc(userGoals.updatedAt))
+        .limit(limit) as Promise<GoalRow[]>,
+      db
+        .select()
+        .from(userRewards)
+        .orderBy(desc(userRewards.earnedAt))
+        .limit(limit) as Promise<RewardRow[]>,
+      db
+        .select()
+        .from(userReviews)
+        .orderBy(desc(userReviews.updatedAt))
+        .limit(limit) as Promise<ReviewRow[]>,
+      db
+        .select()
+        .from(chatSessions)
+        .orderBy(desc(chatSessions.updatedAt))
+        .limit(limit) as Promise<ChatSessionRow[]>,
     ]);
 
     const adminById = new Map(adminRows.map((row) => [row.id, row]));
@@ -934,7 +1016,9 @@ export async function getAdminAuditTrail(limit = 250) {
         entityType: "goal",
         entityId: row.id,
         occurredAt: row.completedAt ?? row.updatedAt ?? row.createdAt,
-        durationMs: row.completedAt ? getDateDiffMs(row.startedAt, row.completedAt) : null,
+        durationMs: row.completedAt
+          ? getDateDiffMs(row.startedAt, row.completedAt)
+          : null,
         metadata: {
           title: row.title,
           status: row.status,
@@ -1006,9 +1090,10 @@ export async function getAdminAuditTrail(limit = 250) {
         actorId: user.id,
         actorName: user.name?.trim() || user.email,
         actorEmail: user.email,
-        action: row.createdAt && row.updatedAt && row.updatedAt > row.createdAt
-          ? "swift_ai.chat.updated"
-          : "swift_ai.chat.started",
+        action:
+          row.createdAt && row.updatedAt && row.updatedAt > row.createdAt
+            ? "swift_ai.chat.updated"
+            : "swift_ai.chat.started",
         entityType: "chat_session",
         entityId: row.id,
         occurredAt,
@@ -1021,7 +1106,9 @@ export async function getAdminAuditTrail(limit = 250) {
     }
 
     return entries
-      .sort((left, right) => right.occurredAt.getTime() - left.occurredAt.getTime())
+      .sort(
+        (left, right) => right.occurredAt.getTime() - left.occurredAt.getTime(),
+      )
       .slice(0, limit);
   });
 }

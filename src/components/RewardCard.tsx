@@ -176,7 +176,7 @@ export function RewardCard({
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <Image
-                src="/logo-192.png"
+                src="/logo-192.jpg"
                 alt="SwiftType"
                 width={24}
                 height={24}

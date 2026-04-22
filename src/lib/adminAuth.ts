@@ -156,9 +156,7 @@ function assertAdminLoginCode(code: string) {
   const configuredCode = getDigitEnv("ADMIN_LOGIN_CODE", 6);
 
   if (!configuredCode) {
-    throw new Error(
-      "ADMIN_LOGIN_CODE must be configured as a 6-digit code",
-    );
+    throw new Error("ADMIN_LOGIN_CODE must be configured as a 6-digit code");
   }
 
   if (code !== configuredCode) {
@@ -215,7 +213,10 @@ export async function authenticateAdmin(email: string, code: string) {
       .select()
       .from(adminUsers)
       .where(
-        and(eq(adminUsers.email, normalizedEmail), eq(adminUsers.isActive, true)),
+        and(
+          eq(adminUsers.email, normalizedEmail),
+          eq(adminUsers.isActive, true),
+        ),
       )
       .limit(1);
 
@@ -326,7 +327,9 @@ export async function touchAdminSession(sessionId: string) {
     await db
       .update(adminSessions)
       .set({ lastSeenAt: new Date() })
-      .where(and(eq(adminSessions.id, sessionId), isNull(adminSessions.endedAt)));
+      .where(
+        and(eq(adminSessions.id, sessionId), isNull(adminSessions.endedAt)),
+      );
   });
 }
 
@@ -335,6 +338,8 @@ export async function endAdminSession(sessionId: string) {
     await db
       .update(adminSessions)
       .set({ endedAt: new Date(), lastSeenAt: new Date() })
-      .where(and(eq(adminSessions.id, sessionId), isNull(adminSessions.endedAt)));
+      .where(
+        and(eq(adminSessions.id, sessionId), isNull(adminSessions.endedAt)),
+      );
   });
 }

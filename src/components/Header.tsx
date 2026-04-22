@@ -1,4 +1,4 @@
-import { Sparkles, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { AuthModal } from "./AuthModal";
@@ -29,7 +29,7 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
           >
-            <Image src="/logo-192.png" alt="SwiftType" width={28} height={28} />
+            <Image src="/logo-192.jpg" alt="SwiftType" width={28} height={28} />
           </div>
           <span className="text-[17px] font-black text-gray-900 dark:text-white tracking-tight">
             Swift<span className="text-brand-orange">Type</span>
@@ -59,7 +59,7 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
             }
             title={isAuthed ? "Chat with Swift AI" : "Sign in to use Swift AI"}
           >
-            <Sparkles size={13} />
+            <Image src="/swift-ai-icon.png" alt="" width={13} height={13} className="rounded-sm" />
             Ask Swift
           </button>
 

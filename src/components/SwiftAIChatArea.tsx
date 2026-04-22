@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
+import Image from "next/image";
 import {
   DefaultChatTransport,
   lastAssistantMessageIsCompleteWithToolCalls,
@@ -14,7 +15,6 @@ import {
   Send,
   Square,
   RotateCcw,
-  Sparkles,
   WifiOff,
   AlertCircle,
   Pencil,
@@ -626,10 +626,10 @@ function MessageBubble({
       {/* Avatar */}
       <div
         className={clsx(
-          "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold relative",
+          "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold relative overflow-hidden",
           isUser
             ? "bg-gray-100 dark:bg-white/8 text-gray-500 dark:text-gray-400"
-            : "text-white",
+            : "",
         )}
         style={
           !isUser
@@ -637,7 +637,9 @@ function MessageBubble({
             : undefined
         }
       >
-        {isUser ? userName[0].toUpperCase() : <Sparkles size={12} />}
+        {isUser ? userName[0].toUpperCase() : (
+          <Image src="/swift-ai-icon.png" alt="Swift AI" width={28} height={28} className="rounded-lg" />
+        )}
         {isStreaming && !isUser && (
           <span
             className="absolute inset-0 rounded-lg animate-ping"
@@ -1024,12 +1026,13 @@ function WelcomeMessage({
 
   return (
     <div className="h-full flex flex-col items-center justify-center text-center px-8">
-      <div
-        className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3"
-        style={{ background: "linear-gradient(135deg, #ff6b35, #ff8c5a)" }}
-      >
-        <Sparkles size={18} className="text-white" />
-      </div>
+      <Image
+        src="/swift-ai-icon.png"
+        alt="Swift AI"
+        width={40}
+        height={40}
+        className="rounded-2xl mb-3"
+      />
       <h3 className="text-base font-bold text-gray-900 dark:text-white">
         Hey {name}!
       </h3>
@@ -1085,12 +1088,13 @@ function TypingIndicator() {
 
   return (
     <div className="flex gap-3">
-      <div
-        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white"
-        style={{ background: "linear-gradient(135deg, #ff6b35, #ff8c5a)" }}
-      >
-        <Sparkles size={12} />
-      </div>
+      <Image
+        src="/swift-ai-icon.png"
+        alt="Swift AI"
+        width={28}
+        height={28}
+        className="rounded-lg shrink-0"
+      />
       <div className="bg-gray-50 dark:bg-white/4 border border-brand-orange/20 dark:border-brand-orange/15 rounded-2xl rounded-tl-md px-4 py-3">
         <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 dark:text-gray-400">
           <span className="inline-block h-2 w-2 rounded-full bg-brand-orange animate-pulse" />

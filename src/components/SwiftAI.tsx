@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, WifiOff, BookOpen } from "lucide-react";
+import Image from "next/image";
+import { X, WifiOff, BookOpen } from "lucide-react";
 import { SwiftAISidebar } from "./SwiftAISidebar";
 import { SwiftAIChatArea } from "./SwiftAIChatArea";
 import { useNetworkStatus } from "@/lib/useNetworkStatus";
@@ -170,14 +171,13 @@ export function SwiftAI({
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/6">
               <div className="flex items-center gap-2.5">
-                <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
-                  }}
-                >
-                  <Sparkles size={13} className="text-white" />
-                </div>
+                <Image
+                  src="/swift-ai-icon.png"
+                  alt="Swift AI"
+                  width={28}
+                  height={28}
+                  className="rounded-lg"
+                />
                 <div>
                   <h1 className="text-sm font-bold text-gray-900 dark:text-white leading-none">
                     Swift <span className="text-brand-orange">AI</span>
@@ -263,12 +263,13 @@ export function SwiftAI({
 function EmptyState({ onNewChat }: { onNewChat: () => void }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center px-8">
-      <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-        style={{ background: "linear-gradient(135deg, #ff6b35, #ff8c5a)" }}
-      >
-        <Sparkles size={20} className="text-white" />
-      </div>
+      <Image
+        src="/swift-ai-icon.png"
+        alt="Swift AI"
+        width={48}
+        height={48}
+        className="rounded-2xl mb-4"
+      />
       <h2 className="text-base font-bold text-gray-900 dark:text-white">
         Ask Swift anything
       </h2>

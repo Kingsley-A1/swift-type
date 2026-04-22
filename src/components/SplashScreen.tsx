@@ -56,7 +56,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
                     boxShadow: "0 8px 32px rgba(0,0,0,0.10)"
                   }}
                 >
-                  <Image src="/logo-192.png" alt="SwiftType" width={96} height={96} priority />
+                  <Image src="/logo-192.jpg" alt="SwiftType" width={96} height={96} priority />
                 </div>
               </motion.div>
 

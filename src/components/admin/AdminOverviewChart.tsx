@@ -20,7 +20,7 @@ interface AdminOverviewChartProps {
 export function AdminOverviewChart({ data }: AdminOverviewChartProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
-      <div className="h-64 rounded-3xl border border-white/60 bg-white/80 p-3 shadow-sm">
+      <div className="h-64 rounded-xl border border-gray-100 bg-white p-3">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -55,7 +55,7 @@ export function AdminOverviewChart({ data }: AdminOverviewChartProps) {
         </ResponsiveContainer>
       </div>
 
-      <div className="h-64 rounded-3xl border border-white/60 bg-white/80 p-3 shadow-sm">
+      <div className="h-64 rounded-xl border border-gray-100 bg-white p-3">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />

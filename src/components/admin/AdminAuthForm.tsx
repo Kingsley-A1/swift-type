@@ -91,13 +91,17 @@ export function AdminAuthForm({ mode }: AdminAuthFormProps) {
 
       {mode === "login" ? (
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Admin login code</span>
+          <span className="text-sm font-medium text-slate-700">
+            Admin login code
+          </span>
           <input
             inputMode="numeric"
             pattern="[0-9]{6}"
             maxLength={6}
             value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D+/g, "").slice(0, 6))}
+            onChange={(event) =>
+              setCode(event.target.value.replace(/\D+/g, "").slice(0, 6))
+            }
             className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm tracking-[0.35em] text-slate-900 outline-none transition focus:border-(--brand-orange) focus:ring-4 focus:ring-orange-100"
             placeholder="123456"
             required
@@ -105,7 +109,9 @@ export function AdminAuthForm({ mode }: AdminAuthFormProps) {
         </label>
       ) : (
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Registration password</span>
+          <span className="text-sm font-medium text-slate-700">
+            Registration password
+          </span>
           <input
             inputMode="numeric"
             pattern="[0-9]{10}"
@@ -126,7 +132,7 @@ export function AdminAuthForm({ mode }: AdminAuthFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="flex h-12 w-full items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#ff6b35] text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading
           ? mode === "login"

@@ -17,34 +17,33 @@ export default async function AdminPortalLayout({
   await touchAdminSession(admin.sessionId);
 
   return (
-    <div className="min-h-screen px-4 py-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <header className="sticky top-0 z-20 mb-5 rounded-4xl border border-white/60 bg-white/85 p-4 shadow-lg backdrop-blur sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <Link href="/admin" className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">
-                Swift Type Admin
-              </Link>
-              <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">
-                Product observability cockpit
-              </p>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      <header className="sticky top-0 z-20 bg-white border-b border-gray-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="flex h-14 items-center justify-between gap-4">
+            <Link
+              href="/admin"
+              className="text-[14px] font-black tracking-tight text-gray-900"
+            >
+              Swift<span className="text-[#ff6b35]">Type</span>{" "}
+              <span className="text-[13px] font-normal text-gray-400">
+                Admin
+              </span>
+            </Link>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-600">
-                <span className="block text-xs uppercase tracking-[0.18em] text-slate-500">
-                  Signed in
-                </span>
-                <span className="mt-1 block font-semibold text-slate-950">
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block text-right">
+                <p className="text-[12px] font-semibold text-gray-900 leading-none">
                   {admin.name}
-                </span>
-                <span className="block text-xs text-slate-500">{admin.email}</span>
+                </p>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  {admin.email}
+                </p>
               </div>
-
               <form action="/api/admin/logout" method="post">
                 <button
                   type="submit"
-                  className="h-12 rounded-2xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  className="h-8 rounded-lg bg-gray-100 px-3 text-[12px] font-semibold text-gray-600 hover:bg-gray-200 transition-colors"
                 >
                   Sign out
                 </button>
@@ -52,13 +51,11 @@ export default async function AdminPortalLayout({
             </div>
           </div>
 
-          <div className="mt-4">
-            <AdminPortalNav />
-          </div>
-        </header>
+          <AdminPortalNav />
+        </div>
+      </header>
 
-        {children}
-      </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">{children}</div>
     </div>
   );
 }

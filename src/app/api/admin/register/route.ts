@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { createAdminSession, registerAdmin, setAdminSessionCookie } from "@/lib/adminAuth";
+import {
+  createAdminSession,
+  registerAdmin,
+  setAdminSessionCookie,
+} from "@/lib/adminAuth";
 import { recordAdminAudit } from "@/lib/adminAudit";
 
 function getClientInfo(request: Request) {
@@ -34,7 +38,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, adminId: admin.id }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to register admin";
+    const message =
+      error instanceof Error ? error.message : "Failed to register admin";
     return NextResponse.json({ message }, { status: 400 });
   }
 }

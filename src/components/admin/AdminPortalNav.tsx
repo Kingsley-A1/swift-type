@@ -13,19 +13,23 @@ export function AdminPortalNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-2 overflow-x-auto pb-1">
+    <nav className="flex gap-1 -mb-px overflow-x-auto">
       {links.map((link) => {
-        const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+        const isActive =
+          link.href === "/admin"
+            ? pathname === "/admin"
+            : pathname.startsWith(`${link.href}/`) ||
+              pathname === link.href;
 
         return (
           <Link
             key={link.href}
             href={link.href}
             className={[
-              "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition",
+              "px-4 py-3 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap",
               isActive
-                ? "bg-slate-950 text-white"
-                : "bg-white/80 text-slate-700 hover:bg-white",
+                ? "border-[#ff6b35] text-[#ff6b35]"
+                : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-200",
             ].join(" ")}
           >
             {link.label}

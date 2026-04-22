@@ -58,7 +58,7 @@ export const metadata: Metadata = {
       "Free adaptive typing trainer with real-time WPM stats, finger-color keyboard, and smart AI-powered drills.",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Swift Type – Adaptive Typing Trainer",
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     title: "Swift Type – Train Your Fingers, Master Your Keyboard",
     description:
       "Adaptive typing trainer, teaches touch typing, how to type fast and accurate with AI drills.",
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -85,9 +85,9 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.png",
-    apple: "/logo-192.png",
-    shortcut: "/favicon.png",
+    icon: "/favicon.jpg",
+    apple: "/logo-192.jpg",
+    shortcut: "/favicon.jpg",
   },
 };
 

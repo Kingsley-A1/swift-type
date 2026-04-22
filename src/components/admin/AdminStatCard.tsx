@@ -6,14 +6,14 @@ interface AdminStatCardProps {
 
 export function AdminStatCard({ label, value, hint }: AdminStatCardProps) {
   return (
-    <div className="rounded-3xl border border-white/60 bg-white/85 p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+    <div className="rounded-xl bg-white border border-gray-100 p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
         {label}
       </p>
-      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">
+      <p className="mt-2.5 text-2xl font-black tracking-tight text-gray-900">
         {value}
       </p>
-      <p className="mt-2 text-sm text-slate-500">{hint}</p>
+      <p className="mt-1.5 text-[12px] text-gray-400">{hint}</p>
     </div>
   );
 }
