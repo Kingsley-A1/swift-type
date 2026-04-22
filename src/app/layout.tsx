@@ -23,7 +23,7 @@ const siteUrl =
     ? `https://${process.env.VERCEL_URL}`
     : "https://swift-type-two.vercel.app");
 
-const ogImageUrl = `${siteUrl}/og-image.jpg`;
+const ogImageUrl = `${siteUrl}/og-image-v2.jpg`;
 
 export const viewport: Viewport = {
   themeColor: "#ff6b35",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     "typing game",
     "adaptive typing",
     "typing tutor",
-    "fast typing"
+    "fast typing",
   ],
   authors: [{ name: "Swift Type" }],
   creator: "Swift Type",
