@@ -19,6 +19,7 @@ export default async function AdminPortalLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-20 bg-white border-b border-gray-100">
+        <div className="h-0.5 bg-linear-to-r from-[#ff6b35] via-[#ff6b35]/40 to-transparent" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex h-14 items-center justify-between gap-4">
             <Link
@@ -43,7 +44,7 @@ export default async function AdminPortalLayout({
               <form action="/api/admin/logout" method="post">
                 <button
                   type="submit"
-                  className="h-8 rounded-lg bg-gray-100 px-3 text-[12px] font-semibold text-gray-600 hover:bg-gray-200 transition-colors"
+                  className="h-8 rounded-lg border border-[#ff6b35]/25 bg-[#fff7f3] px-3 text-[12px] font-semibold text-[#ff6b35] hover:bg-[#ffece3] transition-colors"
                 >
                   Sign out
                 </button>

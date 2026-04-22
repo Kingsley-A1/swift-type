@@ -155,9 +155,9 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
   return (
     <div
       ref={containerRef}
-      className="typing-panel relative mb-2.5 w-full cursor-text overflow-y-auto px-6 py-4"
+      className="typing-panel relative mb-2 w-full cursor-text overflow-y-auto px-5 py-3 sm:px-6"
       style={{
-        height: "160px",
+        height: "clamp(104px, 18vh, 132px)",
         scrollbarWidth: "thin",
         scrollbarColor: "rgba(255,107,53,0.25) transparent",
       }}
@@ -177,7 +177,7 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
 
       {/* Characters */}
       <div
-        className="relative z-10 flex flex-wrap text-[1.2rem] leading-[1.75]"
+        className="relative z-10 flex flex-wrap text-[clamp(1rem,1.45vw,1.15rem)] leading-[1.65]"
         style={{ fontFamily: "'JetBrains Mono', monospace" }}
       >
         {chars.map((char, i) => {

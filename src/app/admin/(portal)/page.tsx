@@ -55,7 +55,7 @@ export default async function AdminOverviewPage() {
 
       {/* Primary stats row */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
+        <div className="bg-white rounded-xl border border-[#ff6b35]/15 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
             Users
           </p>
@@ -66,7 +66,7 @@ export default async function AdminOverviewPage() {
             {summary.activeUsers7d} active this week
           </p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
+        <div className="bg-white rounded-xl border border-[#ff6b35]/15 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
             Sessions
           </p>
@@ -77,7 +77,7 @@ export default async function AdminOverviewPage() {
             {formatHours(summary.totalPracticeHours)} practice time
           </p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
+        <div className="bg-white rounded-xl border border-[#ff6b35]/15 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
             Swift AI
           </p>
@@ -88,7 +88,7 @@ export default async function AdminOverviewPage() {
             {summary.totalAIFeedbackUp} helpful responses
           </p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
+        <div className="bg-white rounded-xl border border-[#ff6b35]/15 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
             Reviews
           </p>

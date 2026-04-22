@@ -331,7 +331,7 @@ export default function Home() {
           )}
 
           {!isFinished && (
-            <div className="flex-1 min-h-0 flex flex-col justify-end">
+            <div className="mt-1 flex-1 min-h-0 flex flex-col justify-end">
               <Keyboard isBlocked={anyPanelOpen} />
             </div>
           )}

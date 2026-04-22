@@ -102,11 +102,11 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
   return (
     <div className="w-full">
       {/* Mode Switcher */}
-      <div className="flex items-center justify-between mb-2 px-0.5">
+      <div className="mb-2.5 flex items-center justify-between px-0.5">
         <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
           Keyboard Layout
         </span>
-        <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-white/8 bg-gray-100 dark:bg-white/5">
+        <div className="flex rounded-lg overflow-hidden border border-[#ff6b35]/20 dark:border-[#ff6b35]/25 bg-white dark:bg-[#181a20]">
           {(["windows", "mac"] as const).map((m) => (
             <button
               key={m}
@@ -115,7 +115,7 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
                 "px-3 py-1 text-[10px] font-semibold transition-colors duration-100",
                 kbMode === m
                   ? "bg-brand-orange text-white"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200",
+                  : "text-gray-500 dark:text-gray-300 hover:bg-[#fff4ef] hover:text-[#ff6b35] dark:hover:bg-[#ff6b35]/12 dark:hover:text-[#ff6b35]",
               )}
             >
               {m === "windows" ? "Windows" : "MacBook"}
@@ -134,9 +134,9 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
           pointerEvents: isBlocked ? "none" : "auto",
         }}
       >
-        <div className="flex flex-col gap-[5px] w-full">
+        <div className="flex flex-col gap-1.25 w-full">
           {layout.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex gap-[5px] w-full">
+            <div key={rowIdx} className="flex gap-1.25 w-full">
               {row.map((key) => {
                 const isPressed = activeKeys.has(key.id);
                 const isNextKey =
@@ -187,7 +187,7 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
                             ? "#d1d5db"
                             : "#374151",
                     }}
-                    className="flex flex-col items-center justify-center min-h-[46px] rounded-[7px] text-[11px] font-semibold transition-all duration-[60ms] select-none cursor-default overflow-hidden"
+                    className="flex flex-col items-center justify-center min-h-11.5 rounded-[7px] text-[11px] font-semibold transition-all duration-60 select-none cursor-default overflow-hidden"
                   >
                     {/* Shift char top-left */}
                     {key.shiftChar && key.finger !== "action" ? (
@@ -203,7 +203,7 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
                         >
                           {key.shiftChar}
                         </span>
-                        <span className="text-[12px] font-bold leading-none mt-[1px]">
+                        <span className="text-[12px] font-bold leading-none mt-px">
                           {capsLock ? key.mainChar.toUpperCase() : key.mainChar}
                         </span>
                       </div>

@@ -57,8 +57,8 @@ export default async function AdminUsersPage() {
         />
       </section>
 
-      <section className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="hidden grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.9fr] gap-3 bg-gray-50 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 lg:grid">
+      <section className="bg-white rounded-xl border border-[#ff6b35]/15 overflow-hidden">
+        <div className="hidden grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.9fr] gap-3 bg-[#fff7f3] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500 lg:grid">
           <span>User</span>
           <span>Last active</span>
           <span>Sessions</span>
