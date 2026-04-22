@@ -17,6 +17,14 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://swift-type-two.vercel.app");
+
+const ogImageUrl = `${siteUrl}/og-image.jpg`;
+
 export const viewport: Viewport = {
   themeColor: "#ff6b35",
   width: "device-width",
@@ -29,7 +37,7 @@ export const metadata: Metadata = {
     template: "%s | Swift Type",
   },
   description:
-    "Swift Type is  fast, adaptive typing trainer. Practice touch typing, improve your WPM, and master your keyboard with real-time feedback and beautiful analytics.",
+    "Swift Type is an AI Powered Next generation, fast, adaptive typing trainer. Practice touch typing, improve your WPM, and master your keyboard with real-time feedback and beautiful analytics.",
   keywords: [
     "typing trainer",
     "touch typing",
@@ -47,18 +55,18 @@ export const metadata: Metadata = {
   creator: "Swift Type",
   applicationName: "Swift Type",
   generator: "Next.js",
-  metadataBase: new URL("https://swifttype.app"),
+  metadataBase: new URL(siteUrl),
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://swifttype.app",
+    url: siteUrl,
     siteName: "Swift Type",
     title: "Swift Type – Train Your Fingers, Master Your Keyboard",
     description:
-      "Free adaptive typing trainer with real-time WPM stats, finger-color keyboard, and smart AI-powered drills.",
+      "AI Powered Next-gen typing trainer. Practice touch typing, improve your WPM, and master your keyboard with real-time feedback and beautiful analytics.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: ogImageUrl,
         width: 1200,
         height: 630,
         alt: "Swift Type – Adaptive Typing Trainer",
@@ -70,7 +78,7 @@ export const metadata: Metadata = {
     title: "Swift Type – Train Your Fingers, Master Your Keyboard",
     description:
       "Adaptive typing trainer, teaches touch typing, how to type fast and accurate with AI drills.",
-    images: ["/og-image.jpg"],
+    images: [ogImageUrl],
   },
   robots: {
     index: true,
@@ -99,7 +107,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans overflow-hidden flex items-center justify-center p-4`}
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans min-h-dvh overflow-hidden flex items-start justify-center px-4 sm:px-5`}
       >
         <ThemeProvider
           attribute="class"
