@@ -24,6 +24,7 @@ import {
   Target,
   ExternalLink,
   Play,
+  Sparkles,
 } from "lucide-react";
 import clsx from "clsx";
 import { useNetworkStatus } from "@/lib/useNetworkStatus";
