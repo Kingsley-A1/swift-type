@@ -3,7 +3,6 @@
 import { WINDOWS_LAYOUT, MAC_LAYOUT } from "@/data/keyboardLayouts";
 import { useTypingStore } from "@/store/useTypingStore";
 import { useEffect, useState } from "react";
-import { type FingerMapping } from "@/data/keyboardLayouts";
 import clsx from "clsx";
 
 // ─── FINGER COLORS (keybr.com palette — lighter pastels) ─────────────────────
@@ -46,23 +45,6 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
 
   const layout = kbMode === "mac" ? MAC_LAYOUT : WINDOWS_LAYOUT;
 
-  // Find which finger the next key requires
-  const nextFinger: FingerMapping | null = (() => {
-    if (!nextChar) return null;
-    for (const row of layout) {
-      for (const key of row) {
-        if (
-          key.mainChar === nextChar ||
-          key.mainChar === nextChar.toLowerCase() ||
-          key.shiftChar === nextChar
-        ) {
-          return key.finger;
-        }
-      }
-    }
-    return null;
-  })();
-
   // Detect dark mode
   useEffect(() => {
     const check = () =>
@@ -80,7 +62,9 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
     const down = (e: KeyboardEvent) => {
       if (!isActive) return; // only highlight during an active session
       setActiveKeys((p) => new Set(p).add(e.code));
-      if (e.code === "CapsLock") setCapsLock(e.getModifierState("CapsLock"));
+      if (e.code === "CapsLock" && typeof e.getModifierState === "function") {
+        setCapsLock(e.getModifierState("CapsLock"));
+      }
     };
     const up = (e: KeyboardEvent) => {
       setActiveKeys((p) => {
@@ -109,6 +93,7 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
         <div className="flex rounded-lg overflow-hidden border border-[#ff6b35]/20 dark:border-[#ff6b35]/25 bg-white dark:bg-[#181a20]">
           {(["windows", "mac"] as const).map((m) => (
             <button
+              type="button"
               key={m}
               onClick={() => setKbMode(m)}
               className={clsx(
@@ -135,8 +120,11 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
         }}
       >
         <div className="flex flex-col gap-1.25 w-full">
-          {layout.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex gap-1.25 w-full">
+          {layout.map((row) => (
+            <div
+              key={row.map((key) => key.id).join("|")}
+              className="flex gap-1.25 w-full"
+            >
               {row.map((key) => {
                 const isPressed = activeKeys.has(key.id);
                 const isNextKey =

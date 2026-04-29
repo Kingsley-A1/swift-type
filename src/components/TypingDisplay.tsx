@@ -1,9 +1,13 @@
 "use client";
 
 import { useTypingStore } from "@/store/useTypingStore";
-import React, { useEffect, useRef, useState, memo, forwardRef } from "react";
+import { useEffect, useRef, useState, memo, forwardRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
+
+interface SwiftTypeWindow extends Window {
+  __swiftTypePlaySound?: (kind: "correct" | "error") => void;
+}
 
 const CharSpan = memo(
   forwardRef<
@@ -54,7 +58,6 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
     targetText,
     typedText,
     isActive,
-    isFinished,
     typeChar,
     deleteChar,
     resetSession,
@@ -65,6 +68,23 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const activeCharRef = useRef<HTMLSpanElement>(null);
+
+  const charItems = useMemo(() => {
+    const seen = new Map<string, number>();
+    let position = -1;
+
+    return targetText.split("").map((char) => {
+      position += 1;
+      const occurrence = (seen.get(char) ?? 0) + 1;
+      seen.set(char, occurrence);
+
+      return {
+        id: `${char}-${occurrence}-${position}`,
+        char,
+        position,
+      };
+    });
+  }, [targetText]);
 
   // Keep focus on input when active (but not when blocked by a panel)
   useEffect(() => {
@@ -77,7 +97,12 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
 
   // Auto-scroll the container to keep the active character vertically centered
   useEffect(() => {
-    if (isActive && activeCharRef.current && containerRef.current) {
+    if (
+      isActive &&
+      typedText.length >= 0 &&
+      activeCharRef.current &&
+      containerRef.current
+    ) {
       activeCharRef.current.scrollIntoView({
         behavior: "smooth",
         block: "center",
@@ -87,6 +112,7 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
 
   useEffect(() => {
     const handleModifierState = (event: KeyboardEvent) => {
+      if (typeof event.getModifierState !== "function") return;
       setIsCapsLockOn(event.getModifierState("CapsLock"));
     };
 
@@ -139,18 +165,16 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
       const expectedChar = targetText[typedText.length] ?? "";
       const storedChar = getStoredCharacter(e.key, expectedChar);
       const correct = storedChar === expectedChar;
-      setIsCapsLockOn(e.getModifierState("CapsLock"));
+      if (typeof e.getModifierState === "function") {
+        setIsCapsLockOn(e.getModifierState("CapsLock"));
+      }
       typeChar(storedChar);
-      if (
-        typeof window !== "undefined" &&
-        (window as any).__swiftTypePlaySound
-      ) {
-        (window as any).__swiftTypePlaySound(correct ? "correct" : "error");
+      const typedWindow = window as SwiftTypeWindow;
+      if (typedWindow.__swiftTypePlaySound) {
+        typedWindow.__swiftTypePlaySound(correct ? "correct" : "error");
       }
     }
   };
-
-  const chars = targetText.split("");
 
   return (
     <div
@@ -161,7 +185,6 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
         scrollbarWidth: "thin",
         scrollbarColor: "rgba(255,107,53,0.25) transparent",
       }}
-      onClick={() => !isBlocked && inputRef.current?.focus()}
     >
       {/* Hidden input receiver */}
       <input
@@ -180,16 +203,16 @@ export function TypingDisplay({ isBlocked = false }: { isBlocked?: boolean }) {
         className="relative z-10 flex flex-wrap text-[clamp(1rem,1.45vw,1.15rem)] leading-[1.65]"
         style={{ fontFamily: "'JetBrains Mono', monospace" }}
       >
-        {chars.map((char, i) => {
-          const typed = typedText[i];
-          const isCaret = i === typedText.length && isActive;
+        {charItems.map((item) => {
+          const typed = typedText[item.position];
+          const isCaret = item.position === typedText.length && isActive;
 
           return (
             <CharSpan
-              key={i}
+              key={item.id}
               ref={isCaret ? activeCharRef : null}
-              expectedChar={char}
-              displayChar={getDisplayCharacter(char)}
+              expectedChar={item.char}
+              displayChar={getDisplayCharacter(item.char)}
               typed={typed}
               isCaret={isCaret}
             />
