@@ -1,3 +1,4 @@
+THIS IS OLD ND SHOULD BE IGNORED.
 # Deep Review & Path Forward: SwifTyper Industry-Standard Upgrade
 
 ## 1. Executive Summary
