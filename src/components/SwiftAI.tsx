@@ -7,6 +7,7 @@ import { X, WifiOff, BookOpen } from "lucide-react";
 import { SwiftAISidebar } from "./SwiftAISidebar";
 import { SwiftAIChatArea } from "./SwiftAIChatArea";
 import { useNetworkStatus } from "@/lib/useNetworkStatus";
+import type { SwiftAISessionConfig } from "@/lib/swift-ai-tool-parts";
 
 interface ChatSession {
   id: string;
@@ -20,21 +21,14 @@ interface SwiftAIProps {
   isOpen: boolean;
   onClose: () => void;
   onDocsOpen?: () => void;
-  isDocsOpen?: boolean;
   onNavigate?: (target: string) => void;
-  onStartSession?: (config: {
-    mode: string;
-    level: string;
-    duration?: number;
-    wordCount?: number;
-  }) => void;
+  onStartSession?: (config: SwiftAISessionConfig) => void;
 }
 
 export function SwiftAI({
   isOpen,
   onClose,
   onDocsOpen,
-  isDocsOpen,
   onNavigate,
   onStartSession,
 }: SwiftAIProps) {
@@ -142,32 +136,14 @@ export function SwiftAI({
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="swift-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/20 dark:bg-black/40 backdrop-blur-[2px]"
-          />
-
-          {/* Panel — fixed 50% width, always at right-0 */}
-          <motion.div
-            key="swift-panel"
-            initial={{ x: "100%", opacity: 0.6 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0.6 }}
-            transition={{ type: "spring", damping: 28, stiffness: 220 }}
-            className="fixed inset-y-0 right-0 z-50 flex flex-col bg-white dark:bg-[#14161c]"
-            style={{
-              width: "50%",
-              borderLeft: "1px solid rgba(0,0,0,0.06)",
-              boxShadow: "-20px 0 60px rgba(0,0,0,0.12)",
-            }}
-          >
+        <motion.div
+          key="swift-panel"
+          initial={{ x: "100%", opacity: 0.7 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: "100%", opacity: 0.7 }}
+          transition={{ type: "spring", damping: 26, stiffness: 220 }}
+          className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#14161c] sm:w-[88vw] lg:w-[30vw] 2xl:w-130"
+        >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/6">
               <div className="flex items-center gap-2.5">
@@ -191,6 +167,7 @@ export function SwiftAI({
                 {/* Docs toggle */}
                 {onDocsOpen && (
                   <button
+                    type="button"
                     onClick={onDocsOpen}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-gray-200 dark:border-white/8 text-gray-500 dark:text-gray-400 hover:border-brand-orange/30 hover:text-brand-orange dark:hover:text-brand-orange transition-all"
                     title="View Docs"
@@ -200,7 +177,9 @@ export function SwiftAI({
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={onClose}
+                  aria-label="Close Swift AI"
                   className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                 >
                   <X size={15} className="text-gray-400" />
@@ -251,8 +230,7 @@ export function SwiftAI({
                 )}
               </div>
             </div>
-          </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
@@ -278,6 +256,7 @@ function EmptyState({ onNewChat }: { onNewChat: () => void }) {
         practice tips.
       </p>
       <button
+        type="button"
         onClick={onNewChat}
         className="mt-5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
         style={{ background: "linear-gradient(135deg, #ff6b35, #ff8c5a)" }}

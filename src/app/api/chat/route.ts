@@ -1,4 +1,5 @@
-import { streamText, UIMessage, convertToModelMessages, tool } from "ai";
+import { streamText, convertToModelMessages, tool } from "ai";
+import type { UIMessage } from "ai";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -20,29 +21,16 @@ import {
   getGoalSnapshotTimezone,
   isGoalStreakAtRisk,
 } from "@/lib/goals";
+import {
+  getCachedSwiftAIContext,
+  invalidateCachedSwiftAIContext,
+  setCachedSwiftAIContext,
+} from "@/lib/swiftAIContextCache";
 
 // ─── CONTEXT CACHE (60s TTL per user) ────────────────────────────────────────
 // Prevents 5 DB queries on every back-to-back chat message.
 
-const contextCache = new Map<
-  string,
-  { context: TypingContext; expiresAt: number }
->();
 const CACHE_TTL_MS = 60_000;
-
-function getCachedContext(userId: string): TypingContext | null {
-  const entry = contextCache.get(userId);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    contextCache.delete(userId);
-    return null;
-  }
-  return entry.context;
-}
-
-function setCachedContext(userId: string, context: TypingContext) {
-  contextCache.set(userId, { context, expiresAt: Date.now() + CACHE_TTL_MS });
-}
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -62,6 +50,8 @@ interface TypingContext {
   streakState?: "on_track" | "at_risk" | "missed"; //State of the current streak
   communityReviews?: string[]; //Community reviews
   reviewCount?: number; //Number of reviews
+  hasReviewed?: boolean; //Whether current user has already submitted a review
+  myReviewSummary?: string; //Current user's own review summary
 }
 
 // ─── CONTEXT BUILDER ─────────────────────────────────────────────────────────
@@ -72,6 +62,7 @@ function buildTypingContext(
   goalSnapshot: Awaited<ReturnType<typeof getActiveGoals>>,
   latestReward?: typeof userRewards.$inferSelect,
   allReviews?: (typeof userReviews.$inferSelect)[],
+  currentUserReview?: typeof userReviews.$inferSelect,
 ): TypingContext {
   const ctx: TypingContext = { totalSessions: recentSessions.length };
   const normalizedSessions = recentSessions.map((session) => ({
@@ -175,6 +166,22 @@ function buildTypingContext(
       );
   }
 
+  if (currentUserReview) {
+    ctx.hasReviewed = true;
+    const createdAt =
+      currentUserReview.createdAt instanceof Date
+        ? currentUserReview.createdAt
+        : currentUserReview.createdAt
+          ? new Date(currentUserReview.createdAt)
+          : null;
+    const reviewDate = createdAt && !Number.isNaN(createdAt.getTime())
+      ? createdAt.toLocaleDateString()
+      : "Date unavailable";
+    ctx.myReviewSummary = `${currentUserReview.role}: "${currentUserReview.content}" (${reviewDate})`;
+  } else {
+    ctx.hasReviewed = false;
+  }
+
   return ctx;
 }
 
@@ -185,7 +192,7 @@ function buildSystemPrompt(userName: string, ctx: TypingContext): string {
 
 ## IDENTITY
 - Name: Swift AI (or just "Swift")
-- Built by: King Tech Foundation, led by Kingsley Maduabuchi (Founder)
+- Built by: King Tech Foundation, led by Kingsley Maduabuchi also known as Blessed King (Founder)
 - Platform: Swift Type — a next-generation, productivity-first efficient typing coach
 - Personality: Warm, encouraging, concise, occasionally witty. Call the user "${userName}". Celebrate progress, normalize struggle, and keep them coming back.
 - Expertise: Touch typing, keyboard ergonomics, muscle memory, speed building, accuracy strategies.
@@ -195,7 +202,7 @@ function buildSystemPrompt(userName: string, ctx: TypingContext): string {
 - Speed comes from accuracy first, then muscle memory, then reducing finger travel
 - Common plateaus at 40, 60, 80 WPM — each needs different techniques
 - Bigram fluency matters more than individual key speed
-- Beginners should never look at their keyboard
+- Beginners should never look at their keyboard but make friend with the Swift Type on-screen keyboard which has the current key highlight
 
 ## USER DATA
 ${ctx.totalSessions > 0 ? `- Sessions completed: ${ctx.totalSessions}` : "- New user — no sessions yet"}
@@ -225,8 +232,11 @@ ${ctx.latestReward ? `LATEST_REWARD=${ctx.latestReward}` : "LATEST_REWARD=none"}
 ${ctx.streakState ? `STREAK_STATE=${ctx.streakState}` : "STREAK_STATE=unknown"}
 
 ## COMMUNITY REVIEWS
-${ctx.reviewCount ? `Swift Type has ${ctx.reviewCount} community review(s). You may cite these naturally to encourage ${userName}:` : "No community reviews yet — if appropriate, gently invite the user to be the first to leave one in the Reviews panel."}
+${ctx.reviewCount ? `Swift Type has ${ctx.reviewCount} community review(s). You may cite these naturally to encourage ${userName}:` : "No community reviews yet — if appropriate, gently invite the user to be the first to leave one in the Reviews panel and use you tool to open the panel for them."}
 ${ctx.communityReviews?.join("\n") ?? ""}
+
+## USER REVIEW STATUS
+${ctx.hasReviewed ? `${userName} has already submitted a review: ${ctx.myReviewSummary ?? "Review submitted"}. Thank them for contributing and do not ask for another review unless they explicitly ask to update it.` : `${userName} has not submitted a review yet. At suitable moments (for example after progress wins), confidently invite them to share a quick review and use navigateTo with target='reviews' so they can open it immediately.`}
 
 ## DATA INTEGRITY
 - USER DATA is the source of truth.
@@ -266,7 +276,7 @@ When using tools:
 9. If STREAK_STATE=missed, recommend smaller, easier next goals instead of pushing harder.
 10. If STREAK_STATE=at_risk, prioritize one short session today before any advanced drills.
 11. If the user is new (no sessions), warmly welcome them, explain what Swift Type can do, and suggest starting with a 60-second timed session.
-12. Occasionally — especially when a user hits a milestone or seems engaged — invite them to share a review in the Reviews panel. Keep it natural, never pushy.
+12. Review nudge personalization: if USER REVIEW STATUS says the user has not reviewed, invite a review at suitable moments and use navigateTo to open Reviews. If they already reviewed, do not prompt for a new review unless they ask to edit/update it.
 13. When relevant, cite community reviews verbatim (with the reviewer's name) to motivate the user.
 14. ALWAYS use your tools to take action. Do not claim you did something without actually calling the tool.
 15. When directing users to a page or panel, use the navigateTo tool so they see a clickable link.
@@ -329,7 +339,7 @@ export async function POST(req: Request) {
   }
 
   // Check cache first — rebuild only if expired (60s TTL)
-  let typingContext = getCachedContext(userId);
+  let typingContext = getCachedSwiftAIContext<TypingContext>(userId);
 
   if (!typingContext) {
     const [
@@ -338,6 +348,7 @@ export async function POST(req: Request) {
       goalSnapshot,
       latestRewardRow,
       allReviews,
+      currentUserReviewRows,
     ] = await Promise.all([
       db
         .select()
@@ -358,6 +369,12 @@ export async function POST(req: Request) {
         .from(userReviews)
         .orderBy(desc(userReviews.createdAt))
         .limit(20),
+      db
+        .select()
+        .from(userReviews)
+        .where(eq(userReviews.userId, userId))
+        .orderBy(desc(userReviews.createdAt))
+        .limit(1),
     ]);
 
     typingContext = buildTypingContext(
@@ -366,8 +383,9 @@ export async function POST(req: Request) {
       goalSnapshot,
       latestRewardRow[0],
       allReviews,
+      currentUserReviewRows[0],
     );
-    setCachedContext(userId, typingContext);
+    setCachedSwiftAIContext(userId, typingContext, CACHE_TTL_MS);
   }
   const systemPrompt = buildSystemPrompt(userName, typingContext);
 
@@ -415,7 +433,7 @@ export async function POST(req: Request) {
           });
 
           // Invalidate cached context so next message picks up the new goal
-          contextCache.delete(userId);
+          invalidateCachedSwiftAIContext(userId);
 
           const goal =
             template.periodType === "daily"

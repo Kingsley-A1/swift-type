@@ -20,9 +20,9 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { getRandomWords } from "@/data/dictionary";
 import {
-  CURRICULUM_STAGES,
   generateCurriculumText,
 } from "@/lib/adaptiveEngine";
+import type { SwiftAISessionConfig } from "@/lib/swift-ai-tool-parts";
 import {
   syncSessionToServer,
   syncStatsToServer,
@@ -40,6 +40,16 @@ type PanelId =
   | "swiftai"
   | "reviews"
   | null;
+
+type DictionaryLevel = Parameters<typeof getRandomWords>[0];
+
+const normalizeDictionaryLevel = (value: string | undefined): DictionaryLevel => {
+  if (value === "beginner" || value === "intermediate" || value === "advanced") {
+    return value;
+  }
+
+  return "beginner";
+};
 
 export default function Home() {
   const {
@@ -65,8 +75,8 @@ export default function Home() {
   const [openPanel, setOpenPanel] = useState<PanelId>(null);
   const bootstrappedUserId = useRef<string | null>(null);
 
-  const openOnly = (panel: PanelId) => setOpenPanel(panel);
-  const closePanel = () => setOpenPanel(null);
+  const openOnly = useCallback((panel: PanelId) => setOpenPanel(panel), []);
+  const closePanel = useCallback(() => setOpenPanel(null), []);
 
   const isGuideOpen = openPanel === "guide";
   const isSwiftAIOpen = openPanel === "swiftai";
@@ -76,6 +86,7 @@ export default function Home() {
   const isProfileOpen = openPanel === "profile";
   const isReviewsOpen = openPanel === "reviews";
   const anyPanelOpen = openPanel !== null;
+  const hasBlockingPanel = openPanel !== null && openPanel !== "swiftai";
 
   // Handlers for SwiftAI tool actions
   const handleAINavigate = useCallback((target: string) => {
@@ -90,24 +101,18 @@ export default function Home() {
     };
     const panel = panelMap[target];
     if (panel) openOnly(panel);
-  }, []);
+  }, [openOnly]);
 
   const handleAIStartSession = useCallback(
-    (config: {
-      mode: string;
-      level: string;
-      duration?: number;
-      wordCount?: number;
-    }) => {
-      closePanel(); // close SwiftAI first
+    (config: SwiftAISessionConfig) => {
       const { setConfig } = useTypingStore.getState();
       setConfig({
-        mode: config.mode as any,
-        level: config.level as any,
+        mode: config.mode,
+        level: config.level,
         ...(config.duration ? { duration: config.duration } : {}),
         ...(config.wordCount ? { wordCount: config.wordCount } : {}),
       });
-      const lvl = config.level || "beginner";
+      const lvl = normalizeDictionaryLevel(config.level);
       const baseWpm =
         lvl === "advanced" ? 100 : lvl === "intermediate" ? 60 : 20;
       const count =
@@ -117,7 +122,7 @@ export default function Home() {
       startSession(
         config.mode === "curriculum"
           ? generateCurriculumText(curriculumStage, count)
-          : getRandomWords(lvl as any, count),
+          : getRandomWords(lvl, count),
       );
     },
     [curriculumStage, startSession],
@@ -143,9 +148,7 @@ export default function Home() {
   }, [session?.user?.id, status]);
 
   const primaryReward =
-    rewardQueue.find((r) => r.rewardType === "goal_completion") ??
-    rewardQueue[0] ??
-    null;
+    rewardQueue.find((r) => r.rewardType === "goal_completion") ?? null;
   const companionReward =
     rewardQueue.find((r) => r.rewardType === "rank") ??
     rewardQueue.find((r) => r.rewardType === "streak") ??
@@ -155,6 +158,12 @@ export default function Home() {
     typeof primaryReward?.metadata?.goalTitle === "string"
       ? primaryReward.metadata.goalTitle
       : primaryReward?.description;
+
+  useEffect(() => {
+    if (rewardQueue.length > 0 && !primaryReward) {
+      clearRewardQueue();
+    }
+  }, [clearRewardQueue, primaryReward, rewardQueue.length]);
 
   const prevSessionCount = useRef(
     useTypingStore.getState().savedSessions.length,
@@ -193,7 +202,7 @@ export default function Home() {
         return;
       }
 
-      if (isGuideOpen || isSwiftAIOpen) return;
+      if (isGuideOpen) return;
 
       if (e.key === "Enter" && !isActive && !isFinished) {
         e.preventDefault();
@@ -218,7 +227,7 @@ export default function Home() {
         startSession(
           mode === "curriculum"
             ? generateCurriculumText(curriculumStage, count)
-            : getRandomWords(level as any, count),
+            : getRandomWords(normalizeDictionaryLevel(level), count),
         );
       }
       if (e.key === "Tab") {
@@ -246,12 +255,12 @@ export default function Home() {
     isActive,
     isFinished,
     isGuideOpen,
-    isSwiftAIOpen,
     level,
     mode,
     resetSession,
     startSession,
     wordCount,
+    closePanel,
   ]);
 
   return (
@@ -266,7 +275,6 @@ export default function Home() {
         isOpen={isSwiftAIOpen}
         onClose={closePanel}
         onDocsOpen={() => openOnly("guide")}
-        isDocsOpen={isGuideOpen}
         onNavigate={handleAINavigate}
         onStartSession={handleAIStartSession}
       />
@@ -279,7 +287,7 @@ export default function Home() {
       />
       <ReviewsPanel isOpen={isReviewsOpen} onClose={closePanel} />
       <GoalCompleteModal
-        isOpen={rewardQueue.length > 0}
+        isOpen={Boolean(primaryReward)}
         onClose={clearRewardQueue}
         primaryReward={primaryReward}
         companionReward={companionReward}
@@ -311,9 +319,15 @@ export default function Home() {
       />
 
       {/* Full-viewport container */}
-      <div className="h-dvh pl-18">
+      <div
+        className={`h-dvh pl-18 transition-[padding] duration-300 ${
+          isSwiftAIOpen ? "lg:pr-[30vw] 2xl:pr-130" : ""
+        }`}
+      >
         <main
-          className="mx-auto flex h-dvh w-full max-w-6xl flex-col border-x border-brand-orange/10 px-4 py-3 sm:px-5 lg:px-7"
+          className={`mx-auto flex h-dvh w-full flex-col border-x border-brand-orange/10 px-4 py-3 sm:px-5 lg:px-7 ${
+            isSwiftAIOpen ? "max-w-none" : "max-w-6xl"
+          }`}
         >
           <Header
             onHistoryOpen={() => openOnly("history")}
@@ -323,7 +337,7 @@ export default function Home() {
 
           {!isFinished ? (
             <>
-              <TypingDisplay isBlocked={anyPanelOpen} />
+              <TypingDisplay isBlocked={hasBlockingPanel} />
               <LiveStats />
             </>
           ) : (
@@ -332,7 +346,7 @@ export default function Home() {
 
           {!isFinished && (
             <div className="mt-1 flex-1 min-h-0 flex flex-col justify-end">
-              <Keyboard isBlocked={anyPanelOpen} />
+              <Keyboard isBlocked={hasBlockingPanel} />
             </div>
           )}
 

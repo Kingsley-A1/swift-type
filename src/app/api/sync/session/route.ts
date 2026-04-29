@@ -7,6 +7,7 @@ import {
   getActiveGoals,
   updateGoalProgressFromSession,
 } from "@/lib/goalService";
+import { invalidateCachedSwiftAIContext } from "@/lib/swiftAIContextCache";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
     .where(eq(sessions.id, data.id))
     .limit(1);
   if (existing.length > 0) {
+    invalidateCachedSwiftAIContext(session.user.id);
     const goalSnapshot = await getActiveGoals(session.user.id);
     return NextResponse.json({
       ok: true,
@@ -54,6 +56,8 @@ export async function POST(req: Request) {
         ? data.timezone
         : "UTC",
   });
+
+    invalidateCachedSwiftAIContext(session.user.id);
 
   return NextResponse.json({
     ok: true,

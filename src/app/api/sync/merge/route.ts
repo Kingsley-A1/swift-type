@@ -8,6 +8,7 @@ import {
   updateGoalProgressFromSession,
 } from "@/lib/goalService";
 import type { RewardRecord } from "@/lib/rewards";
+import { invalidateCachedSwiftAIContext } from "@/lib/swiftAIContextCache";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -100,6 +101,14 @@ export async function POST(req: Request) {
     if (result.rewardEvents.length > 0) {
       rewardEvents.push(...result.rewardEvents);
     }
+  }
+
+  if (
+    sortedSessions.length > 0 ||
+    perKeyStats !== undefined ||
+    nGramStats !== undefined
+  ) {
+    invalidateCachedSwiftAIContext(userId);
   }
 
   return NextResponse.json({
