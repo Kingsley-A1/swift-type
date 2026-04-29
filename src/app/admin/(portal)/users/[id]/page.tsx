@@ -106,26 +106,26 @@ export default async function AdminUserDetailPage({
 
       {/* Key stats */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <AdminStatCard
-            label="Practice depth"
-            value={`${Math.round(detail.overview.totalPracticeSeconds / 60)} min`}
-            hint={`${detail.overview.sessionsCount} sessions · ${detail.overview.totalKeystrokes} keystrokes`}
-          />
-          <AdminStatCard
-            label="Performance"
-            value={`${detail.overview.averageWpm} WPM`}
-            hint={`${detail.overview.averageAccuracy}% avg accuracy`}
-          />
-          <AdminStatCard
-            label="Goals"
-            value={`${detail.overview.goalCompletionRate}%`}
-            hint={`${detail.overview.completedGoals} completed, ${detail.overview.activeGoals} active`}
-          />
-          <AdminStatCard
-            label="Swift AI"
-            value={formatDuration(detail.overview.longestChatSpanMs)}
-            hint={`${detail.chats.length} chat sessions`}
-          />
+        <AdminStatCard
+          label="Practice depth"
+          value={`${Math.round(detail.overview.totalPracticeSeconds / 60)} min`}
+          hint={`${detail.overview.sessionsCount} sessions · ${detail.overview.totalKeystrokes} keystrokes`}
+        />
+        <AdminStatCard
+          label="Performance"
+          value={`${detail.overview.averageWpm} WPM`}
+          hint={`${detail.overview.averageAccuracy}% avg accuracy`}
+        />
+        <AdminStatCard
+          label="Goals"
+          value={`${detail.overview.goalCompletionRate}%`}
+          hint={`${detail.overview.completedGoals} completed, ${detail.overview.activeGoals} active`}
+        />
+        <AdminStatCard
+          label="Swift AI"
+          value={formatDuration(detail.overview.longestChatSpanMs)}
+          hint={`${detail.chats.length} chat sessions`}
+        />
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
@@ -225,9 +225,12 @@ export default async function AdminUserDetailPage({
                 className="flex items-center justify-between gap-3 py-3 border-b border-gray-100 last:border-b-0"
               >
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-gray-900 truncate">{goal.title}</p>
+                  <p className="text-[13px] font-semibold text-gray-900 truncate">
+                    {goal.title}
+                  </p>
                   <p className="text-[11px] text-gray-400">
-                    {goal.goalType} · {goal.currentValue}/{goal.targetValue} · {goal.periodType}
+                    {goal.goalType} · {goal.currentValue}/{goal.targetValue} ·{" "}
+                    {goal.periodType}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600">
@@ -271,7 +274,8 @@ export default async function AdminUserDetailPage({
                         {chat.title}
                       </p>
                       <p className="text-[11px] text-gray-400">
-                        {chat.messageCount} messages · {formatDuration(chat.durationMs)}
+                        {chat.messageCount} messages ·{" "}
+                        {formatDuration(chat.durationMs)}
                       </p>
                     </div>
                     <span className="shrink-0 text-[11px] text-gray-400">
@@ -296,7 +300,9 @@ export default async function AdminUserDetailPage({
           <div className="mt-3 space-y-3">
             <div className="flex items-center justify-between py-3 border-b border-gray-100">
               <p className="text-[12px] text-gray-500">Review count</p>
-              <p className="text-[13px] font-semibold text-gray-900">{detail.reviews.length}</p>
+              <p className="text-[13px] font-semibold text-gray-900">
+                {detail.reviews.length}
+              </p>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-100">
               <p className="text-[12px] text-gray-500">Preferred mode</p>
@@ -307,7 +313,9 @@ export default async function AdminUserDetailPage({
             <div className="flex items-center justify-between py-3">
               <p className="text-[12px] text-gray-500">Goal reminder</p>
               <p className="text-[13px] font-semibold text-gray-900">
-                {detail.preferences?.goalReminderEnabled ? "Enabled" : "Disabled"}
+                {detail.preferences?.goalReminderEnabled
+                  ? "Enabled"
+                  : "Disabled"}
               </p>
             </div>
           </div>

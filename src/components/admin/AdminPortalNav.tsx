@@ -18,8 +18,7 @@ export function AdminPortalNav() {
         const isActive =
           link.href === "/admin"
             ? pathname === "/admin"
-            : pathname.startsWith(`${link.href}/`) ||
-              pathname === link.href;
+            : pathname.startsWith(`${link.href}/`) || pathname === link.href;
 
         return (
           <Link

@@ -42,10 +42,10 @@ export default function AdminRegisterPage() {
         </div>
 
         <div className="mt-4 bg-white rounded-xl border border-gray-100 p-4 space-y-2 text-[13px] text-gray-400">
+          <p>Registration requires the 10-digit ADMIN_REGISTRATION_PASSWORD.</p>
           <p>
-            Registration requires the 10-digit ADMIN_REGISTRATION_PASSWORD.
+            After registering, sign in with your email + 6-digit login code.
           </p>
-          <p>After registering, sign in with your email + 6-digit login code.</p>
           <p>All admin actions are written to the audit log.</p>
         </div>
       </div>

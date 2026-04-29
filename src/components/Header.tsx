@@ -26,9 +26,7 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
       <header className="w-full flex items-center justify-between mb-3 pb-3 border-b border-gray-100 dark:border-white/6">
         {/* Brand */}
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
-          >
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
             <Image src="/logo-192.jpg" alt="SwiftType" width={28} height={28} />
           </div>
           <span className="text-[17px] font-black text-gray-900 dark:text-white tracking-tight">
@@ -59,7 +57,13 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
             }
             title={isAuthed ? "Chat with Swift AI" : "Sign in to use Swift AI"}
           >
-            <Image src="/swift-ai-icon.png" alt="" width={13} height={13} className="rounded-sm" />
+            <Image
+              src="/swift-ai-icon.png"
+              alt=""
+              width={13}
+              height={13}
+              className="rounded-sm"
+            />
             Ask Swift
           </button>
 

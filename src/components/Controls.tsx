@@ -116,26 +116,31 @@ export function Controls() {
   const hintBtnRef = useRef<HTMLButtonElement>(null);
   const audioCtx = useRef<AudioContext | null>(null);
 
-  const playSound = useCallback((type: "correct" | "error") => {
-    if (!soundEnabled) return;
-    if (!audioCtx.current) audioCtx.current = new AudioContext();
-    const ctx = audioCtx.current;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = type === "correct" ? 880 : 220;
-    osc.type = type === "correct" ? "sine" : "square";
-    gain.gain.setValueAtTime(0.05, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.1);
-  }, [soundEnabled]);
+  const playSound = useCallback(
+    (type: "correct" | "error") => {
+      if (!soundEnabled) return;
+      if (!audioCtx.current) audioCtx.current = new AudioContext();
+      const ctx = audioCtx.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = type === "correct" ? 880 : 220;
+      osc.type = type === "correct" ? "sine" : "square";
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    },
+    [soundEnabled],
+  );
 
   // Register sound handler on window — properly cleaned up on unmount
   useEffect(() => {
     (window as any).__swiftTypePlaySound = playSound;
-    return () => { (window as any).__swiftTypePlaySound = undefined; };
+    return () => {
+      (window as any).__swiftTypePlaySound = undefined;
+    };
   }, [playSound]);
 
   // Regenerate preview text when config changes (and no session is running)
@@ -158,7 +163,12 @@ export function Controls() {
         ? generateCurriculumText(curriculumStage, count)
         : getRandomWords(level as any, count);
 
-    useTypingStore.setState({ targetText: text, typedText: "", mistakes: 0, keystrokes: 0 });
+    useTypingStore.setState({
+      targetText: text,
+      typedText: "",
+      mistakes: 0,
+      keystrokes: 0,
+    });
   }, [mode, level, duration, wordCount, curriculumStage]);
 
   const handleStart = () => {
@@ -313,7 +323,13 @@ export function Controls() {
           title="Adaptive AI — drills your weak keys"
           activeClass="bg-brand-orange/10 text-brand-orange border-brand-orange/25"
         >
-          <Image src="/swift-ai-icon.png" alt="Swift AI" width={14} height={14} className="rounded-sm" />
+          <Image
+            src="/swift-ai-icon.png"
+            alt="Swift AI"
+            width={14}
+            height={14}
+            className="rounded-sm"
+          />
         </IconBtn>
 
         <IconBtn

@@ -95,9 +95,7 @@ export default async function AdminOverviewPage() {
           <p className="mt-2 text-3xl font-black tracking-tight text-gray-900">
             {formatCompactNumber(summary.totalReviews)}
           </p>
-          <p className="mt-1 text-[12px] text-gray-400">
-            User testimonials
-          </p>
+          <p className="mt-1 text-[12px] text-gray-400">User testimonials</p>
         </div>
       </section>
 
@@ -326,7 +324,8 @@ export default async function AdminOverviewPage() {
                     {user.sessionsCount}
                   </span>
                   <span className="text-[13px] text-gray-500">
-                    {user.completedGoals}/{user.activeGoals + user.completedGoals}
+                    {user.completedGoals}/
+                    {user.activeGoals + user.completedGoals}
                   </span>
                   <span className="text-[13px] text-gray-500">
                     {user.chatSessionsCount}

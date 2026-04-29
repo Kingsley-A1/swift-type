@@ -64,7 +64,7 @@ export function PostSessionStats({
   };
 
   return (
-      <div className="relative mb-4 w-full overflow-hidden rounded-[28px] border border-gray-200/70 bg-white/88 p-8 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-500 dark:border-white/10 dark:bg-white/4 dark:shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+    <div className="relative mb-4 w-full overflow-hidden rounded-[28px] border border-gray-200/70 bg-white/88 p-8 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-500 dark:border-white/10 dark:bg-white/4 dark:shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,107,53,0.12),transparent_72%)]" />
       <button
         onClick={handleClose}

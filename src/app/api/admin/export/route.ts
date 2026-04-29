@@ -21,7 +21,7 @@ function toCsv(rows: Array<Record<string, unknown>>) {
     }, new Set<string>()),
   );
 
-  const escape = (value: unknown) => {
+  const escapeCsv = (value: unknown) => {
     const text =
       value instanceof Date
         ? value.toISOString()
@@ -34,7 +34,7 @@ function toCsv(rows: Array<Record<string, unknown>>) {
 
   const lines = [headers.join(",")];
   for (const row of rows) {
-    lines.push(headers.map((header) => escape(row[header])).join(","));
+    lines.push(headers.map((header) => escapeCsv(row[header])).join(","));
   }
 
   return lines.join("\n");

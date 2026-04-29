@@ -35,7 +35,8 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className="fixed inset-0 z-9999 flex flex-col items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, #ffffff 0%, #f4f6fb 50%, #eef2ff 100%)",
+              background:
+                "linear-gradient(135deg, #ffffff 0%, #f4f6fb 50%, #eef2ff 100%)",
             }}
           >
             {/* Logo Mark */}
@@ -51,12 +52,19 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="relative"
               >
-                <div className="w-24 h-24 rounded-[28px] flex items-center justify-center shadow-2xl overflow-hidden"
+                <div
+                  className="w-24 h-24 rounded-[28px] flex items-center justify-center shadow-2xl overflow-hidden"
                   style={{
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.10)"
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
                   }}
                 >
-                  <Image src="/logo-192.jpg" alt="SwiftType" width={96} height={96} priority />
+                  <Image
+                    src="/logo-192.jpg"
+                    alt="SwiftType"
+                    width={96}
+                    height={96}
+                    priority
+                  />
                 </div>
               </motion.div>
 
@@ -70,7 +78,10 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
                 <h1 className="text-4xl font-black text-gray-900 tracking-tight">
                   Swift<span style={{ color: "#ff6b35" }}>Type</span>
                 </h1>
-                <p className="text-sm font-medium mt-2" style={{ color: "rgba(15,23,42,0.45)" }}>
+                <p
+                  className="text-sm font-medium mt-2"
+                  style={{ color: "rgba(15,23,42,0.45)" }}
+                >
                   Train your fingers. Master your keyboard.
                 </p>
               </motion.div>

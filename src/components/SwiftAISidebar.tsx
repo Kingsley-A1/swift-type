@@ -58,7 +58,8 @@ export function SwiftAISidebar({
   const [renameValue, setRenameValue] = useState("");
   const [collapsedInternal, setCollapsedInternal] = useState(false);
 
-  const collapsed = collapsedProp !== undefined ? collapsedProp : collapsedInternal;
+  const collapsed =
+    collapsedProp !== undefined ? collapsedProp : collapsedInternal;
   const setCollapsed = (v: boolean) => {
     setCollapsedInternal(v);
     onCollapsedChange?.(v);

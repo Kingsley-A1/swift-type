@@ -638,8 +638,16 @@ function MessageBubble({
             : undefined
         }
       >
-        {isUser ? userName[0].toUpperCase() : (
-          <Image src="/swift-ai-icon.png" alt="Swift AI" width={28} height={28} className="rounded-lg" />
+        {isUser ? (
+          userName[0].toUpperCase()
+        ) : (
+          <Image
+            src="/swift-ai-icon.png"
+            alt="Swift AI"
+            width={28}
+            height={28}
+            className="rounded-lg"
+          />
         )}
         {isStreaming && !isUser && (
           <span

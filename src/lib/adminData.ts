@@ -104,16 +104,6 @@ interface AdminRow {
   lastLoginAt: Date | null;
 }
 
-interface AdminSessionRow {
-  id: string;
-  adminUserId: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  createdAt: Date | null;
-  lastSeenAt: Date | null;
-  endedAt: Date | null;
-}
-
 interface AdminAuditRow {
   id: string;
   adminUserId: string | null;
