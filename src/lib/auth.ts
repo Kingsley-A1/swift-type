@@ -20,29 +20,37 @@ function readEnv(...keys: string[]) {
 const googleClientId = readEnv("AUTH_GOOGLE_ID", "GOOGLE_CLIENT_ID");
 const googleClientSecret = readEnv(
   "AUTH_GOOGLE_SECRET",
+  "AUTH_GOOGLE_CLIENT_SECRET",
   "GOOGLE_CLIENT_SECRET",
 );
+const googleClientIdExtended = googleClientId ?? readEnv("AUTH_GOOGLE_CLIENT_ID");
 const githubClientId = readEnv("AUTH_GITHUB_ID", "GITHUB_CLIENT_ID");
 const githubClientSecret = readEnv(
   "AUTH_GITHUB_SECRET",
+  "AUTH_GITHUB_CLIENT_SECRET",
   "GITHUB_CLIENT_SECRET",
 );
+const githubClientIdExtended = githubClientId ?? readEnv("AUTH_GITHUB_CLIENT_ID");
 
-const isGoogleConfigured = Boolean(googleClientId && googleClientSecret);
-const isGitHubConfigured = Boolean(githubClientId && githubClientSecret);
+const isGoogleConfigured = Boolean(googleClientIdExtended && googleClientSecret);
+const isGitHubConfigured = Boolean(githubClientIdExtended && githubClientSecret);
 
-if (process.env.NODE_ENV === "production") {
-  if ((googleClientId && !googleClientSecret) || (!googleClientId && googleClientSecret)) {
-    console.warn(
-      "Google OAuth is partially configured. Set both AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET (or GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET).",
-    );
-  }
+if (
+  (googleClientIdExtended && !googleClientSecret) ||
+  (!googleClientIdExtended && googleClientSecret)
+) {
+  console.warn(
+    "Google OAuth is partially configured. Set both AUTH_GOOGLE_ID/AUTH_GOOGLE_CLIENT_ID and AUTH_GOOGLE_SECRET/AUTH_GOOGLE_CLIENT_SECRET (or GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET).",
+  );
+}
 
-  if ((githubClientId && !githubClientSecret) || (!githubClientId && githubClientSecret)) {
-    console.warn(
-      "GitHub OAuth is partially configured. Set both AUTH_GITHUB_ID and AUTH_GITHUB_SECRET (or GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET).",
-    );
-  }
+if (
+  (githubClientIdExtended && !githubClientSecret) ||
+  (!githubClientIdExtended && githubClientSecret)
+) {
+  console.warn(
+    "GitHub OAuth is partially configured. Set both AUTH_GITHUB_ID/AUTH_GITHUB_CLIENT_ID and AUTH_GITHUB_SECRET/AUTH_GITHUB_CLIENT_SECRET (or GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET).",
+  );
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -56,7 +64,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...(isGoogleConfigured
       ? [
           Google({
-            clientId: googleClientId,
+            clientId: googleClientIdExtended,
             clientSecret: googleClientSecret,
           }),
         ]
@@ -64,7 +72,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...(isGitHubConfigured
       ? [
           GitHub({
-            clientId: githubClientId,
+            clientId: githubClientIdExtended,
             clientSecret: githubClientSecret,
           }),
         ]
@@ -85,7 +93,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             .limit(1),
         );
 
-        if (!user || !user.password) return null; // Fallback to OAuth if password missing
+        if (!user?.password) return null; // Fallback to OAuth if password missing
 
         const passwordsMatch = await bcrypt.compare(
           credentials.password as string,
