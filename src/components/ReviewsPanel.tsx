@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Star, ChevronDown, Send, Pencil, Loader2, Quote } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image, { type ImageLoaderProps } from "next/image";
 import { REVIEW_ROLES, KEY_ROLES, type ReviewRole } from "@/db/schema";
 import clsx from "clsx";
 
@@ -31,17 +32,39 @@ const ROLE_BADGE_CLASS: Record<string, string> = {
   Instructor: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/20",
 };
 const DEFAULT_BADGE = "bg-gray-100 dark:bg-white/8 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-white/10";
+const reviewDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+function formatReviewDate(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Date unavailable";
+  }
+
+  return reviewDateFormatter.format(parsed);
+}
 
 function initials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
+function avatarImageLoader({ src }: ImageLoaderProps) {
+  return src;
+}
+
 function Avatar({ name, image }: { name: string; image: string | null }) {
   if (image) {
     return (
-      <img
+      <Image
+        loader={avatarImageLoader}
+        unoptimized
         src={image}
         alt={name}
+        width={36}
+        height={36}
         referrerPolicy="no-referrer"
         className="w-9 h-9 rounded-full object-cover border-2 border-white dark:border-white/10 shadow-sm"
       />
@@ -110,9 +133,12 @@ function ReviewCard({ review, isOwn }: { review: ReviewRecord; isOwn: boolean })
       </p>
 
       {/* Date */}
-      <p className="text-[10px] text-gray-400 dark:text-gray-600 mt-auto">
-        {new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-      </p>
+      <time
+        dateTime={review.createdAt}
+        className="mt-auto text-[10px] text-gray-400 dark:text-gray-600"
+      >
+        {formatReviewDate(review.createdAt)}
+      </time>
     </motion.div>
   );
 }
@@ -291,6 +317,7 @@ export function ReviewsPanel({ isOpen, onClose }: ReviewsPanelProps) {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={onClose}
                 className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
               >
@@ -308,6 +335,7 @@ export function ReviewsPanel({ isOpen, onClose }: ReviewsPanelProps) {
                     {myReview ? "You've shared your thoughts — thank you! 🎉" : "Enjoying Swift Type? Tell the world."}
                   </p>
                   <button
+                    type="button"
                     onClick={() => setShowForm(true)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-orange text-white text-[12px] font-semibold hover:bg-orange-500 transition-all shrink-0 ml-3"
                   >

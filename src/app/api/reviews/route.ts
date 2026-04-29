@@ -10,24 +10,71 @@ function json(data: unknown, status = 200) {
   });
 }
 
+function toValidDate(value: unknown): Date | null {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function getReviewDateMs(row: {
+  createdAt?: unknown;
+  updatedAt?: unknown;
+}) {
+  return (
+    toValidDate(row.createdAt)?.getTime() ??
+    toValidDate(row.updatedAt)?.getTime() ??
+    0
+  );
+}
+
+function normalizeReviewRow<T extends { createdAt?: unknown; updatedAt?: unknown }>(
+  row: T,
+) {
+  const normalizedCreatedAt =
+    toValidDate(row.createdAt) ?? toValidDate(row.updatedAt) ?? new Date();
+  const normalizedUpdatedAt =
+    toValidDate(row.updatedAt) ?? normalizedCreatedAt;
+
+  return {
+    ...row,
+    createdAt: normalizedCreatedAt.toISOString(),
+    updatedAt: normalizedUpdatedAt.toISOString(),
+  };
+}
+
 // ─── GET: all reviews ordered by role hierarchy ───────────────────────────────
 export async function GET(_req: Request) {
   try {
     const session = await auth();
-    const rows = await db.select().from(userReviews).orderBy(desc(userReviews.createdAt));
+    const rows = await db
+      .select()
+      .from(userReviews)
+      .orderBy(desc(userReviews.createdAt));
 
     const sorted = [...rows].sort((a, b) => {
       const pa = ROLE_PRIORITY[(a.role as ReviewRole)] ?? 99;
       const pb = ROLE_PRIORITY[(b.role as ReviewRole)] ?? 99;
       if (pa !== pb) return pa - pb;
-      return new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
+      return getReviewDateMs(b) - getReviewDateMs(a);
     });
 
-    const myReview = session?.user?.id
-      ? (sorted.find((r) => r.userId === session.user!.id) ?? null)
+    const normalized = sorted.map((row) => normalizeReviewRow(row));
+
+    const sessionUserId = session?.user?.id;
+    const myReview = sessionUserId
+      ? (normalized.find((r) => r.userId === sessionUserId) ?? null)
       : null;
 
-    return json({ reviews: sorted, myReview });
+    return json({ reviews: normalized, myReview });
   } catch {
     return json({ error: "Failed to fetch reviews" }, 500);
   }
@@ -69,7 +116,7 @@ export async function POST(req: Request) {
       .set({ content, role, organisation: org, userImage, updatedAt: new Date() })
       .where(eq(userReviews.userId, userId))
       .returning();
-    return json({ review: updated });
+    return json({ review: normalizeReviewRow(updated) });
   }
 
   const [created] = await db
@@ -77,5 +124,5 @@ export async function POST(req: Request) {
     .values({ userId, userName, userImage, content, role, organisation: org })
     .returning();
 
-  return json({ review: created }, 201);
+  return json({ review: normalizeReviewRow(created) }, 201);
 }
