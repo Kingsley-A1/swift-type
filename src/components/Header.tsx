@@ -1,9 +1,10 @@
-import { Flame } from "lucide-react";
+import { Flame, Eye } from "lucide-react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { AuthModal } from "./AuthModal";
 import { useState, useEffect } from "react";
 import { useTypingStore } from "@/store/useTypingStore";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface HeaderProps {
   onHistoryOpen: () => void;
@@ -13,13 +14,27 @@ interface HeaderProps {
 export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
   const { data: session, status } = useSession();
   const { goalStreak } = useTypingStore();
+  const isAuthed = status === "authenticated";
+  const streak = goalStreak.currentStreak;
   const [mounted, setMounted] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [showMonitoringEye, setShowMonitoringEye] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  const isAuthed = status === "authenticated";
-  const streak = goalStreak.currentStreak;
+  useEffect(() => {
+    if (!isAuthed) {
+      setShowMonitoringEye(false);
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setShowMonitoringEye(true);
+      window.setTimeout(() => setShowMonitoringEye(false), 1400);
+    }, 5200);
+
+    return () => window.clearInterval(intervalId);
+  }, [isAuthed]);
 
   return (
     <>
@@ -57,14 +72,53 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
             }
             title={isAuthed ? "Chat with Swift AI" : "Sign in to use Swift AI"}
           >
-            <Image
-              src="/swift-ai-icon.png"
-              alt=""
-              width={13}
-              height={13}
-              className="rounded-sm"
-            />
-            Ask Swift
+            <AnimatePresence mode="wait" initial={false}>
+              {showMonitoringEye ? (
+                <motion.span
+                  key="monitor-eye"
+                  initial={{ opacity: 0, y: 2 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -2 }}
+                  transition={{ duration: 0.2 }}
+                  className="inline-flex items-center gap-1.5"
+                >
+                  <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/55 bg-white/12">
+                    <Eye size={11} className="text-white" />
+                    <motion.span
+                      className="absolute h-1.5 w-1.5 rounded-full bg-white"
+                      animate={{
+                        x: [-1.2, 1.2, 0],
+                        y: [0, 0, 1.2],
+                      }}
+                      transition={{
+                        duration: 1.1,
+                        ease: "easeInOut",
+                        repeat: Infinity,
+                      }}
+                    />
+                  </span>
+                  <span className="text-[11px] font-semibold">Monitoring</span>
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="ask-swift"
+                  initial={{ opacity: 0, y: 2 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -2 }}
+                  transition={{ duration: 0.2 }}
+                  className="inline-flex items-center gap-1.5"
+                >
+                  <Image
+                    src="/swift-ai-icon.png"
+                    alt=""
+                    width={13}
+                    height={13}
+                    className="rounded-sm"
+                  />
+                  Ask Swift
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
 
           {/* Auth */}

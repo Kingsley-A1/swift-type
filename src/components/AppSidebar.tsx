@@ -13,6 +13,7 @@ import {
   Trophy,
   X,
   FileText,
+  Medal,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTypingStore } from "@/store/useTypingStore";
@@ -43,6 +44,7 @@ interface SidebarNavItemProps {
   active?: boolean;
   highlighted?: boolean;
   trailing?: ReactNode;
+  disabled?: boolean;
   onClick: () => void;
   expanded: boolean;
 }
@@ -53,16 +55,20 @@ function SidebarNavItem({
   active = false,
   highlighted = false,
   trailing,
+  disabled = false,
   onClick,
   expanded,
 }: SidebarNavItemProps) {
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
         active
           ? "bg-brand-orange/10 text-brand-orange"
-          : "text-gray-600 hover:bg-white/70 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/8 dark:hover:text-white"
+          : disabled
+            ? "cursor-not-allowed text-gray-400/80 dark:text-gray-500"
+            : "text-gray-600 hover:bg-white/70 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/8 dark:hover:text-white"
       }`}
       title={expanded ? undefined : label}
     >
@@ -306,6 +312,40 @@ export function AppSidebar({
               ) : undefined
             }
           />
+
+          <SidebarNavItem
+            icon={<Medal size={18} />}
+            label="Swift Rank"
+            disabled
+            onClick={() => undefined}
+            expanded={isOpen}
+            trailing={
+              isOpen ? (
+                <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sky-600 dark:border-sky-400/20 dark:bg-sky-500/10 dark:text-sky-300">
+                  Coming Soon
+                </span>
+              ) : undefined
+            }
+          />
+
+          {isOpen && (
+            <div className="ml-10 mt-1 flex flex-wrap gap-1.5 pb-1">
+              {[
+                "Rookie",
+                "Bronze",
+                "Silver",
+                "Gold",
+                "Platinum",
+              ].map((rank) => (
+                <span
+                  key={rank}
+                  className="rounded-full border border-gray-200 bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400"
+                >
+                  {rank}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Bottom: profile + signout */}

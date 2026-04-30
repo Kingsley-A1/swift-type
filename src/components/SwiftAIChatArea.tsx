@@ -15,7 +15,6 @@ import {
   Send,
   Square,
   RotateCcw,
-  WifiOff,
   AlertCircle,
   Pencil,
   Copy,
@@ -358,16 +357,6 @@ export function SwiftAIChatArea({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Offline banner */}
-      {!isOnline && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20">
-          <WifiOff size={13} className="text-amber-500 shrink-0" />
-          <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
-            You&apos;re offline — messages won&apos;t send until reconnected.
-          </p>
-        </div>
-      )}
-
       {/* Error banner */}
       {status === "error" && (
         <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-500/10 border-b border-red-200 dark:border-red-500/20">
@@ -491,10 +480,10 @@ export function SwiftAIChatArea({
                 }
               }}
               rows={3}
-              placeholder="Ask Swift anything..."
+              placeholder="Ask Swift anything about typing..."
               disabled={status !== "ready" || !isOnline}
               aria-label="Message Swift AI"
-              className="flex-1 min-h-20 max-h-50 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3 px-4 py-2.5 text-sm leading-relaxed text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-brand-orange/40 dark:focus:border-brand-orange/30 focus:ring-2 focus:ring-brand-orange/10 transition-all disabled:opacity-50 resize-none overflow-y-auto"
+              className="flex-1 min-h-20 max-h-50 rounded-2xl border border-brand-orange/25 dark:border-brand-orange/20 bg-white dark:bg-[#1a1d25] px-4 py-2.5 text-sm leading-relaxed text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-brand-orange/45 dark:focus:border-brand-orange/35 focus:ring-2 focus:ring-brand-orange/15 transition-all disabled:opacity-50 resize-none overflow-y-auto shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:shadow-none"
             />
 
             {isActive ? (
@@ -667,8 +656,8 @@ function MessageBubble({
         </p>
         <div
           className={clsx(
-            "inline-flex max-w-[85%] flex-col",
-            isUser && "items-end",
+            "flex flex-col",
+            isUser ? "inline-flex max-w-[85%] items-end" : "w-full",
           )}
         >
           {isUser ? (
@@ -689,11 +678,8 @@ function MessageBubble({
           ) : (
             <div
               className={clsx(
-                "text-left text-sm leading-relaxed rounded-2xl px-4 py-2.5 select-text",
-                "bg-gray-50 dark:bg-white/4 text-gray-700 dark:text-gray-300 rounded-tl-md border",
-                isStreaming
-                  ? "border-brand-orange/25 dark:border-brand-orange/20"
-                  : "border-gray-100 dark:border-white/6",
+                "w-full text-left text-sm leading-relaxed px-0 py-0 select-text",
+                "text-gray-700 dark:text-gray-300",
               )}
             >
               <MessageContent content={textContent} isStreaming={isStreaming} />
@@ -843,7 +829,7 @@ function MessageBubble({
                 className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-gray-500 transition-colors hover:border-brand-orange/30 hover:text-brand-orange dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-brand-orange/20 dark:hover:text-brand-orange"
               >
                 <RotateCcw size={12} />
-                Regenerate response
+                Regenerate
               </button>
             </div>
           )}
@@ -890,17 +876,17 @@ function MessageContent({
             </h3>
           ),
           // Inline code
-          code: ({ children, className }) => {
-            const isBlock = className?.includes("language-");
+          code: ({ children, className, ...props }) => {
+            const inline = Boolean((props as { inline?: boolean }).inline);
+            const text = String(children ?? "").replace(/\n$/, "");
+            const isBlock =
+              !inline &&
+              (className?.includes("language-") || text.includes("\n"));
+
             if (isBlock) {
-              return (
-                <pre className="mt-2 mb-2 rounded-xl bg-gray-900 dark:bg-black/40 px-4 py-3 overflow-x-auto">
-                  <code className="text-[12px] font-mono text-gray-100">
-                    {children}
-                  </code>
-                </pre>
-              );
+              return <MarkdownCodeCard code={text} className={className} />;
             }
+
             return (
               <code className="px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-[12px] font-mono text-brand-orange">
                 {children}
@@ -957,7 +943,7 @@ function MessageContent({
                 className={clsx(
                   "transition-colors",
                   isExternal
-                    ? "my-0.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-orange/20 bg-brand-orange/[0.08] px-2.5 py-1 text-[12px] font-medium text-brand-orange no-underline hover:border-brand-orange/35 hover:bg-brand-orange/[0.12]"
+                    ? "my-0.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-orange/20 bg-brand-orange/8 px-2.5 py-1 text-[12px] font-medium text-brand-orange no-underline hover:border-brand-orange/35 hover:bg-brand-orange/12"
                     : "inline-flex items-center gap-1 text-brand-orange underline decoration-brand-orange/40 underline-offset-3 hover:decoration-brand-orange",
                 )}
                 title={isExternal ? "Opens in a new tab" : undefined}
@@ -1017,6 +1003,50 @@ function MessageContent({
   );
 }
 
+function MarkdownCodeCard({
+  code,
+  className,
+}: {
+  code: string;
+  className?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const language = className?.replace("language-", "").trim() || "text";
+
+  const onCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  }, [code]);
+
+  return (
+    <div className="my-2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-black/25 dark:shadow-none">
+      <div className="flex items-center justify-between border-b border-gray-200/80 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+          {language}
+        </span>
+        <button
+          type="button"
+          onClick={() => void onCopy()}
+          className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-[10px] font-semibold text-gray-600 transition-colors hover:border-brand-orange/40 hover:text-brand-orange dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-brand-orange/25 dark:hover:text-brand-orange"
+        >
+          <Copy size={11} />
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <pre className="max-h-72 overflow-auto px-4 py-3">
+        <code className="text-[12px] font-mono leading-relaxed text-gray-800 dark:text-gray-100">
+          {code}
+        </code>
+      </pre>
+    </div>
+  );
+}
+
 // ─── WELCOME ─────────────────────────────────────────────────────────────────
 
 function WelcomeMessage({
@@ -1027,8 +1057,8 @@ function WelcomeMessage({
   onSend: (text: string) => void;
 }) {
   const suggestions = [
-    "Why am I stuck at my current WPM?",
-    "Which keys should I practice more?",
+    "Who are you?",
+    "Tell me how you can be of help to me.",
     "How do I improve my accuracy?",
     "What's the best way to build speed?",
   ];
@@ -1046,8 +1076,8 @@ function WelcomeMessage({
         Hey {name}!
       </h3>
       <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 max-w-sm">
-        I'm Swift AI, your personal typing coach. I can see your practice data
-        and give you tailored advice.
+        I'm Swift AI, a superintelligent typing coach built for {name}. I can see your practice data
+        and give you tailored advice and do many many more things for you.
       </p>
 
       <div className="grid grid-cols-2 gap-2 mt-6 w-full max-w-md">

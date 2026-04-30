@@ -718,7 +718,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         type: "steps",
         items: [
           "Click 'Sign In' in the top-right header.",
-          "Choose email and password for the simple native sign-in flow, or continue with GitHub.",
+          "Choose email and password for the simple native sign-in flow, or continue with Google or GitHub.",
           "If you are new, switch to 'Create Account' and complete email plus password in the same modal.",
           "After sign-in, Swift Type restores your account features immediately.",
           "Your previous guest sessions are automatically promoted to your account.",
@@ -734,7 +734,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         type: "paragraph",
-        text: "Click your avatar in the top-right corner to open your profile panel. It shows your best WPM, average WPM, and accuracy across all sessions — and lets you jump straight to Swift AI coaching or your full stats history.",
+        text: "Click your avatar in the down-right corner to open your profile panel. It shows your best WPM, average WPM, and accuracy across all sessions — and lets you jump straight to Swift AI coaching or your full stats history.",
       },
     ],
   },

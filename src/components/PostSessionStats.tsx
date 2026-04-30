@@ -64,7 +64,7 @@ export function PostSessionStats({
   };
 
   return (
-    <div className="relative mb-4 w-full overflow-hidden rounded-[28px] border border-gray-200/70 bg-white/88 p-8 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-500 dark:border-white/10 dark:bg-white/4 dark:shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+    <div className="relative mb-4 w-full overflow-hidden rounded-xl border border-gray-200/70 bg-white/88 p-6 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-500 dark:border-white/10 dark:bg-white/4 dark:shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,107,53,0.12),transparent_72%)]" />
       <button
         onClick={handleClose}
@@ -73,11 +73,11 @@ export function PostSessionStats({
       >
         <X size={20} />
       </button>
-      <div className="mb-7 pr-10">
+      <div className="mb-5 pr-10">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
           Session Summary
         </p>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <StatCard
             label="Net Speed"
             value={`${netWPM} WPM`}
@@ -122,11 +122,15 @@ export function PostSessionStats({
         </div>
       </div>
 
-      <div className="mt-6 h-64 w-full rounded-3xl border border-gray-200/70 bg-white/60 p-4 dark:border-white/8 dark:bg-black/10">
+      <div className="mt-4 w-full rounded-xl border border-gray-200/70 bg-white/60 p-3 dark:border-white/8 dark:bg-black/10">
+        <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+          Speed Trend
+        </div>
+        <div className="h-[clamp(220px,32vh,300px)] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={wpmHistory}
-            margin={{ top: 5, right: 0, left: -20, bottom: 0 }}
+            margin={{ top: 5, right: 6, left: 0, bottom: 0 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -173,6 +177,7 @@ export function PostSessionStats({
             />
           </LineChart>
         </ResponsiveContainer>
+        </div>
       </div>
       <div className="mt-5 flex flex-wrap justify-center gap-5 text-xs text-text-muted">
         <span className="flex items-center gap-2">
@@ -199,7 +204,7 @@ function StatCard({
   indicator?: ReactNode;
 }) {
   return (
-    <div className="rounded-[22px] border border-gray-200/70 bg-white/72 px-5 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] dark:border-white/8 dark:bg-white/3 dark:shadow-none">
+    <div className="rounded-xl border border-gray-200/70 bg-white/72 px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:border-white/8 dark:bg-white/3 dark:shadow-none">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
           {label}

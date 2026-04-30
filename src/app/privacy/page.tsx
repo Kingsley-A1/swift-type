@@ -1,4 +1,5 @@
 import { PrivacyPolicy } from "@/components/PrivacyPolicy";
+import { LegalPageScaffold } from "@/components/LegalPageScaffold";
 
 export const metadata = {
   title: "Privacy Policy",
@@ -7,8 +8,10 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="fixed inset-0 z-40 bg-[#fafafa] dark:bg-[#0f1218] overflow-y-auto layout-scrollbar pt-6 pb-20 sm:py-16 px-4">
-      <PrivacyPolicy />
-    </div>
+    <LegalPageScaffold>
+      <div className="fixed inset-0 z-40 overflow-y-auto bg-[#fafafa] px-4 pb-20 pt-6 pl-22 layout-scrollbar dark:bg-[#0f1218] sm:py-16 sm:pl-24">
+        <PrivacyPolicy />
+      </div>
+    </LegalPageScaffold>
   );
 }

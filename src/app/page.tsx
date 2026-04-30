@@ -210,7 +210,7 @@ export default function Home() {
         if (
           !state.hasPlayedIntro &&
           state.targetText ===
-            "swift type teaches you touch typing happy learning click enter to start"
+            "Hey there, welcome to Swift Type! You are about to become the master of your keyboard, just stick around!"
         ) {
           state.setConfig({
             mode: "timed",

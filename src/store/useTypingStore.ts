@@ -202,7 +202,7 @@ export const useTypingStore = create<TypeState>()(
       isFinished: false,
       timeLeft: 60,
       targetText:
-        "swift type teaches you touch typing happy learning click enter to start",
+        "Hey there, welcome to Swift Type! You are about to become the master of your keyboard, just stick around!",
       typedText: "",
       wordIndex: 0,
       charIndex: 0,

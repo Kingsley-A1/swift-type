@@ -218,7 +218,7 @@ export function PrivacyPolicy() {
           <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed">
             Last updated <strong>March 2026</strong>. Questions or data requests:{" "}
             <span className="text-brand-orange font-medium">
-              privacy@swifttype.app
+              privacy@swifttype.com.ng
             </span>
           </p>
         </div>

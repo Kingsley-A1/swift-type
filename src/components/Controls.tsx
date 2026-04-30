@@ -178,7 +178,7 @@ export function Controls() {
       !state.isActive &&
       !state.isFinished &&
       state.targetText ===
-        "swift type teaches you touch typing happy learning click enter to start"
+        "Hey there, welcome to Swift Type! You are about to become the master of your keyboard, just stick around!"
     ) {
       state.setConfig({ mode: "timed", duration: 60, hasPlayedIntro: true });
       startSession(state.targetText);
