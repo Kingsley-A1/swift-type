@@ -67,7 +67,7 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
             }
             style={
               isAuthed
-                ? { background: "linear-gradient(135deg, #ff6b35, #ff8c5a)" }
+                ? { background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)" }
                 : undefined
             }
             title={isAuthed ? "Chat with Swift AI" : "Sign in to use Swift AI"}
@@ -82,22 +82,15 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
                   transition={{ duration: 0.2 }}
                   className="inline-flex items-center gap-1.5"
                 >
-                  <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/55 bg-white/12">
-                    <Eye size={11} className="text-white" />
-                    <motion.span
-                      className="absolute h-1.5 w-1.5 rounded-full bg-white"
-                      animate={{
-                        x: [-1.2, 1.2, 0],
-                        y: [0, 0, 1.2],
-                      }}
-                      transition={{
-                        duration: 1.1,
-                        ease: "easeInOut",
-                        repeat: Infinity,
-                      }}
-                    />
+                  <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/10">
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5], scale: [0.9, 1.1, 0.9] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <Eye size={12} className="text-white" />
+                    </motion.div>
                   </span>
-                  <span className="text-[11px] font-semibold">Monitoring</span>
+                  <span className="text-[11px] font-semibold tracking-wide">Monitoring</span>
                 </motion.span>
               ) : (
                 <motion.span
@@ -146,7 +139,7 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
                 onClick={() => setIsAuthOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold text-white transition-all hover:opacity-90 active:scale-95"
                 style={{
-                  background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                  background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
                 }}
               >
                 Sign In

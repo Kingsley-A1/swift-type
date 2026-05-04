@@ -49,16 +49,16 @@ export function LiveStats() {
   const isLastTen = mode === "timed" && timeLeft <= 10 && isActive;
 
   return (
-    <div className="mb-4 mt-2 shrink-0">
+    <div className="flex flex-col items-center justify-center w-full min-w-[280px]">
       {/* Timed progress bar */}
       {mode === "timed" && (
-        <div className="w-full h-[2px] bg-gray-100 dark:bg-white/8 rounded-full overflow-hidden mb-2">
+        <div className="w-full h-[2px] bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-1.5">
           <motion.div
             className="h-full rounded-full"
             style={{
               background: isLastTen
-                ? "linear-gradient(90deg, #ef4444, #ff6b35)"
-                : "linear-gradient(90deg, #ff6b35, #ffa040)",
+                ? "linear-gradient(90deg, #ef4444, #fa4c0c)"
+                : "linear-gradient(90deg, #fa4c0c, #ffa040)",
             }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.8, ease: "linear" }}
@@ -67,7 +67,7 @@ export function LiveStats() {
       )}
 
       {/* Stats */}
-      <div className="flex justify-center gap-10 py-2 border-y border-gray-100 dark:border-white/6">
+      <div className="flex justify-center gap-5 sm:gap-8 w-full">
         {[
           {
             label: "TIMER",
@@ -120,8 +120,8 @@ export function LiveStats() {
             size: "text-xl",
           },
         ].map(({ label, value, highlight, orange, red, mono, size }) => (
-          <div key={label} className="text-center">
-            <span className="text-[9px] font-bold tracking-widest text-gray-400 block mb-0.5">
+          <div key={label} className="text-center flex flex-col items-center justify-end">
+            <span className="text-[8px] font-bold tracking-widest text-gray-400 block mb-0.5">
               {label}
             </span>
             <span

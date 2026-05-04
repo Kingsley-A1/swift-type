@@ -338,7 +338,6 @@ export default function Home() {
           {!isFinished ? (
             <>
               <TypingDisplay isBlocked={hasBlockingPanel} />
-              <LiveStats />
             </>
           ) : (
             <PostSessionStats />
@@ -351,12 +350,15 @@ export default function Home() {
           )}
 
           <div className="shrink-0 flex justify-center pt-1 pb-0.5">
-            <span
-              className="text-[11px] font-medium tracking-wide"
+            <a
+              href="https://kingtech.com.ng"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] font-medium tracking-wide hover:underline transition-colors hover:opacity-80"
               style={{ color: "rgba(253, 175, 8, 0.96)" }}
             >
               Engineered by King Tech Foundation
-            </span>
+            </a>
           </div>
         </main>
       </div>
