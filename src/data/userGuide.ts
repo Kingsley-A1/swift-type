@@ -332,7 +332,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         items: [
           "Lifetime Average WPM and Accuracy — calculated across all saved sessions.",
           "Session list — each card shows date, mode used, duration, WPM, and accuracy.",
-          "Up to 200 sessions are stored locally in your browser (localStorage).",
+          "Sessions are stored securely in your browser so you don't lose progress.",
           "Use Clear All History to reset and start fresh.",
         ],
       },
@@ -398,6 +398,51 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       {
         type: "tip",
         text: "When practicing, watch the orange-highlighted key on Swift Type's on-screen keyboard. It shows exactly which finger to use. Don't think — just match finger to color.",
+      },
+      {
+        type: "heading",
+        text: "Interactive Keyboard",
+      },
+      {
+        type: "paragraph",
+        text: "The virtual keyboard isn't just for show. You can click the keys with your mouse to type, which is helpful if you are using a touch screen. Furthermore, the virtual keyboard automatically synchronizes with your device's CapsLock state in real-time.",
+      },
+    ],
+  },
+
+  // ─── APP SIDEBAR NAVIGATION ──────────────────────────────────────────────────
+  {
+    id: "app-sidebar",
+    title: "App Sidebar & Navigation",
+    emoji: "🧭",
+    level: "all",
+    tags: [
+      "sidebar",
+      "navigation",
+      "menu",
+      "profile",
+      "rewards",
+      "reviews",
+    ],
+    content: [
+      {
+        type: "paragraph",
+        text: "The sleek App Sidebar on the left edge of your screen gives you quick access to all of Swift Type's powerful features. Just hover over or click the icons to explore.",
+      },
+      {
+        type: "steps",
+        items: [
+          "Target (🎯): Opens the Goals panel to track your daily and weekly milestones.",
+          "History (🗂️): Opens your complete Performance History and lifetime stats.",
+          "Book (📖): Opens the User Guide (you are here!).",
+          "Trophy (🏆): Opens the Rewards panel to view your earned badges and achievements.",
+          "Star (⭐): Opens the Reviews panel to see what others are saying.",
+          "Avatar / User (👤): Opens your Profile panel for account management and quick stats.",
+        ],
+      },
+      {
+        type: "tip",
+        text: "The sidebar stays out of your way during typing sessions so you can maintain absolute focus, but it's always just a click away.",
       },
     ],
   },
@@ -605,7 +650,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     content: [
       {
         type: "paragraph",
-        text: "Swift AI is your personal typing coach — powered by Gemini 2.5 Flash. It understands your session history, current skill level, and weak spots, then gives you personalised advice, drills, and answers in real time. Think of it as a world-class typing instructor who is always available and never judges your WPM.",
+        text: "Swift AI is your personal typing coach — powered by advanced AI models. It understands your session history, current skill level, and weak spots, then gives you personalised advice, drills, and answers in real time. Think of it as a world-class typing instructor who is always available and never judges your WPM.",
       },
       {
         type: "heading",
@@ -649,8 +694,8 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         items: [
           {
             label: "AI model",
-            value: "Gemini 2.5",
-            desc: "Flash — fast & accurate",
+            value: "Advanced",
+            desc: "Fast & accurate",
           },
           { label: "Response time", value: "<2s", desc: "Real-time streaming" },
           {

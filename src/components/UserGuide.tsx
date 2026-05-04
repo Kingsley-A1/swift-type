@@ -205,7 +205,6 @@ function SectionCard({
   onClick: () => void;
   highlight?: string;
 }) {
-  // Highlight matching text
   const getExcerpt = () => {
     if (!highlight) return null;
     const idx = SEARCH_INDEX.find((s) => s.sectionId === section.id);
@@ -223,35 +222,31 @@ function SectionCard({
     <motion.button
       layout
       onClick={onClick}
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
-      className="w-full text-left p-4 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/8 hover:border-brand-orange/30 dark:hover:border-brand-orange/30 hover:shadow-md transition-all group"
+      whileHover={{ x: 4 }}
+      className="w-full text-left py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 border border-transparent transition-all group flex items-center justify-between gap-3"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          {/* Emoji icon */}
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/8 text-xl group-hover:border-brand-orange/20 transition-colors">
-            {section.emoji}
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-brand-orange transition-colors">
+      <div className="flex items-center gap-4">
+        <div className="text-2xl group-hover:scale-110 transition-transform">
+          {section.emoji}
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-brand-orange transition-colors">
               {section.title}
             </h3>
-            {excerpt && (
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 leading-relaxed line-clamp-2">
-                …{excerpt}…
-              </p>
-            )}
-            <div className="mt-1.5">
-              <LevelBadge level={section.level} />
-            </div>
+            <LevelBadge level={section.level} />
           </div>
+          {excerpt && (
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 line-clamp-1">
+              …{excerpt}…
+            </p>
+          )}
         </div>
-        <ChevronRight
-          size={14}
-          className="flex-shrink-0 text-gray-300 dark:text-gray-600 group-hover:text-brand-orange transition-colors mt-1"
-        />
       </div>
+      <ChevronRight
+        size={16}
+        className="flex-shrink-0 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-brand-orange"
+      />
     </motion.button>
   );
 }
@@ -396,16 +391,15 @@ export function UserGuide({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0.6 }}
             transition={{ type: "spring", damping: 28, stiffness: 220 }}
-            className="fixed inset-y-0 z-50 flex flex-col"
+            className="fixed inset-y-0 right-0 z-50 flex flex-col shadow-2xl border-l border-gray-200 dark:border-white/10"
             style={{
-              right: isSwiftAIOpen ? "50%" : "0",
-              width: isSwiftAIOpen ? "45%" : "50%",
+              right: isSwiftAIOpen ? "clamp(300px, 30vw, 500px)" : "0",
+              width: "100%",
+              maxWidth: "420px",
               transition:
-                "right 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1)",
+                "right 0.3s cubic-bezier(0.4,0,0.2,1)",
               background: "var(--container-bg)",
               backdropFilter: "blur(24px) saturate(180%)",
-              borderLeft: "1px solid var(--container-border)",
-              boxShadow: "-20px 0 60px rgba(0,0,0,0.12)",
             }}
           >
             {/* ── Header ── */}
@@ -422,14 +416,14 @@ export function UserGuide({
                   <div
                     className="w-8 h-8 rounded-xl flex items-center justify-center"
                     style={{
-                      background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                      background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
                     }}
                   >
                     <BookOpen size={14} className="text-white" />
                   </div>
                   <div>
                     <h1 className="text-base font-black text-gray-900 dark:text-white leading-none">
-                      Swift<span style={{ color: "#ff6b35" }}>Type</span>{" "}
+                      Swift<span style={{ color: "#fa4c0c" }}>Type</span>{" "}
                       <span className="text-gray-600">Docs</span>
                     </h1>
                     <p className="text-[10px] text-gray-400 mt-0.5">
@@ -444,7 +438,7 @@ export function UserGuide({
                       onClick={onAskSwift}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white transition-all hover:opacity-90 active:scale-95"
                       style={{
-                        background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                        background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
                       }}
                       title="Ask Swift AI"
                     >
@@ -551,7 +545,7 @@ export function UserGuide({
                             className="flex items-center gap-4 p-4 rounded-2xl mb-5"
                             style={{
                               background:
-                                "linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%)",
+                                "linear-gradient(135deg, #fa4c0c 0%, #ff8c5a 100%)",
                               boxShadow: "0 4px 20px rgba(255,107,53,0.25)",
                             }}
                           >
