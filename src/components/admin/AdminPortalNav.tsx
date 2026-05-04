@@ -27,7 +27,7 @@ export function AdminPortalNav() {
             className={[
               "px-4 py-3 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap",
               isActive
-                ? "border-[#ff6b35] text-[#ff6b35]"
+                ? "border-[#fa4c0c] text-[#fa4c0c]"
                 : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-200",
             ].join(" ")}
           >

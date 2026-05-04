@@ -89,7 +89,7 @@ export function ProfilePanel({
                     <div
                       className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-black text-white mb-4"
                       style={{
-                        background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                        background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
                         boxShadow: "0 4px 20px rgba(255,107,53,0.3)",
                       }}
                     >
@@ -152,7 +152,7 @@ export function ProfilePanel({
                     onClick={onAskGenius}
                     className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                     style={{
-                      background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                      background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
                       boxShadow: "0 4px 16px rgba(255,107,53,0.25)",
                     }}
                   >

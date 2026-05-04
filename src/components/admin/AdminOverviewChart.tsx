@@ -23,14 +23,14 @@ export function AdminOverviewChart({ data }: AdminOverviewChartProps) {
       <div className="h-64 rounded-xl border border-gray-100 bg-white p-3">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#F9F9F9" />
             <XAxis dataKey="label" tick={{ fill: "#475569", fontSize: 12 }} />
             <YAxis tick={{ fill: "#475569", fontSize: 12 }} />
             <Tooltip />
             <Line
               type="monotone"
               dataKey="sessions"
-              stroke="#ff6b35"
+              stroke="#fa4c0c"
               strokeWidth={3}
               dot={false}
               name="Typing sessions"
@@ -58,7 +58,7 @@ export function AdminOverviewChart({ data }: AdminOverviewChartProps) {
       <div className="h-64 rounded-xl border border-gray-100 bg-white p-3">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#F9F9F9" />
             <XAxis dataKey="label" tick={{ fill: "#475569", fontSize: 12 }} />
             <YAxis tick={{ fill: "#475569", fontSize: 12 }} />
             <Tooltip />

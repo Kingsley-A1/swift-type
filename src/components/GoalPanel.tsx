@@ -92,7 +92,7 @@ function GoalCard({
           className="h-full rounded-full"
           style={{
             width: `${progress}%`,
-            background: "linear-gradient(90deg, #ff6b35, #ff8c5a)",
+            background: "linear-gradient(90deg, #fa4c0c, #ff8c5a)",
           }}
         />
       </div>
@@ -252,7 +252,7 @@ export function GoalPanel({ isOpen, onClose }: GoalPanelProps) {
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center"
                   style={{
-                    background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                    background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
                   }}
                 >
                   <Target size={18} className="text-white" />
@@ -439,7 +439,7 @@ export function GoalPanel({ isOpen, onClose }: GoalPanelProps) {
                         className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
                         style={{
                           background:
-                            "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                            "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
                         }}
                       >
                         {isSubmitting ? "Creating…" : "Create Goal"}

@@ -157,15 +157,15 @@ export function PostSessionStats({
                 borderRadius: "8px",
                 color: "#fff",
               }}
-              itemStyle={{ color: "#ff6b35" }}
+              itemStyle={{ color: "#fa4c0c" }}
             />
             <Line
               type="monotone"
               dataKey="wpm"
-              stroke="#ff6b35"
+              stroke="#fa4c0c"
               strokeWidth={3}
               dot={false}
-              activeDot={{ r: 6, fill: "#ff6b35" }}
+              activeDot={{ r: 6, fill: "#fa4c0c" }}
             />
             <Line
               type="monotone"

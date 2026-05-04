@@ -132,7 +132,7 @@ export function AdminAuthForm({ mode }: AdminAuthFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#ff6b35] text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#fa4c0c] text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading
           ? mode === "login"

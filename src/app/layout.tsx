@@ -54,7 +54,7 @@ const ogImagePath = `/og-image-v3.jpg?v=${encodeURIComponent(ogImageVersion)}`;
 const ogImageUrl = `${siteUrl}${ogImagePath}`;
 
 export const viewport: Viewport = {
-  themeColor: "#ff6b35",
+  themeColor: "#fa4c0c",
   width: "device-width",
   initialScale: 1,
 };

@@ -512,7 +512,7 @@ export function SwiftAIChatArea({
                 style={
                   input.trim() && isOnline
                     ? {
-                        background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+                        background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
                       }
                     : undefined
                 }
@@ -623,7 +623,7 @@ function MessageBubble({
         )}
         style={
           !isUser
-            ? { background: "linear-gradient(135deg, #ff6b35, #ff8c5a)" }
+            ? { background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)" }
             : undefined
         }
       >
@@ -642,7 +642,7 @@ function MessageBubble({
           <span
             className="absolute inset-0 rounded-lg animate-ping"
             style={{
-              background: "linear-gradient(135deg, #ff6b35, #ff8c5a)",
+              background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)",
               opacity: 0.35,
             }}
           />

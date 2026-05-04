@@ -259,7 +259,7 @@ function EmptyState({ onNewChat }: { onNewChat: () => void }) {
         type="button"
         onClick={onNewChat}
         className="mt-5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
-        style={{ background: "linear-gradient(135deg, #ff6b35, #ff8c5a)" }}
+        style={{ background: "linear-gradient(135deg, #fa4c0c, #ff8c5a)" }}
       >
         Start a conversation
       </button>

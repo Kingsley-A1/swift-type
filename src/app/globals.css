@@ -4,20 +4,20 @@
 
 @layer base {
   :root {
-    --brand-orange: #ff6b35;
+    --brand-orange: #fa4c0c;
     --deep-obsidian: #1a1a2e;
     --elegant-white: #fafbfc;
     --text-muted: #64748b;
     --key-bg: #ffffff;
     --key-text: #1a1a1a;
-    --screen-bg: #f0f2f5;
+    --screen-bg: #F9F9F9;
     --container-bg: rgba(255, 255, 255, 0.88);
     --container-border: rgba(0, 0, 0, 0.07);
   }
 
   .dark {
-    --brand-orange: #ff6b35;
-    --deep-obsidian: #e2e8f0;
+    --brand-orange: #fa4c0c;
+    --deep-obsidian: #F9F9F9;
     --elegant-white: #fafbfc;
     --text-muted: #6b7280;
     --key-bg: #2a2a2a;

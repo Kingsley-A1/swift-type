@@ -70,7 +70,7 @@ function Avatar({ name, image }: { name: string; image: string | null }) {
       />
     );
   }
-  const colors = ["#ff6b35", "#7c3aed", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444"];
+  const colors = ["#fa4c0c", "#7c3aed", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444"];
   const color = colors[name.charCodeAt(0) % colors.length];
   return (
     <div

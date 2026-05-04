@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "brand-orange": "#ff6b35",
+        "brand-orange": "#fa4c0c",
         "deep-obsidian": "#1a1a1a",
         "elegant-white": "#fafbfc",
         "text-muted": "#64748b",

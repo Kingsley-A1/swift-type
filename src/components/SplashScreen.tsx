@@ -76,7 +76,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
                 className="text-center"
               >
                 <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-                  Swift<span style={{ color: "#ff6b35" }}>Type</span>
+                  Swift<span style={{ color: "#fa4c0c" }}>Type</span>
                 </h1>
                 <p
                   className="text-sm font-medium mt-2"
@@ -97,7 +97,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
                   <motion.div
                     key={i}
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: "#ff6b35" }}
+                    style={{ backgroundColor: "#fa4c0c" }}
                     animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
                     transition={{
                       repeat: Infinity,
