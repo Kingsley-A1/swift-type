@@ -98,7 +98,7 @@ export default async function AdminUserDetailPage({
         </div>
         <a
           href={`/api/admin/export?scope=user&userId=${detail.overview.userId}&format=json`}
-          className="h-8 rounded-lg bg-[#ff6b35] px-3 text-[12px] font-semibold text-white hover:opacity-90 transition-opacity flex items-center self-start"
+          className="h-8 rounded-lg bg-[#fa4c0c] px-3 text-[12px] font-semibold text-white hover:opacity-90 transition-opacity flex items-center self-start"
         >
           Export user JSON
         </a>

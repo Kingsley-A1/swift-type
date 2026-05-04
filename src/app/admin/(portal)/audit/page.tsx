@@ -51,7 +51,7 @@ export default async function AdminAuditPage() {
           </a>
           <a
             href="/api/admin/export?scope=audit&format=json"
-            className="h-8 rounded-lg bg-[#ff6b35] px-3 text-[12px] font-semibold text-white hover:opacity-90 transition-opacity flex items-center"
+            className="h-8 rounded-lg bg-[#fa4c0c] px-3 text-[12px] font-semibold text-white hover:opacity-90 transition-opacity flex items-center"
           >
             Export JSON
           </a>
@@ -83,7 +83,7 @@ export default async function AdminAuditPage() {
       </section>
 
       {/* Audit log */}
-      <section className="bg-white rounded-xl border border-[#ff6b35]/15 overflow-hidden">
+      <section className="bg-white rounded-xl border border-[#fa4c0c]/15 overflow-hidden">
         <div className="hidden grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.6fr] gap-3 bg-[#fff7f3] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500 lg:grid">
           <span>Actor / Action</span>
           <span>Entity</span>
@@ -102,7 +102,7 @@ export default async function AdminAuditPage() {
                     className={[
                       "inline-block h-1.5 w-1.5 rounded-full shrink-0",
                       entry.actorType === "admin"
-                        ? "bg-[#ff6b35]"
+                        ? "bg-[#fa4c0c]"
                         : "bg-gray-300",
                     ].join(" ")}
                   />
@@ -146,7 +146,7 @@ export default async function AdminAuditPage() {
                   className={[
                     "inline-flex items-center gap-1 text-[11px] font-semibold",
                     entry.actorType === "admin"
-                      ? "text-[#ff6b35]"
+                      ? "text-[#fa4c0c]"
                       : "text-gray-400",
                   ].join(" ")}
                 >

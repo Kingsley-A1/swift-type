@@ -19,14 +19,14 @@ export default async function AdminPortalLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-20 bg-white border-b border-gray-100">
-        <div className="h-0.5 bg-linear-to-r from-[#ff6b35] via-[#ff6b35]/40 to-transparent" />
+        <div className="h-0.5 bg-linear-to-r from-[#fa4c0c] via-[#fa4c0c]/40 to-transparent" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex h-14 items-center justify-between gap-4">
             <Link
               href="/admin"
               className="text-[14px] font-black tracking-tight text-gray-900"
             >
-              Swift<span className="text-[#ff6b35]">Type</span>{" "}
+              Swift<span className="text-[#fa4c0c]">Type</span>{" "}
               <span className="text-[13px] font-normal text-gray-400">
                 Admin
               </span>
@@ -44,7 +44,7 @@ export default async function AdminPortalLayout({
               <form action="/api/admin/logout" method="post">
                 <button
                   type="submit"
-                  className="h-8 rounded-lg border border-[#ff6b35]/25 bg-[#fff7f3] px-3 text-[12px] font-semibold text-[#ff6b35] hover:bg-[#ffece3] transition-colors"
+                  className="h-8 rounded-lg border border-[#fa4c0c]/25 bg-[#fff7f3] px-3 text-[12px] font-semibold text-[#fa4c0c] hover:bg-[#ffece3] transition-colors"
                 >
                   Sign out
                 </button>

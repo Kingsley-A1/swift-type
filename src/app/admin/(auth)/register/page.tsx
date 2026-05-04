@@ -9,7 +9,7 @@ export default function AdminRegisterPage() {
     <main className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="text-[13px] font-bold uppercase tracking-[0.28em] text-[#ff6b35]">
+          <span className="text-[13px] font-bold uppercase tracking-[0.28em] text-[#fa4c0c]">
             Swift Type
           </span>
           <h1 className="mt-2 text-2xl font-black tracking-tight text-gray-900">
@@ -34,7 +34,7 @@ export default function AdminRegisterPage() {
             Already registered?{" "}
             <Link
               href="/admin/login"
-              className="font-semibold text-gray-900 hover:text-[#ff6b35] transition-colors"
+              className="font-semibold text-gray-900 hover:text-[#fa4c0c] transition-colors"
             >
               Sign in here
             </Link>
