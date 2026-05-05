@@ -137,7 +137,7 @@ export function SwiftRankPanel({ isOpen, onClose }: SwiftRankPanelProps) {
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [auditUserId, setAuditUserId] = useState<string | null>(null);
-  const PAGE = 25;
+  const PAGE = 30;
 
   const fetchPage = useCallback(
     async (o: number, reset: boolean) => {
@@ -313,13 +313,15 @@ export function SwiftRankPanel({ isOpen, onClose }: SwiftRankPanelProps) {
 
                 {/* Load more */}
                 {hasMore && (
-                  <button
-                    onClick={() => fetchPage(offset, false)}
-                    disabled={isLoading}
-                    className="w-full py-3.5 text-[12px] font-semibold text-brand-orange hover:bg-brand-orange/5 transition-colors disabled:opacity-50"
-                  >
-                    {isLoading ? "Loading…" : `Show more (${total - entries.length} remaining)`}
-                  </button>
+                  <div className="border-t border-gray-100 dark:border-white/6">
+                    <button
+                      onClick={() => fetchPage(offset, false)}
+                      disabled={isLoading}
+                      className="w-full py-3.5 text-[12px] font-semibold text-brand-orange hover:bg-brand-orange/5 transition-colors disabled:opacity-50"
+                    >
+                      {isLoading ? "Loading…" : `Show ${Math.min(30, total - entries.length)} more of ${(total - entries.length).toLocaleString()} remaining`}
+                    </button>
+                  </div>
                 )}
 
                 {isLoading && entries.length === 0 && (
