@@ -70,56 +70,123 @@ function RankRow({
     <motion.button
       onClick={onClick}
       whileHover={{ x: 2 }}
-      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all border-b last:border-b-0 ${
+      className={`w-full px-4 py-3 text-left transition-all border-b last:border-b-0 ${
         isMe
           ? "bg-brand-orange/6 border-brand-orange/15 dark:bg-brand-orange/10"
           : "hover:bg-gray-50 dark:hover:bg-white/4 border-gray-100 dark:border-white/6"
       }`}
     >
-      {/* Rank number */}
-      <div className="w-8 shrink-0 text-center">
-        {entry.rank <= 3 ? (
-          <span className="text-base">{["🥇", "🥈", "🥉"][entry.rank - 1]}</span>
-        ) : (
-          <span className={`text-[13px] font-bold ${isMe ? "text-brand-orange" : "text-gray-400"}`}>
-            #{entry.rank}
-          </span>
-        )}
-      </div>
+      {/* Mobile Layout */}
+      <div className="flex md:hidden items-center gap-3">
+        {/* Rank number */}
+        <div className="w-8 shrink-0 text-center">
+          {entry.rank <= 3 ? (
+            <span className="text-base">{["🥇", "🥈", "🥉"][entry.rank - 1]}</span>
+          ) : (
+            <span className={`text-[13px] font-bold ${isMe ? "text-brand-orange" : "text-gray-400"}`}>
+              #{entry.rank}
+            </span>
+          )}
+        </div>
 
-      {/* Avatar */}
-      <div className="shrink-0">
-        {entry.avatarUrl && !entry.isAnonymous ? (
-          <img
-            src={entry.avatarUrl}
-            alt={entry.displayName}
-            className="w-7 h-7 rounded-full border border-gray-200 dark:border-white/10"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black"
-            style={{ background: `${getTierInfo(entry.tier).color}25`, color: getTierInfo(entry.tier).color }}
-          >
-            {entry.isAnonymous ? "?" : entry.displayName.slice(0, 1).toUpperCase()}
+        {/* Avatar */}
+        <div className="shrink-0 w-8 h-8 flex items-center justify-center">
+          {entry.avatarUrl && !entry.isAnonymous ? (
+            <img
+              src={entry.avatarUrl}
+              alt={entry.displayName}
+              className="w-7 h-7 rounded-full border border-gray-200 dark:border-white/10"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black"
+              style={{ background: `${getTierInfo(entry.tier).color}25`, color: getTierInfo(entry.tier).color }}
+            >
+              {entry.isAnonymous ? "?" : entry.displayName.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+        </div>
+
+        {/* Name + tier */}
+        <div className="flex-1 min-w-0">
+          <p className={`text-[13px] font-semibold truncate ${isMe ? "text-brand-orange" : "text-gray-900 dark:text-white"}`}>
+            {entry.displayName} {isMe && <span className="text-[10px] font-bold opacity-70">(You)</span>}
+          </p>
+          <div className="mt-0.5">
+            <TierBadge tier={entry.tier} />
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Name + tier */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-[13px] font-semibold truncate ${isMe ? "text-brand-orange" : "text-gray-900 dark:text-white"}`}>
-          {entry.displayName} {isMe && <span className="text-[10px] font-bold opacity-70">(You)</span>}
-        </p>
-        <div className="mt-0.5">
-          <TierBadge tier={entry.tier} />
+        {/* XP + WPM */}
+        <div className="text-right shrink-0">
+          <p className="text-[13px] font-black text-brand-orange">{entry.totalXp.toLocaleString()} XP</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">{entry.avgWpm} WPM · {entry.avgAccuracy}%</p>
         </div>
       </div>
 
-      {/* XP + WPM */}
-      <div className="text-right shrink-0">
-        <p className="text-[13px] font-black text-brand-orange">{entry.totalXp.toLocaleString()} XP</p>
-        <p className="text-[10px] text-gray-400 mt-0.5">{entry.avgWpm} WPM · {entry.avgAccuracy}%</p>
+      {/* Desktop Layout */}
+      <div className="hidden md:grid grid-cols-[1.5rem_2rem_minmax(100px,1.5fr)_3.5rem_3.5rem_3.5rem_4rem_3.5rem_4.5rem] items-center gap-2">
+        <div className="text-center">
+          {entry.rank <= 3 ? (
+            <span className="text-base">{["🥇", "🥈", "🥉"][entry.rank - 1]}</span>
+          ) : (
+            <span className={`text-[12px] font-bold ${isMe ? "text-brand-orange" : "text-gray-400"}`}>
+              #{entry.rank}
+            </span>
+          )}
+        </div>
+
+        <div className="w-8 h-8 flex items-center justify-center shrink-0">
+          {entry.avatarUrl && !entry.isAnonymous ? (
+            <img
+              src={entry.avatarUrl}
+              alt={entry.displayName}
+              className="w-7 h-7 rounded-full border border-gray-200 dark:border-white/10"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black"
+              style={{ background: `${getTierInfo(entry.tier).color}25`, color: getTierInfo(entry.tier).color }}
+            >
+              {entry.isAnonymous ? "?" : entry.displayName.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 pr-1">
+          <p className={`text-[13px] font-semibold truncate ${isMe ? "text-brand-orange" : "text-gray-900 dark:text-white"}`}>
+            {entry.displayName} {isMe && <span className="text-[10px] font-bold opacity-70 ml-1">(You)</span>}
+          </p>
+          <div className="mt-0.5 flex">
+            <TierBadge tier={entry.tier} />
+          </div>
+        </div>
+
+        <div className="text-right">
+          <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-300">{entry.avgAccuracy}%</span>
+        </div>
+
+        <div className="text-right">
+          <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-300">{entry.avgWpm}</span>
+        </div>
+
+        <div className="text-right">
+          <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-300">{entry.bestStreak}d</span>
+        </div>
+
+        <div className="text-right">
+          <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-300">{entry.totalPracticeMinutes}m</span>
+        </div>
+
+        <div className="text-right">
+          <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-300">{entry.totalSessions}</span>
+        </div>
+
+        <div className="text-right">
+          <p className="text-[12px] font-black text-brand-orange">{entry.totalXp.toLocaleString()}</p>
+        </div>
       </div>
     </motion.button>
   );
@@ -191,7 +258,7 @@ export function SwiftRankPanel({ isOpen, onClose }: SwiftRankPanelProps) {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0.7 }}
               transition={{ type: "spring", damping: 28, stiffness: 240 }}
-              className="fixed inset-y-0 right-0 z-50 flex flex-col w-full max-w-[480px] bg-white dark:bg-[#14161c] shadow-2xl"
+              className="fixed inset-y-0 right-0 z-50 flex flex-col w-full lg:w-1/2 md:max-w-[900px] bg-white dark:bg-[#14161c] shadow-2xl"
               style={{ borderLeft: "1px solid var(--container-border, rgba(0,0,0,0.08))" }}
             >
               {/* ── Header ── */}
@@ -274,7 +341,23 @@ export function SwiftRankPanel({ isOpen, onClose }: SwiftRankPanelProps) {
                         <TierBadge tier={mySnapshot.tier} />
                       </div>
                     </div>
-                    <div className="text-right">
+                    {/* Desktop detailed view for me */}
+                    <div className="hidden md:flex gap-6 items-center pr-4">
+                      <div className="text-right">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Acc</p>
+                        <p className="text-[15px] font-black text-gray-700 dark:text-gray-200">{mySnapshot.avgAccuracy}%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Speed</p>
+                        <p className="text-[15px] font-black text-gray-700 dark:text-gray-200">{mySnapshot.avgWpm} WPM</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Total XP</p>
+                        <p className="text-[16px] font-black text-brand-orange">{mySnapshot.totalXp.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    {/* Mobile simplified view for me */}
+                    <div className="text-right md:hidden">
                       <p className="text-[15px] font-black text-brand-orange">{mySnapshot.totalXp.toLocaleString()} XP</p>
                       <p className="text-[11px] text-gray-400 mt-0.5">
                         {mySnapshot.avgWpm} WPM · {mySnapshot.avgAccuracy}% acc
@@ -285,11 +368,25 @@ export function SwiftRankPanel({ isOpen, onClose }: SwiftRankPanelProps) {
               )}
 
               {/* ── Table Header ── */}
-              <div className="flex-shrink-0 flex items-center gap-3 px-4 py-2 border-b border-gray-100 dark:border-white/6 bg-gray-50 dark:bg-white/3">
+              {/* Mobile Header */}
+              <div className="flex md:hidden flex-shrink-0 items-center gap-3 px-4 py-2 border-b border-gray-100 dark:border-white/6 bg-gray-50 dark:bg-white/3">
                 <div className="w-8 text-center text-[9px] font-bold tracking-widest text-gray-400 uppercase">#</div>
                 <div className="w-7" />
                 <div className="flex-1 text-[9px] font-bold tracking-widest text-gray-400 uppercase">Typist</div>
                 <div className="shrink-0 text-right text-[9px] font-bold tracking-widest text-gray-400 uppercase">XP / WPM</div>
+              </div>
+
+              {/* Desktop Header */}
+              <div className="hidden md:grid flex-shrink-0 grid-cols-[1.5rem_2rem_minmax(100px,1.5fr)_3.5rem_3.5rem_3.5rem_4rem_3.5rem_4.5rem] items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-white/6 bg-gray-50 dark:bg-white/3">
+                <div className="text-center text-[9px] font-bold tracking-widest text-gray-400 uppercase">#</div>
+                <div />
+                <div className="text-[9px] font-bold tracking-widest text-gray-400 uppercase pl-1">Typist</div>
+                <div className="text-right text-[9px] font-bold tracking-widest text-gray-400 uppercase" title="Accuracy">Acc</div>
+                <div className="text-right text-[9px] font-bold tracking-widest text-gray-400 uppercase" title="Speed (Words Per Minute)">WPM</div>
+                <div className="text-right text-[9px] font-bold tracking-widest text-gray-400 uppercase" title="Streak">Strk</div>
+                <div className="text-right text-[9px] font-bold tracking-widest text-gray-400 uppercase" title="Practice Time">Time</div>
+                <div className="text-right text-[9px] font-bold tracking-widest text-gray-400 uppercase" title="Sessions">Sess</div>
+                <div className="text-right text-[9px] font-bold tracking-widest text-brand-orange uppercase">XP</div>
               </div>
 
               {/* ── Rows ── */}
