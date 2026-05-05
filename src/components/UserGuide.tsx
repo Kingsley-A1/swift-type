@@ -422,12 +422,12 @@ export function UserGuide({
                     <BookOpen size={14} className="text-white" />
                   </div>
                   <div>
-                    <h1 className="text-base font-black text-gray-900 dark:text-white leading-none">
+                    <h1 className="text-[15px] font-black text-gray-900 dark:text-white leading-none">
                       Swift<span style={{ color: "#fa4c0c" }}>Type</span>{" "}
-                      <span className="text-gray-600">Docs</span>
+                      <span className="text-gray-500 dark:text-gray-400 font-semibold">Docs</span>
                     </h1>
                     <p className="text-[10px] text-gray-400 mt-0.5">
-                      Everything you need to type faster
+                      swift-type.com.ng
                     </p>
                   </div>
                 </div>
@@ -539,39 +539,31 @@ export function UserGuide({
                       />
                     ) : (
                       <>
-                        {/* Quick start banner */}
+                        {/* Slim Get Started row */}
                         {levelFilter === "all" && (
-                          <div
-                            className="flex items-center gap-4 p-4 rounded-2xl mb-5"
+                          <button
+                            onClick={() => setActiveSection("first-session")}
+                            className="group w-full flex items-center gap-3 p-3.5 rounded-xl mb-4 text-left border transition-all hover:shadow-sm"
                             style={{
-                              background:
-                                "linear-gradient(135deg, #fa4c0c 0%, #ff8c5a 100%)",
-                              boxShadow: "0 4px 20px rgba(255,107,53,0.25)",
+                              background: "linear-gradient(135deg, rgba(250,76,12,0.07), rgba(255,140,90,0.04))",
+                              borderColor: "rgba(250,76,12,0.15)",
                             }}
                           >
-                            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 text-2xl">
-                              ⚡
-                            </div>
+                            <span className="text-xl flex-shrink-0">⚡</span>
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-sm font-bold text-white">
-                                New here?
-                              </h3>
-                              <p className="text-xs text-white/75 mt-0.5">
-                                Start with "Your First Typing Session" — it
-                                takes 2 minutes to read.
+                              <p className="text-[12px] font-bold text-gray-900 dark:text-white">
+                                New here? Start in 2 minutes
+                              </p>
+                              <p className="text-[11px] text-gray-400 mt-0.5">
+                                Read &ldquo;Your First Typing Session&rdquo;
                               </p>
                             </div>
-                            <button
-                              onClick={() => setActiveSection("first-session")}
-                              className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-colors"
-                            >
-                              Start <Zap size={12} />
-                            </button>
-                          </div>
+                            <Zap size={14} className="flex-shrink-0 text-brand-orange group-hover:scale-110 transition-transform" />
+                          </button>
                         )}
 
-                        {/* Section grid */}
-                        <div className="space-y-2">
+                        {/* Section list */}
+                        <div className="divide-y divide-gray-100 dark:divide-white/6">
                           {filteredSections.map((section) => (
                             <SectionCard
                               key={section.id}
@@ -581,9 +573,9 @@ export function UserGuide({
                           ))}
                         </div>
 
-                        {/* Bottom hint */}
-                        <p className="text-center text-[11px] text-gray-300 mt-8 mb-4">
-                          {GUIDE_SECTIONS.length} articles · Always up to date
+                        {/* Footer */}
+                        <p className="text-center text-[10px] text-gray-300 dark:text-gray-600 mt-6 mb-2">
+                          {GUIDE_SECTIONS.length} articles &middot; swift-type.com.ng
                         </p>
                       </>
                     )}

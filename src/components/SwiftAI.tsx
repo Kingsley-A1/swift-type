@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { X, WifiOff, BookOpen } from "lucide-react";
+import { X, WifiOff, BookOpen, Maximize2, Minimize2 } from "lucide-react";
 import { SwiftAISidebar } from "./SwiftAISidebar";
 import { SwiftAIChatArea } from "./SwiftAIChatArea";
 import { useNetworkStatus } from "@/lib/useNetworkStatus";
@@ -37,6 +37,7 @@ export function SwiftAI({
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isFullMode, setIsFullMode] = useState(false);
   const isOnline = useNetworkStatus();
 
   const fetchSessions = useCallback(() => {
@@ -63,6 +64,7 @@ export function SwiftAI({
     if (!isOpen) {
       setActiveChatId(null);
       setSidebarCollapsed(false);
+      setIsFullMode(false);
     }
   }, [isOpen]);
 
@@ -136,14 +138,28 @@ export function SwiftAI({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          key="swift-panel"
-          initial={{ x: "100%", opacity: 0.7 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: "100%", opacity: 0.7 }}
-          transition={{ type: "spring", damping: 26, stiffness: 220 }}
-          className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#14161c] sm:w-[88vw] lg:w-[30vw] 2xl:w-130"
-        >
+        <>
+          {isFullMode && (
+            <motion.div
+              key="swift-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsFullMode(false)}
+              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm dark:bg-black/40"
+            />
+          )}
+          <motion.div
+            key="swift-panel"
+            initial={{ x: "100%", opacity: 0.7 }}
+            animate={{ x: 0, opacity: 1, width: isFullMode ? "40vw" : undefined }}
+            exit={{ x: "100%", opacity: 0.7 }}
+            transition={{ type: "spring", damping: 26, stiffness: 220 }}
+            className={`fixed inset-y-0 right-0 z-50 flex flex-col border-l border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#14161c] ${
+              isFullMode ? "w-[90vw] sm:w-[60vw] lg:w-[40vw] max-w-5xl" : "w-full sm:w-[88vw] lg:w-[30vw] 2xl:w-130"
+            }`}
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-white/6">
               <div className="flex items-center gap-2.5">
@@ -176,6 +192,16 @@ export function SwiftAI({
                     Docs
                   </button>
                 )}
+                {/* Full Mode toggle */}
+                <button
+                  type="button"
+                  onClick={() => setIsFullMode(!isFullMode)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-gray-200 dark:border-white/8 text-gray-500 dark:text-gray-400 hover:border-brand-orange/30 hover:text-brand-orange dark:hover:text-brand-orange transition-all"
+                  title={isFullMode ? "Minimize" : "Open Full"}
+                >
+                  {isFullMode ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                  {isFullMode ? "Minimize" : "Open Full"}
+                </button>
                 <button
                   type="button"
                   onClick={onClose}
@@ -230,7 +256,8 @@ export function SwiftAI({
                 )}
               </div>
             </div>
-        </motion.div>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
