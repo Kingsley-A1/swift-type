@@ -3,6 +3,9 @@ import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { getAdminSession } from "@/lib/adminAuth";
 import { getAdminUserDetail } from "@/lib/adminData";
 import { recordAdminAudit } from "@/lib/adminAudit";
+import { getUserRankDetail } from "@/lib/swiftRankService";
+import { getUserRankRewards } from "@/lib/swiftRankRewards";
+import { CURRENT_PERIOD, getTierInfo } from "@/lib/swiftRank";
 
 function formatDate(value: Date | null) {
   return value
@@ -57,10 +60,16 @@ export default async function AdminUserDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [detail, admin] = await Promise.all([
+  const period = CURRENT_PERIOD();
+  const [detail, admin, rankData, rankRewards] = await Promise.all([
     getAdminUserDetail(id),
     getAdminSession(),
+    getUserRankDetail(id, period),
+    getUserRankRewards(id),
   ]);
+
+  const { snapshot: rankSnapshot, ledger: rankLedger } = rankData;
+  const tierInfo = rankSnapshot ? getTierInfo(rankSnapshot.tier) : null;
 
   if (!detail) {
     notFound();
@@ -290,6 +299,88 @@ export default async function AdminUserDetailPage({
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Swift Rank Audit */}
+      <section className="bg-white rounded-xl border border-gray-100 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-base">{tierInfo?.emoji ?? "⚪"}</span>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">Swift Rank</p>
+            <p className="text-sm font-bold text-gray-900">
+              {rankSnapshot
+                ? `${rankSnapshot.tier} · #${rankSnapshot.rank ?? "—"} globally · ${rankSnapshot.totalXp.toLocaleString()} XP`
+                : "No ranking data for current period"}
+            </p>
+          </div>
+        </div>
+
+        {rankSnapshot && (
+          <>
+            {/* Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              {[
+                { label: "Avg WPM", value: Math.round(rankSnapshot.avgWpm) },
+                { label: "Avg Accuracy", value: `${Math.round(rankSnapshot.avgAccuracy)}%` },
+                { label: "Sessions", value: rankSnapshot.totalSessions },
+                { label: "Practice", value: `${Math.round(rankSnapshot.totalPracticeMinutes)}m` },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">{label}</p>
+                  <p className="text-[15px] font-black text-gray-900 mt-0.5">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Recent XP ledger */}
+            {rankLedger.length > 0 && (
+              <div className="border border-gray-100 rounded-lg overflow-hidden">
+                <div className="grid grid-cols-[6rem_1fr_1fr_1fr_1fr_4rem] gap-2 bg-gray-50 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                  <span>Date</span>
+                  <span>WPM XP</span>
+                  <span>Acc XP</span>
+                  <span>Dur XP</span>
+                  <span>Streak XP</span>
+                  <span className="text-right">Total</span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {rankLedger.slice(0, 10).map((entry) => (
+                    <div key={entry.id} className="grid grid-cols-[6rem_1fr_1fr_1fr_1fr_4rem] gap-2 px-4 py-2.5 text-[12px]">
+                      <span className="text-gray-400 font-mono">
+                        {entry.createdAt
+                          ? new Date(entry.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+                          : "—"}
+                      </span>
+                      <span className="text-gray-600">{entry.wpmContribution}</span>
+                      <span className="text-gray-600">{entry.accuracyContribution}</span>
+                      <span className="text-gray-600">{entry.durationContribution}</span>
+                      <span className="text-gray-600">{entry.streakContribution}</span>
+                      <span className="font-black text-[#fa4c0c] text-right">+{entry.xpAwarded}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Rank rewards earned */}
+        {rankRewards.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Rank Rewards Earned</p>
+            <div className="flex flex-wrap gap-2">
+              {rankRewards.map((r) => (
+                <span
+                  key={r.id}
+                  className="rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                  style={{ borderColor: `${getTierInfo(rankSnapshot?.tier ?? "Rookie").color}40`, color: getTierInfo(rankSnapshot?.tier ?? "Rookie").color, background: `${getTierInfo(rankSnapshot?.tier ?? "Rookie").color}10` }}
+                >
+                  {r.title}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
