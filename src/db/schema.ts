@@ -2,6 +2,7 @@ import {
   pgTable,
   text,
   integer,
+  real,
   timestamp,
   jsonb,
   boolean,
@@ -318,4 +319,62 @@ export const userReviews = pgTable(
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
   },
   (table) => [uniqueIndex("user_reviews_user_id_idx").on(table.userId)],
+);
+
+// ─── SWIFT RANK TABLES ────────────────────────────────────────────────────────
+
+// Immutable per-session XP audit trail
+export const userXpLedger = pgTable(
+  "user_xp_ledger",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sessionId: text("session_id").references(() => sessions.id, {
+      onDelete: "set null",
+    }),
+    period: text("period").notNull(), // "YYYY-MM"
+    xpAwarded: integer("xp_awarded").notNull(),
+    wpmContribution: integer("wpm_contribution").notNull(),
+    accuracyContribution: integer("accuracy_contribution").notNull(),
+    durationContribution: integer("duration_contribution").notNull(),
+    streakContribution: integer("streak_contribution").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+  },
+  (t) => [
+    index("xp_ledger_user_period_idx").on(t.userId, t.period),
+    index("xp_ledger_period_idx").on(t.period),
+    index("xp_ledger_session_id_idx").on(t.sessionId),
+  ],
+);
+
+// Pre-computed monthly rank snapshot (refreshed on session-save + cron)
+export const swiftRankSnapshots = pgTable(
+  "swift_rank_snapshots",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    period: text("period").notNull(), // "YYYY-MM"
+    totalXp: integer("total_xp").notNull().default(0),
+    rank: integer("rank"), // 1-indexed global position
+    tier: text("tier").notNull().default("Rookie"),
+    avgWpm: real("avg_wpm").notNull().default(0),
+    avgAccuracy: real("avg_accuracy").notNull().default(0),
+    totalSessions: integer("total_sessions").notNull().default(0),
+    totalPracticeMinutes: real("total_practice_minutes").notNull().default(0),
+    bestStreak: integer("best_streak").notNull().default(0),
+    isAnonymous: boolean("is_anonymous").notNull().default(false),
+    snapshotAt: timestamp("snapshot_at", { mode: "date" }).defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("swift_rank_user_period_idx").on(t.userId, t.period),
+    index("swift_rank_period_xp_idx").on(t.period, t.totalXp),
+  ],
 );
