@@ -8,6 +8,7 @@ import {
   updateGoalProgressFromSession,
 } from "@/lib/goalService";
 import { invalidateCachedSwiftAIContext } from "@/lib/swiftAIContextCache";
+import { awardSessionXp } from "@/lib/swiftRankService";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -44,6 +45,15 @@ export async function POST(req: Request) {
     duration: data.duration,
     keystrokes: data.keystrokes,
     historyData: data.historyData,
+  });
+
+  // Award Swift Rank XP — non-blocking, does not affect response latency
+  void awardSessionXp({
+    userId: session.user.id,
+    sessionId: data.id,
+    wpm: Number(data.wpm),
+    accuracy: Number(data.accuracy),
+    durationSeconds: Number(data.duration),
   });
 
   const result = await updateGoalProgressFromSession(session.user.id, {
