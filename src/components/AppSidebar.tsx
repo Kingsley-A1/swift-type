@@ -7,6 +7,7 @@ import {
   LineChart,
   LogOut,
   Menu,
+  MessageCircle,
   Shield,
   Star,
   Target,
@@ -30,12 +31,16 @@ interface AppSidebarProps {
   isDocsOpen: boolean;
   isRewardsOpen: boolean;
   isReviewsOpen: boolean;
+  isContactOpen: boolean;
+  isRankOpen: boolean;
   onOpenGoals: () => void;
   onOpenHistory: () => void;
   onOpenDocs: () => void;
   onOpenRewards: () => void;
   onOpenProfile: () => void;
   onOpenReviews: () => void;
+  onOpenContact: () => void;
+  onOpenRank: () => void;
 }
 
 interface SidebarNavItemProps {
@@ -105,12 +110,16 @@ export function AppSidebar({
   isDocsOpen,
   isRewardsOpen,
   isReviewsOpen,
+  isContactOpen,
+  isRankOpen,
   onOpenGoals,
   onOpenHistory,
   onOpenDocs,
   onOpenRewards,
   onOpenProfile,
   onOpenReviews,
+  onOpenContact,
+  onOpenRank,
 }: AppSidebarProps) {
   const { dailyGoal, weeklyGoal, goalStreak, savedSessions } = useTypingStore();
   const { data: session, status } = useSession();
@@ -314,18 +323,25 @@ export function AppSidebar({
           />
 
           <SidebarNavItem
+            icon={<MessageCircle size={18} />}
+            label="Contact"
+            active={isContactOpen}
+            onClick={() => {
+              onOpenContact();
+              close();
+            }}
+            expanded={isOpen}
+          />
+
+          <SidebarNavItem
             icon={<Medal size={18} />}
             label="Swift Rank"
-            disabled
-            onClick={() => undefined}
+            active={isRankOpen}
+            onClick={() => {
+              onOpenRank();
+              close();
+            }}
             expanded={isOpen}
-            trailing={
-              isOpen ? (
-                <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sky-600 dark:border-sky-400/20 dark:bg-sky-500/10 dark:text-sky-300">
-                  Coming Soon
-                </span>
-              ) : undefined
-            }
           />
 
           {isOpen && (

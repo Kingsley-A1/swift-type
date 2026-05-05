@@ -8,6 +8,8 @@ import { Keyboard } from "@/components/Keyboard";
 import { PostSessionStats } from "@/components/PostSessionStats";
 import { UserGuide } from "@/components/UserGuide";
 import { SwiftAI } from "@/components/SwiftAI";
+import { ContactPanel } from "@/components/ContactPanel";
+import { SwiftRankPanel } from "@/components/SwiftRankPanel";
 import { GoalPanel } from "@/components/GoalPanel";
 import { GoalCompleteModal } from "@/components/GoalCompleteModal";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -39,6 +41,8 @@ type PanelId =
   | "profile"
   | "swiftai"
   | "reviews"
+  | "contact"
+  | "rank"
   | null;
 
 type DictionaryLevel = Parameters<typeof getRandomWords>[0];
@@ -85,6 +89,8 @@ export default function Home() {
   const isRewardsOpen = openPanel === "rewards";
   const isProfileOpen = openPanel === "profile";
   const isReviewsOpen = openPanel === "reviews";
+  const isContactOpen = openPanel === "contact";
+  const isRankOpen = openPanel === "rank";
   const anyPanelOpen = openPanel !== null;
   const hasBlockingPanel = openPanel !== null && openPanel !== "swiftai";
 
@@ -286,6 +292,15 @@ export default function Home() {
         onOpenGoals={() => openOnly("goals")}
       />
       <ReviewsPanel isOpen={isReviewsOpen} onClose={closePanel} />
+      <ContactPanel
+        isOpen={isContactOpen}
+        onClose={closePanel}
+        onOpenReviews={() => openOnly("reviews")}
+      />
+      <SwiftRankPanel
+        isOpen={isRankOpen}
+        onClose={closePanel}
+      />
       <GoalCompleteModal
         isOpen={Boolean(primaryReward)}
         onClose={clearRewardQueue}
@@ -308,6 +323,10 @@ export default function Home() {
         onOpenRewards={() => openOnly("rewards")}
         onOpenProfile={() => openOnly("profile")}
         onOpenReviews={() => openOnly("reviews")}
+        onOpenContact={() => openOnly("contact")}
+        onOpenRank={() => openOnly("rank")}
+        isContactOpen={isContactOpen}
+        isRankOpen={isRankOpen}
       />
 
       <ProfilePanel
