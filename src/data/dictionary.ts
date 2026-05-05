@@ -49,16 +49,72 @@ export const DICTIONARY = {
   ]
 };
 
-// Expanded to check offline first, then (mock) API fallback or just generate extensive local dictionary
+const LEVEL_DISTRIBUTIONS = {
+  beginner: { beginner: 1.0, intermediate: 0.0, advanced: 0.0 },
+  intermediate: { beginner: 0.6, intermediate: 0.4, advanced: 0.0 },
+  advanced: { beginner: 0.5, intermediate: 0.3, advanced: 0.2 },
+};
+
+const PUNCTUATION_CHANCES = {
+  beginner: { capitalize: 0, period: 0, comma: 0 },
+  intermediate: { capitalize: 0.1, period: 0.05, comma: 0.05 },
+  advanced: { capitalize: 0.2, period: 0.1, comma: 0.1 },
+};
+
 export const getRandomWords = (
   level: keyof typeof DICTIONARY = "beginner",
   count: number = 20,
 ) => {
-  const words = DICTIONARY[level] || DICTIONARY.beginner;
+  const dist = LEVEL_DISTRIBUTIONS[level] || LEVEL_DISTRIBUTIONS.beginner;
+  const punc = PUNCTUATION_CHANCES[level] || PUNCTUATION_CHANCES.beginner;
   const result: string[] = [];
+  let lastWord = "";
+  let capitalizeNext = true; // Always start sentence capitalized for int/adv
 
   for (let i = 0; i < count; i++) {
-    result.push(words[Math.floor(Math.random() * words.length)]);
+    // 1. Distribution weight selection
+    const rand = Math.random();
+    let selectedLevel: keyof typeof DICTIONARY = "beginner";
+    if (rand > dist.beginner + dist.intermediate) {
+      selectedLevel = "advanced";
+    } else if (rand > dist.beginner) {
+      selectedLevel = "intermediate";
+    }
+
+    const wordsPool = DICTIONARY[selectedLevel];
+
+    // 2. Prevent consecutive duplicates
+    let word = "";
+    do {
+      word = wordsPool[Math.floor(Math.random() * wordsPool.length)];
+    } while (word === lastWord && wordsPool.length > 1);
+    
+    lastWord = word;
+
+    // 3. Dynamic Capitalization and Punctuation
+    let formattedWord = word;
+
+    // Capitalize
+    if (capitalizeNext || Math.random() < punc.capitalize) {
+      formattedWord = formattedWord.charAt(0).toUpperCase() + formattedWord.slice(1);
+      capitalizeNext = false;
+    }
+
+    // Punctuation (don't add to the very last word)
+    if (i < count - 1) {
+      const pRand = Math.random();
+      if (pRand < punc.period) {
+        formattedWord += ".";
+        capitalizeNext = true;
+      } else if (pRand < punc.period + punc.comma) {
+        formattedWord += ",";
+      }
+    } else if (level !== "beginner") {
+      // End intermediate/advanced with a period
+      formattedWord += ".";
+    }
+
+    result.push(formattedWord);
   }
 
   return result.join(" ");

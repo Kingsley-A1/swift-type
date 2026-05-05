@@ -153,7 +153,7 @@ export function Controls() {
     if (mode === "timed") {
       const baseWpm =
         level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
-      count = Math.ceil((baseWpm * duration) / 60);
+      count = Math.ceil((baseWpm * duration) / 60) * 3 + 50; // Over-provision
     } else {
       count = wordCount;
     }
@@ -189,7 +189,7 @@ export function Controls() {
     if (mode === "timed") {
       const baseWpm =
         level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
-      count = Math.ceil((baseWpm * duration) / 60);
+      count = Math.ceil((baseWpm * duration) / 60) * 3 + 50; // Over-provision
     } else {
       count = wordCount;
     }

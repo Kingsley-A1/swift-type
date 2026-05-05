@@ -123,7 +123,7 @@ export default function Home() {
         lvl === "advanced" ? 100 : lvl === "intermediate" ? 60 : 20;
       const count =
         config.mode === "timed"
-          ? Math.ceil((baseWpm * (config.duration || 60)) / 60)
+          ? Math.ceil((baseWpm * (config.duration || 60)) / 60) * 3 + 50 // Over-provision to prevent word starvation
           : config.wordCount || 25;
       startSession(
         config.mode === "curriculum"
