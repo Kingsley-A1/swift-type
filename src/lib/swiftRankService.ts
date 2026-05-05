@@ -32,6 +32,14 @@ export async function awardSessionXp(params: {
 }) {
   const { userId, sessionId, wpm, accuracy, durationSeconds } = params;
 
+  // Guard: skip if XP already awarded for this session (dedup)
+  const [existing] = await db
+    .select({ id: userXpLedger.id })
+    .from(userXpLedger)
+    .where(eq(userXpLedger.sessionId, sessionId))
+    .limit(1);
+  if (existing) return;
+
   // Fetch current streak
   const [streakRow] = await db
     .select({ currentStreak: userStreaks.currentStreak })
@@ -60,6 +68,7 @@ export async function awardSessionXp(params: {
   // Refresh the user's snapshot for this period
   await refreshUserSnapshot(userId, period);
 }
+
 
 // ─── REFRESH: recompute one user's snapshot ───────────────────────────────────
 
