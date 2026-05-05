@@ -26,6 +26,8 @@ import {
   invalidateCachedSwiftAIContext,
   setCachedSwiftAIContext,
 } from "@/lib/swiftAIContextCache";
+import { getUserSnapshot } from "@/lib/swiftRankService";
+import { CURRENT_PERIOD, getTierInfo } from "@/lib/swiftRank";
 
 // ─── CONTEXT CACHE (60s TTL per user) ────────────────────────────────────────
 // Prevents 5 DB queries on every back-to-back chat message.
@@ -52,6 +54,12 @@ interface TypingContext {
   reviewCount?: number; //Number of reviews
   hasReviewed?: boolean; //Whether current user has already submitted a review
   myReviewSummary?: string; //Current user's own review summary
+  // Swift Rank
+  swiftRank?: number | null;
+  swiftTier?: string;
+  swiftXp?: number;
+  swiftAvgWpm?: number;
+  swiftBestStreak?: number;
 }
 
 // ─── CONTEXT BUILDER ─────────────────────────────────────────────────────────
@@ -63,6 +71,13 @@ function buildTypingContext(
   latestReward?: typeof userRewards.$inferSelect,
   allReviews?: (typeof userReviews.$inferSelect)[],
   currentUserReview?: typeof userReviews.$inferSelect,
+  rankSnapshot?: {
+    rank: number | null;
+    tier: string;
+    totalXp: number;
+    avgWpm: number;
+    bestStreak: number;
+  } | null,
 ): TypingContext {
   const ctx: TypingContext = { totalSessions: recentSessions.length };
   const normalizedSessions = recentSessions.map((session) => ({
@@ -182,6 +197,15 @@ function buildTypingContext(
     ctx.hasReviewed = false;
   }
 
+  // Swift Rank
+  if (rankSnapshot) {
+    ctx.swiftRank = rankSnapshot.rank;
+    ctx.swiftTier = rankSnapshot.tier;
+    ctx.swiftXp = rankSnapshot.totalXp;
+    ctx.swiftAvgWpm = Math.round(rankSnapshot.avgWpm);
+    ctx.swiftBestStreak = rankSnapshot.bestStreak;
+  }
+
   return ctx;
 }
 
@@ -218,6 +242,14 @@ ${ctx.currentStreak ? `- Current streak: ${ctx.currentStreak} day(s)` : ""}
 ${ctx.bestStreak ? `- Best streak: ${ctx.bestStreak} day(s)` : ""}
 ${ctx.latestReward ? `- Latest reward: ${ctx.latestReward}` : ""}
 ${ctx.streakState ? `- Streak state: ${ctx.streakState}` : ""}
+
+## SWIFT RANK
+${ctx.swiftTier ? `- Current tier: ${getTierInfo(ctx.swiftTier).emoji} ${ctx.swiftTier}` : ""}
+${ctx.swiftRank ? `- Global rank: #${ctx.swiftRank}` : "- Global rank: not yet ranked (complete a session to appear on the board)"}
+${ctx.swiftXp ? `- XP this month: ${ctx.swiftXp}` : ""}
+Tiers (from lowest): ⚪ Rookie → 🥉 Bronze → 🥈 Silver → 🥇 Gold → 💎 Platinum → 🏆 Elite
+XP formula per session: XP = (WPM × 1.0) + (Accuracy × 0.8) + (Minutes × 2.0) + (Streak × 0.5, max 30)
+Use this knowledge naturally — when a user practises, tell them approximately how much XP they're earning and how it moves their rank. When relevant, encourage them to open Swift Rank from the sidebar.
 
 ## CANONICAL METRICS
 ${ctx.totalSessions > 0 ? `SESSIONS_COMPLETED=${ctx.totalSessions}` : "SESSIONS_COMPLETED=unavailable"}
@@ -377,6 +409,8 @@ export async function POST(req: Request) {
         .limit(1),
     ]);
 
+    const rankSnapshot = await getUserSnapshot(userId, CURRENT_PERIOD());
+
     typingContext = buildTypingContext(
       recentSessions,
       statsRows[0],
@@ -384,6 +418,7 @@ export async function POST(req: Request) {
       latestRewardRow[0],
       allReviews,
       currentUserReviewRows[0],
+      rankSnapshot,
     );
     setCachedSwiftAIContext(userId, typingContext, CACHE_TTL_MS);
   }
