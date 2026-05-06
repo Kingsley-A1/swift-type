@@ -196,6 +196,7 @@ export function AppSidebar({
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
       className="fixed left-0 top-0 bottom-0 z-70 overflow-hidden border-r border-gray-200/60 bg-white/60 p-2 pt-4 backdrop-blur-xl dark:border-white/10 dark:bg-[#0f1218]/60"
       style={{ boxShadow: isOpen ? "8px 0 32px rgba(0,0,0,0.05)" : "none" }}
+      data-sidebar-expanded={isOpen ? "true" : "false"}
       aria-label="App navigation"
     >
       {/* min-h-0 lets the inner overflow container shrink, so sidebar scrolling works reliably. */}
@@ -224,7 +225,7 @@ export function AppSidebar({
           </AnimatePresence>
         </button>
 
-        <div className="sidebar-scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="sidebar-scroll flex min-h-0 flex-1 flex-col overflow-y-hidden">
           {/* Nav items */}
           <div className="space-y-1">
             <SidebarNavItem
@@ -270,109 +271,109 @@ export function AppSidebar({
           )}
 
           <SidebarNavItem
-            icon={<LineChart size={18} />}
-            label="History"
-            active={isHistoryOpen}
-            onClick={() => {
-              onOpenHistory();
-              close();
-            }}
-            expanded={isOpen}
-          />
+              icon={<LineChart size={18} />}
+              label="History"
+              active={isHistoryOpen}
+              onClick={() => {
+                onOpenHistory();
+                close();
+              }}
+              expanded={isOpen}
+            />
 
-          <SidebarNavItem
-            icon={<BookOpen size={18} />}
-            label="Docs"
-            active={isDocsOpen}
-            onClick={() => {
-              onOpenDocs();
-              close();
-            }}
-            expanded={isOpen}
-          />
+            <SidebarNavItem
+              icon={<Medal size={18} />}
+              label="Swift Rank"
+              active={isRankOpen}
+              onClick={() => {
+                onOpenRank();
+                close();
+              }}
+              expanded={isOpen}
+            />
 
-          <SidebarNavItem
-            icon={<Shield size={18} />}
-            label="Privacy"
-            onClick={() => {
-              router.push("/privacy");
-              close();
-            }}
-            expanded={isOpen}
-          />
+            <SidebarNavItem
+              icon={<Trophy size={18} />}
+              label="Rewards"
+              active={isRewardsOpen}
+              onClick={() => {
+                onOpenRewards();
+                close();
+              }}
+              expanded={isOpen}
+            />
 
-          <SidebarNavItem
-            icon={<FileText size={18} />}
-            label="Terms"
-            onClick={() => {
-              router.push("/terms");
-              close();
-            }}
-            expanded={isOpen}
-          />
+            <SidebarNavItem
+              icon={<BookOpen size={18} />}
+              label="Docs"
+              active={isDocsOpen}
+              onClick={() => {
+                onOpenDocs();
+                close();
+              }}
+              expanded={isOpen}
+            />
 
-          <SidebarNavItem
-            icon={<Trophy size={18} />}
-            label="Rewards"
-            active={isRewardsOpen}
-            onClick={() => {
-              onOpenRewards();
-              close();
-            }}
-            expanded={isOpen}
-          />
+            <SidebarNavItem
+              icon={<Star size={18} />}
+              label="Reviews"
+              active={isReviewsOpen}
+              highlighted={shouldPromptReview}
+              onClick={() => {
+                onOpenReviews();
+                close();
+              }}
+              expanded={isOpen}
+              trailing={
+                shouldPromptReview && isOpen ? (
+                  <span className="rounded-full border border-brand-orange/20 bg-brand-orange/10 px-2 py-0.5 text-[10px] font-bold text-brand-orange">
+                    New
+                  </span>
+                ) : undefined
+              }
+            />
 
-          <SidebarNavItem
-            icon={<Star size={18} />}
-            label="Reviews"
-            active={isReviewsOpen}
-            highlighted={shouldPromptReview}
-            onClick={() => {
-              onOpenReviews();
-              close();
-            }}
-            expanded={isOpen}
-            trailing={
-              shouldPromptReview && isOpen ? (
-                <span className="rounded-full border border-brand-orange/20 bg-brand-orange/10 px-2 py-0.5 text-[10px] font-bold text-brand-orange">
-                  New
-                </span>
-              ) : undefined
-            }
-          />
+            <SidebarNavItem
+              icon={<MessageCircle size={18} />}
+              label="Contact"
+              active={isContactOpen}
+              onClick={() => {
+                onOpenContact();
+                close();
+              }}
+              expanded={isOpen}
+            />
 
-          <SidebarNavItem
-            icon={<MessageCircle size={18} />}
-            label="Contact"
-            active={isContactOpen}
-            onClick={() => {
-              onOpenContact();
-              close();
-            }}
-            expanded={isOpen}
-          />
+            <SidebarNavItem
+              icon={<Settings size={18} />}
+              label="Settings"
+              active={isSettingsOpen}
+              onClick={() => {
+                onOpenSettings();
+                close();
+              }}
+              expanded={isOpen}
+            />
 
-          <SidebarNavItem
-            icon={<Settings size={18} />}
-            label="Settings"
-            active={isSettingsOpen}
-            onClick={() => {
-              onOpenSettings();
-              close();
-            }}
-            expanded={isOpen}
-          />
+            <SidebarNavItem
+              icon={<Shield size={18} />}
+              label="Privacy"
+              onClick={() => {
+                router.push("/privacy");
+                close();
+              }}
+              expanded={isOpen}
+            />
 
-          <SidebarNavItem
-            icon={<Medal size={18} />}
-            label="Swift Rank"
-            active={isRankOpen}
-            onClick={() => {
-              onOpenRank();
-              close();
-            }}
-            expanded={isOpen}
-          />
+            <SidebarNavItem
+              icon={<FileText size={18} />}
+              label="Terms"
+              onClick={() => {
+                router.push("/terms");
+                close();
+              }}
+              expanded={isOpen}
+            />
 
             <SidebarNavItem
               icon={<Info size={18} />}

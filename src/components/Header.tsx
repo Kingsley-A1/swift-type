@@ -62,8 +62,8 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
             }}
             className={
               isAuthed
-                ? "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                : "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold border border-gray-200 dark:border-white/8 text-gray-400 dark:text-gray-500 transition-all hover:border-gray-300 dark:hover:border-white/15"
+                ? "inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-[13px] font-semibold text-white shadow-sm transition-all hover:opacity-95 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#111318]"
+                : "inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 px-3.5 text-[13px] font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white/12 dark:text-gray-200 dark:hover:border-white/20 dark:hover:bg-white/6 dark:focus-visible:ring-offset-[#111318]"
             }
             style={
               isAuthed
@@ -71,6 +71,13 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
                 : undefined
             }
             title={isAuthed ? "Chat with Swift AI" : "Sign in to use Swift AI"}
+            aria-label={
+              showMonitoringEye
+                ? "Swift AI is monitoring your session"
+                : isAuthed
+                  ? "Open Swift AI"
+                  : "Sign in to use Swift AI"
+            }
           >
             <AnimatePresence mode="wait" initial={false}>
               {showMonitoringEye ? (
@@ -82,7 +89,7 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
                   transition={{ duration: 0.2 }}
                   className="inline-flex items-center gap-1.5"
                 >
-                  <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/10">
+                  <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/15">
                     <motion.div
                       animate={{ opacity: [0.5, 1, 0.5], scale: [0.9, 1.1, 0.9] }}
                       transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -90,7 +97,7 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
                       <Eye size={12} className="text-white" />
                     </motion.div>
                   </span>
-                  <span className="text-[11px] font-semibold tracking-wide">Monitoring</span>
+                  <span className="text-[12px] font-semibold tracking-wide">Monitoring</span>
                 </motion.span>
               ) : (
                 <motion.span
@@ -108,7 +115,7 @@ export function Header({ onHistoryOpen, onSwiftAIOpen }: HeaderProps) {
                     height={13}
                     className="rounded-sm"
                   />
-                  Ask Swift
+                  <span className="text-[12px] font-semibold">Ask Swift</span>
                 </motion.span>
               )}
             </AnimatePresence>
