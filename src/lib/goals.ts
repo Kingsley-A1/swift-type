@@ -79,6 +79,16 @@ export interface GoalInput {
   currentSessions?: number;
 }
 
+export function normalizeGoalInputValues(input: {
+  targetValue: number;
+  requiredSessions?: number;
+}) {
+  return {
+    targetValue: Math.max(1, Math.round(Number(input.targetValue))),
+    requiredSessions: Math.max(1, Math.round(Number(input.requiredSessions ?? 1))),
+  };
+}
+
 export const GOAL_TEMPLATES: GoalTemplate[] = [
   {
     key: "daily-3-sessions",

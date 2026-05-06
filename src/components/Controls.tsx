@@ -12,8 +12,11 @@ import { getRandomWords } from "@/data/dictionary";
 import {
   generateAdaptiveText,
   generateCurriculumText,
-  CURRICULUM_STAGES,
 } from "@/lib/adaptiveEngine";
+import {
+  getTimedWordCount,
+  TIMED_DURATION_CHOICES,
+} from "@/lib/sessionSizing";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { HintModal } from "./HintModal";
 import clsx from "clsx";
@@ -151,9 +154,7 @@ export function Controls() {
 
     let count = 30;
     if (mode === "timed") {
-      const baseWpm =
-        level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
-      count = Math.ceil((baseWpm * duration) / 60) * 3 + 50; // Over-provision
+      count = getTimedWordCount(level, duration);
     } else {
       count = wordCount;
     }
@@ -187,9 +188,7 @@ export function Controls() {
 
     let count = 30;
     if (mode === "timed") {
-      const baseWpm =
-        level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
-      count = Math.ceil((baseWpm * duration) / 60) * 3 + 50; // Over-provision
+      count = getTimedWordCount(level, duration);
     } else {
       count = wordCount;
     }
@@ -213,12 +212,15 @@ export function Controls() {
     { value: "intermediate" as const, label: "Inter." },
     { value: "advanced" as const, label: "Advanced" },
   ];
-  const durationOptions = [
-    { value: "15", label: "15s" },
-    { value: "30", label: "30s" },
-    { value: "60", label: "60s" },
-    { value: "120", label: "120s" },
-  ];
+  const durationMinuteChoices = TIMED_DURATION_CHOICES.map((choice) =>
+    Math.floor(choice.seconds / 60),
+  );
+  const minDurationMinutes = durationMinuteChoices[0] ?? 1;
+  const maxDurationMinutes = durationMinuteChoices[durationMinuteChoices.length - 1] ?? 1;
+  const selectedDurationMinutes = Math.max(
+    minDurationMinutes,
+    Math.min(maxDurationMinutes, Math.round((duration || 60) / 60)),
+  );
 
   return (
     <div className="control-card mb-3.5 flex items-stretch divide-x divide-gray-200 dark:divide-white/8">
@@ -290,13 +292,28 @@ export function Controls() {
         )}
 
         {mode === "timed" && (
-          <PillGroup
-            label="Duration"
-            options={durationOptions}
-            value={String(duration)}
-            onChange={(v) => setConfig({ duration: parseInt(v) })}
-            disabled={isActive}
-          />
+          <div className="flex min-w-30 flex-col gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              Minutes
+            </span>
+            <select
+              value={selectedDurationMinutes}
+              onChange={(event) =>
+                setConfig({ duration: Number(event.target.value) * 60 })
+              }
+              disabled={isActive}
+              className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-[12px] font-medium text-gray-700 outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-[#1b1f27] dark:text-gray-200"
+            >
+              {TIMED_DURATION_CHOICES.map((choice) => {
+                const minutes = Math.floor(choice.seconds / 60);
+                return (
+                  <option key={choice.seconds} value={minutes}>
+                    {minutes}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
         )}
         {(mode === "words" || mode === "curriculum") && (
           <PillGroup

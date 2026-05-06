@@ -16,6 +16,7 @@ import {
   expireGoalRecord,
   getGoalSnapshotTimezone,
   normalizeGoalRecord,
+  normalizeGoalInputValues,
   shouldGoalBeCompleted,
   updateGoalStreak,
 } from "./goals";
@@ -233,14 +234,19 @@ export async function createGoal(
       ),
     );
 
+  const normalized = normalizeGoalInputValues({
+    targetValue: input.targetValue,
+    requiredSessions: input.requiredSessions,
+  });
+
   const baseGoal: GoalRecord = {
     id: crypto.randomUUID(),
     title: input.title,
     periodType: input.periodType,
     goalType: input.goalType,
-    targetValue: input.targetValue,
+    targetValue: normalized.targetValue,
     currentValue: input.currentValue ?? 0,
-    requiredSessions: input.requiredSessions ?? 1,
+    requiredSessions: normalized.requiredSessions,
     currentSessions: input.currentSessions ?? 0,
     status: "active",
     timezone,

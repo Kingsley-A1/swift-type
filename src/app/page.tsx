@@ -19,6 +19,7 @@ import { DocReferralModal } from "@/components/DocReferralModal";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { ProfilePanel } from "@/components/ProfilePanel";
 import { ReviewsPanel } from "@/components/ReviewsPanel";
+import { DeviceGuidanceModal } from "@/components/DeviceGuidanceModal";
 import { useTypingStore } from "@/store/useTypingStore";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
@@ -26,6 +27,7 @@ import { getRandomWords } from "@/data/dictionary";
 import {
   generateCurriculumText,
 } from "@/lib/adaptiveEngine";
+import { getTimedWordCount, type TypingLevel } from "@/lib/sessionSizing";
 import type { SwiftAISessionConfig } from "@/lib/swift-ai-tool-parts";
 import {
   syncSessionToServer,
@@ -48,9 +50,7 @@ type PanelId =
   | "settings"
   | null;
 
-type DictionaryLevel = Parameters<typeof getRandomWords>[0];
-
-const normalizeDictionaryLevel = (value: string | undefined): DictionaryLevel => {
+const normalizeDictionaryLevel = (value: string | undefined): TypingLevel => {
   if (value === "beginner" || value === "intermediate" || value === "advanced") {
     return value;
   }
@@ -117,18 +117,17 @@ export default function Home() {
   const handleAIStartSession = useCallback(
     (config: SwiftAISessionConfig) => {
       const { setConfig } = useTypingStore.getState();
+      const effectiveDuration = config.duration || 60;
       setConfig({
         mode: config.mode,
         level: config.level,
-        ...(config.duration ? { duration: config.duration } : {}),
+        ...(config.duration ? { duration: config.duration } : { duration: 60 }),
         ...(config.wordCount ? { wordCount: config.wordCount } : {}),
       });
-      const lvl = normalizeDictionaryLevel(config.level);
-      const baseWpm =
-        lvl === "advanced" ? 100 : lvl === "intermediate" ? 60 : 20;
+      const lvl = normalizeDictionaryLevel(config.level ?? "beginner");
       const count =
         config.mode === "timed"
-          ? Math.ceil((baseWpm * (config.duration || 60)) / 60) * 3 + 50 // Over-provision to prevent word starvation
+          ? getTimedWordCount(lvl, effectiveDuration)
           : config.wordCount || 25;
       startSession(
         config.mode === "curriculum"
@@ -231,10 +230,8 @@ export default function Home() {
           startSession(state.targetText);
           return;
         }
-        const baseWpm =
-          level === "advanced" ? 100 : level === "intermediate" ? 60 : 20;
         const count =
-          mode === "timed" ? Math.ceil((baseWpm * duration) / 60) : wordCount;
+          mode === "timed" ? getTimedWordCount(level, duration) : wordCount;
         startSession(
           mode === "curriculum"
             ? generateCurriculumText(curriculumStage, count)
@@ -276,6 +273,7 @@ export default function Home() {
 
   return (
     <>
+      <DeviceGuidanceModal />
       <UserGuide
         isOpen={isGuideOpen}
         onClose={closePanel}

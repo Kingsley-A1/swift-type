@@ -2,7 +2,7 @@
 *Prepared by the Office of the CFO*
 
 ## 1. Executive Summary: What is Swift Type?
-**Swift Type** (hosted at [swift-type.com.ng](https://swift-type.com.ng)), engineered by the **King Tech Foundation**, is a next-generation, intelligent typing coach designed for modern professionals, students, and esports typists. Going far beyond traditional WPM (Words Per Minute) tracking, Swift Type analyzes keystroke telemetry, identifies weaknesses, and dynamically generates custom drills using its built-in AI coach (**Swift AI**). Coupled with a global, gamified ranking system (**Swift Rank**), it provides an elite, productivity-first typing experience. 
+**Swift Type** (hosted at [swifttype.com.ng](https://swifttype.com.ng)), engineered by the **King Tech Foundation**, is a next-generation, intelligent typing coach designed for modern professionals, students, and esports typists. Going far beyond traditional WPM (Words Per Minute) tracking, Swift Type analyzes keystroke telemetry, identifies weaknesses, and dynamically generates custom drills using its built-in AI coach (**Swift AI**). Coupled with a global, gamified ranking system (**Swift Rank**), it provides an elite, productivity-first typing experience. 
 
 Our financial mandate is clear: **Product-Led Growth (PLG) driven by extreme retention, monetized through a multifaceted, recurring revenue model.**
 

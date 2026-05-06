@@ -86,9 +86,12 @@ const SPACE_ROW_WINDOWS: KeyConfig[] = [
   { id: "ControlLeft", mainChar: "Control", display: "Ctrl", widthFlex: 1.25, finger: "action" },
   { id: "MetaLeft", mainChar: "Meta", display: "Win", widthFlex: 1.25, finger: "action" },
   { id: "AltLeft", mainChar: "Alt", display: "Alt", widthFlex: 1.25, finger: "action" },
-  { id: "Space", mainChar: " ", display: " ", widthFlex: 6, finger: "thumb" },
+  { id: "Space", mainChar: " ", display: " ", widthFlex: 5.25, finger: "thumb" },
   { id: "AltRight", mainChar: "Alt", display: "Alt", widthFlex: 1.25, finger: "action" },
-  { id: "MetaRight", mainChar: "Meta", display: "Win", widthFlex: 1.25, finger: "action" },
+  { id: "ArrowUp", mainChar: "ArrowUp", display: "▲", widthFlex: 0.5, finger: "action" },
+  { id: "ArrowLeft", mainChar: "ArrowLeft", display: "◄", widthFlex: 0.5, finger: "action" },
+  { id: "ArrowDown", mainChar: "ArrowDown", display: "▼", widthFlex: 0.5, finger: "action" },
+  { id: "ArrowRight", mainChar: "ArrowRight", display: "►", widthFlex: 0.5, finger: "action" },
   { id: "ControlRight", mainChar: "Control", display: "Ctrl", widthFlex: 1.25, finger: "action" },
 ];
 

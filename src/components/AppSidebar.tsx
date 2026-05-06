@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen,
+  House,
   LineChart,
   LogOut,
   Menu,
@@ -72,7 +73,7 @@ function SidebarNavItem({
     <button
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
+      className={`group relative flex w-full items-center gap-3 rounded-xl border-b border-gray-100/80 px-3 py-2.5 text-left transition-all dark:border-white/7 ${
         active
           ? "bg-brand-orange/10 text-brand-orange"
           : disabled
@@ -197,7 +198,8 @@ export function AppSidebar({
       style={{ boxShadow: isOpen ? "8px 0 32px rgba(0,0,0,0.05)" : "none" }}
       aria-label="App navigation"
     >
-      <div className="flex h-full flex-col">
+      {/* min-h-0 lets the inner overflow container shrink, so sidebar scrolling works reliably. */}
+      <div className="flex h-full min-h-0 flex-col">
         {/* Hamburger / close toggle */}
         <button
           onClick={() => setIsOpen((prev) => !prev)}
@@ -222,9 +224,20 @@ export function AppSidebar({
           </AnimatePresence>
         </button>
 
-        {/* Nav items */}
-        <div className="space-y-1">
-          <SidebarNavItem
+        <div className="sidebar-scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {/* Nav items */}
+          <div className="space-y-1">
+            <SidebarNavItem
+              icon={<House size={18} />}
+              label="Home"
+              onClick={() => {
+                router.push("/");
+                close();
+              }}
+              expanded={isOpen}
+            />
+
+            <SidebarNavItem
             icon={<Target size={18} />}
             label="Goals"
             active={isGoalsOpen}
@@ -361,21 +374,21 @@ export function AppSidebar({
             expanded={isOpen}
           />
 
-          <SidebarNavItem
-            icon={<Info size={18} />}
-            label="About"
-            onClick={() => {
-              router.push("/about");
-              close();
-            }}
-            expanded={isOpen}
-          />
-        </div>
+            <SidebarNavItem
+              icon={<Info size={18} />}
+              label="About"
+              onClick={() => {
+                router.push("/about");
+                close();
+              }}
+              expanded={isOpen}
+            />
+          </div>
 
-        {/* Bottom: profile + signout */}
-        <div className="mt-auto">
-          {isAuthed ? (
-            <div className="border-t border-gray-100 dark:border-white/8 pt-3 space-y-1">
+          {/* Bottom: profile + signout */}
+          <div className="mt-auto pt-2">
+            {isAuthed ? (
+              <div className="border-t border-gray-100 dark:border-white/8 pt-3 space-y-1">
               <button
                 onClick={() => {
                   onOpenProfile?.();
@@ -413,37 +426,38 @@ export function AppSidebar({
                 </AnimatePresence>
               </button>
 
-              <button
-                onClick={() => signOut()}
-                className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-gray-500 transition-all hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                title={isOpen ? undefined : "Sign Out"}
-              >
-                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center">
-                  <LogOut size={16} />
-                </span>
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -8 }}
-                      transition={{ duration: 0.16 }}
-                      className="min-w-0 flex-1 truncate text-[12px] font-semibold"
-                    >
-                      Sign Out
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-            </div>
-          ) : (
-            <div className="px-2 pb-2 mt-4">
-              <div className="h-px w-8 bg-gray-200 dark:bg-white/10 mb-3 mx-auto" />
-              <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300 dark:text-gray-600">
-                {isOpen ? "Swift Type" : "ST"}
-              </p>
-            </div>
-          )}
+                <button
+                  onClick={() => signOut()}
+                  className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-gray-500 transition-all hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                  title={isOpen ? undefined : "Sign Out"}
+                >
+                  <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center">
+                    <LogOut size={16} />
+                  </span>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -8 }}
+                        transition={{ duration: 0.16 }}
+                        className="min-w-0 flex-1 truncate text-[12px] font-semibold"
+                      >
+                        Sign Out
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </div>
+            ) : (
+              <div className="px-2 pb-2 mt-4">
+                <div className="h-px w-8 bg-gray-200 dark:bg-white/10 mb-3 mx-auto" />
+                <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300 dark:text-gray-600">
+                  {isOpen ? "Swift Type" : "ST"}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </motion.aside>

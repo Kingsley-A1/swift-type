@@ -4,7 +4,7 @@
 Welcome to the Swift Type project! If you are reading this, you've been tasked with visually translating the power, elegance, and speed of our platform into a cohesive, 10-part flyer campaign for our global launch. 
 
 ### What is Swift Type?
-**Swift Type** (hosted at [swift-type.com.ng](https://swift-type.com.ng)) is a next-generation, intelligent typing coach. It isn't just another typing test website; it's a productivity-first platform designed for modern professionals, developers, and esports enthusiasts. It goes beyond tracking WPM (Words Per Minute) by analyzing strokes, spotting weaknesses, and generating dynamic custom drills using its built-in AI typing coach (**Swift AI**), all while gamifying the experience with a global ranking system (**Swift Rank**).
+**Swift Type** (hosted at [swifttype.com.ng](https://swifttype.com.ng)) is a next-generation, intelligent typing coach. It isn't just another typing test website; it's a productivity-first platform designed for modern professionals, developers, and esports enthusiasts. It goes beyond tracking WPM (Words Per Minute) by analyzing strokes, spotting weaknesses, and generating dynamic custom drills using its built-in AI typing coach (**Swift AI**), all while gamifying the experience with a global ranking system (**Swift Rank**).
 
 ### Who Built It?
 Swift Type is proudly engineered by the **King Tech Foundation** ([kingtech.com.ng](https://kingtech.com.ng)). We are an organization dedicated to building industry-standard, high-performance tools with a deep passion for the community. Our tools are engineered with sacrifice and precision, offered at zero cost to our users to empower them globally.

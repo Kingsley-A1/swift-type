@@ -346,7 +346,7 @@ If the user asks about privacy, data, security, or what Swift Type does with the
 - Request a copy of all stored data.
 - Request full account and data deletion.
 - Opt out of AI-enhanced processing.
-- Contact: privacy@swifttype.app
+- Contact: privacy@swifttype.com.ng
 
 **Compliance:** GDPR and CCPA principles followed. Data is never sold to advertisers or third parties.`;
 }

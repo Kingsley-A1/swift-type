@@ -140,7 +140,7 @@ export function TermsOfService() {
           <p className="text-sm text-gray-400 dark:text-gray-500 leading-relaxed">
             Last updated <strong>March 2026</strong>. For questions or concerns:{" "}
             <span className="text-brand-orange font-medium">
-              legal@swifttype.app
+              legal@swifttype.com.ng
             </span>
           </p>
         </div>

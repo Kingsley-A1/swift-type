@@ -427,7 +427,7 @@ export function UserGuide({
                       <span className="text-gray-500 dark:text-gray-400 font-semibold">Docs</span>
                     </h1>
                     <p className="text-[10px] text-gray-400 mt-0.5">
-                      swift-type.com.ng
+                      swifttype.com.ng
                     </p>
                   </div>
                 </div>
@@ -575,7 +575,7 @@ export function UserGuide({
 
                         {/* Footer */}
                         <p className="text-center text-[10px] text-gray-300 dark:text-gray-600 mt-6 mb-2">
-                          {GUIDE_SECTIONS.length} articles &middot; swift-type.com.ng
+                          {GUIDE_SECTIONS.length} articles &middot; swifttype.com.ng
                         </p>
                       </>
                     )}

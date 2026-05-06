@@ -105,12 +105,12 @@ export function ContactPanel({
                     Swift<span style={{ color: "#fa4c0c" }}>Type</span>
                   </p>
                   <a
-                    href="https://swift-type.com.ng"
+                    href="https://swifttype.com.ng"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[11px] text-brand-orange hover:underline flex items-center gap-1 mt-0.5"
                   >
-                    swift-type.com.ng <ExternalLink size={10} />
+                    swifttype.com.ng <ExternalLink size={10} />
                   </a>
                 </div>
               </div>
@@ -161,7 +161,7 @@ export function ContactPanel({
 
               {/* Email */}
               <a
-                href="mailto:swift-type@gmail.com"
+                href="mailto:legal@swifttype.com.ng"
                 className="group flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/8 border border-transparent hover:border-gray-200 dark:hover:border-white/10 transition-all"
               >
                 <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-orange/15 transition-colors">
@@ -170,7 +170,7 @@ export function ContactPanel({
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Email</p>
                   <p className="text-[13px] font-bold text-gray-900 dark:text-white mt-0.5 truncate">
-                    swift-type@gmail.com
+                    legal@swifttype.com.ng
                   </p>
                 </div>
                 <ExternalLink size={13} className="ml-auto text-gray-300 group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors flex-shrink-0" />
@@ -242,12 +242,12 @@ export function ContactPanel({
               <p className="text-[11px] text-center text-gray-400 dark:text-gray-500 leading-relaxed">
                 Swift Type is live at{" "}
                 <a
-                  href="https://swift-type.com.ng"
+                  href="https://swifttype.com.ng"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-brand-orange hover:underline font-semibold"
                 >
-                  swift-type.com.ng
+                  swifttype.com.ng
                 </a>
                 . We typically respond within 24 hours.
               </p>

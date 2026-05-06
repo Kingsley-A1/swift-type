@@ -97,7 +97,7 @@ export function Keyboard({ isBlocked = false }: { isBlocked?: boolean }) {
           </span>
         </div>
         
-        <div className="flex-shrink-0 flex justify-center px-4">
+        <div className="shrink-0 flex justify-center px-4">
           <LiveStats />
         </div>
 

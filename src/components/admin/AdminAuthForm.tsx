@@ -84,7 +84,7 @@ export function AdminAuthForm({ mode }: AdminAuthFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-(--brand-orange) focus:ring-4 focus:ring-orange-100"
-          placeholder="admin@swifttype.app"
+          placeholder="admin@swifttype.com.ng"
           required
         />
       </label>

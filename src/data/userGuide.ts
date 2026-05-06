@@ -841,7 +841,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         type: "paragraph",
-        text: "You may request a copy of all data we hold, request deletion of your account and all associated data, or opt out of AI-enhanced processing at any time. Send requests to privacy@swifttype.app.",
+        text: "You may request a copy of all data we hold, request deletion of your account and all associated data, or opt out of AI-enhanced processing at any time. Send requests to privacy@swifttype.com.ng.",
       },
     ],
   },

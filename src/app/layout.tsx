@@ -46,7 +46,7 @@ const siteUrl =
   normalizeSiteUrl(process.env.VERCEL_PROJECT_PRODUCTION_URL) ??
   normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL) ??
   normalizeSiteUrl(process.env.VERCEL_URL) ??
-  "https://swift-type-two.vercel.app";
+  "https://swifttype.com.ng";
 
 const ogImageVersion =
   process.env.NEXT_PUBLIC_OG_IMAGE_VERSION?.trim() || "2026-04-22";

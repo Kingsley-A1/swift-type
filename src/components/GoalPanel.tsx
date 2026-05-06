@@ -21,6 +21,7 @@ import {
   getGoalReminderState,
   getGoalProgressRatio,
   getGoalTemplates,
+  normalizeGoalInputValues,
 } from "@/lib/goals";
 import {
   createGoalOnServer,
@@ -173,16 +174,23 @@ export function GoalPanel({ isOpen, onClose }: GoalPanelProps) {
   const handleCreateGoal = async () => {
     if (!editingTemplate || isSubmitting) return;
 
+    const normalized = normalizeGoalInputValues({
+      targetValue: Number.isFinite(editTargetValue) ? editTargetValue : 1,
+      requiredSessions: Number.isFinite(editRequiredSessions)
+        ? editRequiredSessions
+        : 1,
+    });
+
     const finalTargetValue =
       editingTemplate.goalType === "minutes_practiced"
-        ? editTargetValue * 60
-        : editTargetValue;
+        ? normalized.targetValue * 60
+        : normalized.targetValue;
 
     const customTemplate: GoalTemplate = {
       ...editingTemplate,
       title: editTitle.trim() || editingTemplate.title,
       targetValue: finalTargetValue,
-      requiredSessions: editRequiredSessions,
+      requiredSessions: normalized.requiredSessions,
     };
 
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
