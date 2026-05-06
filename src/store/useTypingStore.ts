@@ -158,6 +158,10 @@ interface TypeState {
   rewards: RewardRecord[];
   rewardQueue: RewardRecord[];
 
+  // Settings
+  isAnonymous: boolean;
+  hasSeenDocModal: boolean;
+
   // Actions
   setConfig: (
     config: Partial<
@@ -186,6 +190,8 @@ interface TypeState {
   addRewardEvents: (rewards: RewardRecord[]) => void;
   clearRewardQueue: () => void;
   hydrateRewardHistory: (rewards: RewardRecord[]) => void;
+  setAnonymous: (val: boolean) => void;
+  setHasSeenDocModal: (val: boolean) => void;
 }
 
 export const useTypingStore = create<TypeState>()(
@@ -221,6 +227,9 @@ export const useTypingStore = create<TypeState>()(
       goalStreak: createEmptyGoalSnapshot().streak,
       rewards: [],
       rewardQueue: [],
+
+      isAnonymous: false,
+      hasSeenDocModal: false,
 
       setConfig: (config) =>
         set((draft) => {
@@ -576,6 +585,9 @@ export const useTypingStore = create<TypeState>()(
           rewards,
           rewardQueue: state.rewardQueue,
         })),
+
+      setAnonymous: (val: boolean) => set({ isAnonymous: val }),
+      setHasSeenDocModal: (val: boolean) => set({ hasSeenDocModal: val }),
     })), // closes immer((set, get) => ({  ...  }))
     {
       name: "swiftyper-storage",
@@ -589,6 +601,8 @@ export const useTypingStore = create<TypeState>()(
           weeklyGoal: state.weeklyGoal,
           goalStreak: state.goalStreak,
           rewards: state.rewards,
+          isAnonymous: state.isAnonymous,
+          hasSeenDocModal: state.hasSeenDocModal,
         }) as unknown as TypeState,
     },
   ), // closes persist(

@@ -14,6 +14,8 @@ import { GoalPanel } from "@/components/GoalPanel";
 import { GoalCompleteModal } from "@/components/GoalCompleteModal";
 import { AppSidebar } from "@/components/AppSidebar";
 import { RewardsPanel } from "@/components/RewardsPanel";
+import { SettingsPanel } from "@/components/SettingsPanel";
+import { DocReferralModal } from "@/components/DocReferralModal";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { ProfilePanel } from "@/components/ProfilePanel";
 import { ReviewsPanel } from "@/components/ReviewsPanel";
@@ -43,6 +45,7 @@ type PanelId =
   | "reviews"
   | "contact"
   | "rank"
+  | "settings"
   | null;
 
 type DictionaryLevel = Parameters<typeof getRandomWords>[0];
@@ -91,6 +94,7 @@ export default function Home() {
   const isReviewsOpen = openPanel === "reviews";
   const isContactOpen = openPanel === "contact";
   const isRankOpen = openPanel === "rank";
+  const isSettingsOpen = openPanel === "settings";
   const anyPanelOpen = openPanel !== null;
   const hasBlockingPanel = openPanel !== null && openPanel !== "swiftai";
 
@@ -104,6 +108,7 @@ export default function Home() {
       profile: "profile",
       swiftai: "swiftai",
       reviews: "reviews",
+      settings: "settings",
     };
     const panel = panelMap[target];
     if (panel) openOnly(panel);
@@ -301,6 +306,13 @@ export default function Home() {
         isOpen={isRankOpen}
         onClose={closePanel}
       />
+      <SettingsPanel
+        isOpen={isSettingsOpen}
+        onClose={closePanel}
+      />
+      <DocReferralModal
+        onOpenDocs={() => openOnly("guide")}
+      />
       <GoalCompleteModal
         isOpen={Boolean(primaryReward)}
         onClose={clearRewardQueue}
@@ -325,8 +337,10 @@ export default function Home() {
         onOpenReviews={() => openOnly("reviews")}
         onOpenContact={() => openOnly("contact")}
         onOpenRank={() => openOnly("rank")}
+        onOpenSettings={() => openOnly("settings")}
         isContactOpen={isContactOpen}
         isRankOpen={isRankOpen}
+        isSettingsOpen={isSettingsOpen}
       />
 
       <ProfilePanel

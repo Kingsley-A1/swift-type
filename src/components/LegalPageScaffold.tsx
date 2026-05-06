@@ -17,6 +17,7 @@ export function LegalPageScaffold({ children }: { children: ReactNode }) {
         isReviewsOpen={false}
         isContactOpen={false}
         isRankOpen={false}
+        isSettingsOpen={false}
         onOpenGoals={() => router.push("/")}
         onOpenHistory={() => router.push("/")}
         onOpenDocs={() => router.push("/")}
@@ -25,6 +26,7 @@ export function LegalPageScaffold({ children }: { children: ReactNode }) {
         onOpenReviews={() => router.push("/")}
         onOpenContact={() => router.push("/")}
         onOpenRank={() => router.push("/")}
+        onOpenSettings={() => router.push("/")}
       />
       {children}
     </>

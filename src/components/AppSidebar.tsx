@@ -15,6 +15,8 @@ import {
   X,
   FileText,
   Medal,
+  Settings,
+  Info,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTypingStore } from "@/store/useTypingStore";
@@ -33,6 +35,7 @@ interface AppSidebarProps {
   isReviewsOpen: boolean;
   isContactOpen: boolean;
   isRankOpen: boolean;
+  isSettingsOpen: boolean;
   onOpenGoals: () => void;
   onOpenHistory: () => void;
   onOpenDocs: () => void;
@@ -41,6 +44,7 @@ interface AppSidebarProps {
   onOpenReviews: () => void;
   onOpenContact: () => void;
   onOpenRank: () => void;
+  onOpenSettings: () => void;
 }
 
 interface SidebarNavItemProps {
@@ -112,6 +116,7 @@ export function AppSidebar({
   isReviewsOpen,
   isContactOpen,
   isRankOpen,
+  isSettingsOpen,
   onOpenGoals,
   onOpenHistory,
   onOpenDocs,
@@ -120,6 +125,7 @@ export function AppSidebar({
   onOpenReviews,
   onOpenContact,
   onOpenRank,
+  onOpenSettings,
 }: AppSidebarProps) {
   const { dailyGoal, weeklyGoal, goalStreak, savedSessions } = useTypingStore();
   const { data: session, status } = useSession();
@@ -334,6 +340,17 @@ export function AppSidebar({
           />
 
           <SidebarNavItem
+            icon={<Settings size={18} />}
+            label="Settings"
+            active={isSettingsOpen}
+            onClick={() => {
+              onOpenSettings();
+              close();
+            }}
+            expanded={isOpen}
+          />
+
+          <SidebarNavItem
             icon={<Medal size={18} />}
             label="Swift Rank"
             active={isRankOpen}
@@ -344,24 +361,15 @@ export function AppSidebar({
             expanded={isOpen}
           />
 
-          {isOpen && (
-            <div className="ml-10 mt-1 flex flex-wrap gap-1.5 pb-1">
-              {[
-                "Rookie",
-                "Bronze",
-                "Silver",
-                "Gold",
-                "Platinum",
-              ].map((rank) => (
-                <span
-                  key={rank}
-                  className="rounded-full border border-gray-200 bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400"
-                >
-                  {rank}
-                </span>
-              ))}
-            </div>
-          )}
+          <SidebarNavItem
+            icon={<Info size={18} />}
+            label="About"
+            onClick={() => {
+              router.push("/about");
+              close();
+            }}
+            expanded={isOpen}
+          />
         </div>
 
         {/* Bottom: profile + signout */}
