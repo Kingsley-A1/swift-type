@@ -564,6 +564,38 @@ function normalizeMarkdownHref(href?: string) {
   return trimmed;
 }
 
+function linkifyBareUrlsInMarkdown(content: string) {
+  const pattern =
+    /(^|[\s(>])((?:https?:\/\/)?(?:www\.)?[a-z0-9][a-z0-9-]*(?:\.[a-z0-9][a-z0-9-]*)+(?:\/[^\s<]*)?)/gim;
+
+  return content.replace(pattern, (match, prefix: string, rawUrl: string, offset: number, full: string) => {
+    const urlStartIndex = offset + prefix.length;
+    const beforeUrl = full.slice(Math.max(0, urlStartIndex - 2), urlStartIndex);
+
+    // Skip already-linked markdown labels like ](https://example.com)
+    if (beforeUrl === "](") {
+      return match;
+    }
+
+    // Skip emails.
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawUrl)) {
+      return match;
+    }
+
+    const trailingPunctuationMatch = rawUrl.match(/[.,!?;:]+$/);
+    const trailing = trailingPunctuationMatch ? trailingPunctuationMatch[0] : "";
+    const urlWithoutTrailing = trailing
+      ? rawUrl.slice(0, -trailing.length)
+      : rawUrl;
+
+    const href = /^(https?:)?\/\//i.test(urlWithoutTrailing)
+      ? urlWithoutTrailing
+      : `https://${urlWithoutTrailing}`;
+
+    return `${prefix}[${urlWithoutTrailing}](${href})${trailing}`;
+  });
+}
+
 function getExternalHostnameLabel(href: string) {
   try {
     return new URL(href).hostname.replace(/^www\./i, "");
@@ -848,6 +880,8 @@ function MessageContent({
   content: string;
   isStreaming?: boolean;
 }) {
+  const normalizedContent = linkifyBareUrlsInMarkdown(content);
+
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed select-text">
       <ReactMarkdown
@@ -991,7 +1025,7 @@ function MessageContent({
           ),
         }}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
       {isStreaming && (
         <span

@@ -292,7 +292,7 @@ export function Controls() {
         )}
 
         {mode === "timed" && (
-          <div className="flex min-w-30 flex-col gap-1">
+          <div className="flex min-w-36 flex-col gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
               Minutes
             </span>
@@ -302,7 +302,7 @@ export function Controls() {
                 setConfig({ duration: Number(event.target.value) * 60 })
               }
               disabled={isActive}
-              className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-[12px] font-medium text-gray-700 outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-[#1b1f27] dark:text-gray-200"
+              className="h-8 w-full rounded-xl border border-gray-200 bg-gray-100 px-2.5 text-[12px] font-semibold text-gray-700 outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
             >
               {TIMED_DURATION_CHOICES.map((choice) => {
                 const minutes = Math.floor(choice.seconds / 60);
